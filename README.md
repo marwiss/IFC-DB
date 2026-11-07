@@ -211,6 +211,13 @@ validated, not the graph:
   with IfcOpenShell 0.8.6, and without the rule set's Django parts, which only
   write results to the validation service's database. On the rule set's 722
   test files this gives the expected verdict for every one.
+- **Information Delivery Specifications**, buildingSMART's IDS 1.0, with
+  IfcOpenShell's IfcTester and its own defaults. An IDS is read with
+  defusedxml, which refuses DTDs and entities, and checked against IDS 1.0's
+  schema built without the network. Every requirement an element fails is an
+  issue, and so is a required specification that applies to nothing, and an
+  element that a prohibited one applies to. A summary gives each
+  specification's verdict.
 
 ## Pointing at an instance: STEP id, or GlobalId and path
 
@@ -354,17 +361,19 @@ instances, unless others are given.
 A program with its own record of a model, as Kontroll ties one to a project and
 a document version, uses the parts instead: `convert_file` and `write_file` in
 `ifc_lpg.files`, `import_records` in `ifc_lpg.importer` and `export_records` in
-`ifc_lpg.exporter`. Kontroll's
+`ifc_lpg.exporter`. `check_ids` in `ifc_lpg.files` checks a file against IDS
+files in a process of its own. Kontroll's
 [IFC-LPG page](https://github.com/marwiss/Kontroll/blob/main/docs/ifc-lpg.md)
 describes how a server uses them.
 
-Two tools work on files alone, without a database. Each answers in JSON and exits
-with 0 when all is well:
+Three tools work on files alone, without a database. Each answers in JSON and
+exits with 0 when all is well:
 
 ```sh
 python -m ifc_lpg.equivalence first.ifc second.ifc          # do the two files hold the same model?
 python -m ifc_lpg.validation model.ifc                      # issues against the IFC schema
 python -m ifc_lpg.validation copy.ifc --against model.ifc   # only those the original does not have
+python -m ifc_lpg.ids model.ifc requirements.ids            # what fails an IDS, and each specification's verdict
 ```
 
 buildingSMART's rules need an environment of their own, with IfcOpenShell 0.8.6.
@@ -382,9 +391,10 @@ two files the same model,
 [0010](docs/adr/0010-a-lossless-graph-reads-and-writes-step-itself.md) on reading
 and writing STEP itself,
 [0011](docs/adr/0011-a-file-written-from-the-graph-is-validated.md) on validating
-the written file, and
+the written file,
 [0012](docs/adr/0012-buildingsmarts-rules-run-in-an-environment-of-their-own.md)
-on buildingSMART's rules.
+on buildingSMART's rules, and
+[0013](docs/adr/0013-ids-is-checked-with-ifctester-and-read-safely.md) on IDS.
 
 ## Licence
 

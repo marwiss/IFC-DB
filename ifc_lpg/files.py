@@ -5,7 +5,8 @@
 records into the graph and marks the model ``done``. :func:`export_file` writes a model back from what the graph holds,
 in a process of its own too. Programs with their own idea of a model, such as Kontroll, which ties a model to a project
 and a document version, use the parts directly: :func:`convert_file`, :func:`~ifc_lpg.importer.import_records`,
-:func:`~ifc_lpg.exporter.export_records` and :func:`write_file`.
+:func:`~ifc_lpg.exporter.export_records` and :func:`write_file`. :func:`check_ids` checks a file against IDS files, in a
+process of its own as well.
 """
 
 from __future__ import annotations
@@ -38,15 +39,17 @@ DEFAULT_LIMITS = Limits()
 
 
 class ConversionFailed(RuntimeError):
-    """The file could not be converted or written. The message says why, and never quotes the file at length."""
+    """The file could not be converted, written or checked. The message says why, and never quotes the file at
+    length."""
 
 
 def _now() -> str:
     return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
-async def run_worker(command: list[str], what: str, seconds: float) -> str:
-    """Run a worker with a time limit. Returns what it wrote to stdout."""
+async def run_worker(command: list[str], what: str, seconds: float, *, answers: tuple[int, ...] = (0,)) -> str:
+    """Run a worker with a time limit. Returns what it wrote to stdout. An exit code in ``answers`` is an answer, and any
+    other a failure."""
     process = await asyncio.create_subprocess_exec(
         *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
@@ -56,7 +59,7 @@ async def run_worker(command: list[str], what: str, seconds: float) -> str:
         process.kill()
         await process.wait()
         raise ConversionFailed(f"{what} took longer than {seconds:.0f} s") from None
-    if process.returncode != 0:
+    if process.returncode not in answers:
         lines = stderr.decode("utf-8", "replace").strip().splitlines()
         detail = lines[-1] if lines else f"exit code {process.returncode}"
         with contextlib.suppress(ValueError, AttributeError):
@@ -97,6 +100,16 @@ async def write_file(records: Path, target: Path, *, limits: Limits = DEFAULT_LI
     """Write the records of an exported model as an IFC file at ``target``."""
     command = [sys.executable, "-m", "ifc_lpg.writer", str(records), str(target), "--memory-mb", str(limits.memory_mb)]
     await run_worker(command, "writing the file", limits.timeout_seconds)
+
+
+async def check_ids(source: Path, ids_files: list[Path], *, limits: Limits = DEFAULT_LIMITS) -> dict[str, Any]:
+    """Check ``source`` against the IDS files ``ids_files``. Returns the report of :func:`ifc_lpg.ids.report_of`: the
+    issues, each with the index of its IDS, the IDS files that could not be read, and a summary of every specification."""
+    paths = [str(source), *(str(path) for path in ids_files)]
+    command = [sys.executable, "-m", "ifc_lpg.ids", "--memory-mb", str(limits.memory_mb), "--", *paths]
+    # The check exits with 1 when something failed, which is an answer like any other.
+    answer = await run_worker(command, "the IDS check", limits.timeout_seconds, answers=(0, 1))
+    return json.loads(answer.strip().splitlines()[-1])
 
 
 async def import_file(
