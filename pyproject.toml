@@ -1,0 +1,63 @@
+[project]
+name = "ifc-lpg"
+version = "1.0.0"
+description = "Lossless round-tripping between IFC STEP files and labelled property graphs in Neo4j and Memgraph"
+readme = "README.md"
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = [
+    "ifcopenshell>=0.9.0",
+    # IfcOpenShell's EXPRESS rules import _pytest when they run, which it does not declare (docs/adr/0011).
+    "pytest>=9.0",
+]
+
+[project.optional-dependencies]
+# The official driver, for ifc_lpg.graph.Neo4jGraph; it speaks to Neo4j and to Memgraph.
+neo4j = ["neo4j>=5.26"]
+
+[project.urls]
+Source = "https://github.com/marwiss/IFC-LPG"
+Issues = "https://github.com/marwiss/IFC-LPG/issues"
+
+[dependency-groups]
+dev = [
+    "neo4j>=5.26",
+    "pytest-asyncio>=1.3",
+    "testcontainers>=4.15",
+    "ruff>=0.16",
+    "ty>=0.0.90",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ifc_lpg"]
+
+# Dependency cooldown: never resolve to a version published less than a week ago.
+[tool.uv]
+exclude-newer = "7 days"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["ifc_lpg", "tests"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B", "S", "ASYNC", "T20", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "S108", "T20"] # asserts, test secrets, tmp paths, prints
+"ifc_lpg/worker.py" = ["T20"]                     # the worker process reports through stdout and stderr
+
+[tool.ruff.lint.isort]
+known-first-party = ["ifc_lpg"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra --strict-markers"
+markers = ["integration: needs a graph database (testcontainers starts one)"]
