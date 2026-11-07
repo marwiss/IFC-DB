@@ -285,7 +285,7 @@ the `neo4j` extra for the official driver:
 pip install "ifc-lpg[neo4j] @ git+https://github.com/marwiss/IFC-LPG@v1.0.0"
 ```
 
-A file goes into the graph as a model, and comes back out as a file:
+A file goes into the graph as a model, and comes back out as a file. With Neo4j:
 
 ```python
 import asyncio
@@ -311,9 +311,34 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-For Memgraph the dialect is `"memgraph"`, and a server without users takes empty
-credentials, `auth=("", "")`. `ensure_schema` makes the constraints and indexes
-the queries rely on, and leaves those that exist.
+The same with Memgraph, which the official driver reaches over Bolt too. A
+Memgraph without users takes empty credentials, and one with users takes a user
+name and password as Neo4j does. The schema is made in Memgraph's words:
+
+```python
+import asyncio
+from pathlib import Path
+
+from neo4j import AsyncGraphDatabase
+
+from ifc_lpg.files import export_file, import_file
+from ifc_lpg.graph import Neo4jGraph, ensure_schema
+
+
+async def main() -> None:
+    async with AsyncGraphDatabase.driver("bolt://localhost:7687", auth=("", "")) as driver:
+        graph = Neo4jGraph(driver)
+        await ensure_schema(graph, "memgraph")
+        model = await import_file(graph, Path("house.ifc"), "house")
+        print(model["entities"], "instances")
+        await export_file(graph, "house", Path("house-again.ifc"))
+
+
+asyncio.run(main())
+```
+
+`Neo4jGraph` is named after the driver, not the database. `ensure_schema` makes
+the constraints and indexes the queries rely on, and leaves those that exist.
 
 `import_file` refuses a model id that is taken. While it loads, the model's
 `IfcModel` node is `running`. Afterwards it is `done`, with its counts, or
