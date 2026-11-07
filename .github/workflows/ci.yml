@@ -26,7 +26,7 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: true
-      - run: uv sync
+      - run: uv sync --all-extras
       - run: uv run ruff format --check .
       - run: uv run ruff check .
       - run: uv run ty check ifc_lpg
@@ -46,7 +46,10 @@ jobs:
         with:
           enable-cache: true
           python-version: ${{ matrix.python }}
-      - run: uv sync
+      # The graph side imports with none of the extras, as a server's own process uses it.
+      - run: uv sync --no-dev
+      - run: uv run --no-sync python -c "import ifc_lpg.exporter, ifc_lpg.files, ifc_lpg.graph, ifc_lpg.ids, ifc_lpg.importer, ifc_lpg.lossless, ifc_lpg.step, ifc_lpg.validation"
+      - run: uv sync --all-extras
       - run: uv run pytest -m "not integration"
 
   integration:
@@ -59,9 +62,9 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           enable-cache: true
-      - run: uv sync
+      - run: uv sync --all-extras
       - run: uv run pytest -q -m integration
         env:
           IFC_LPG_TEST_MEMGRAPH: "1"
-      # IfcOpenShell's EXPRESS rules import pytest at run time; the package has it without the dev group.
-      - run: uv run --no-dev python -m ifc_lpg.validation tests/fixtures/three_walls_gtin.ifc
+      # IfcOpenShell's EXPRESS rules import pytest at run time; the extra has it without the dev group.
+      - run: uv run --no-dev --extra ifcopenshell python -m ifc_lpg.validation tests/fixtures/three_walls_gtin.ifc

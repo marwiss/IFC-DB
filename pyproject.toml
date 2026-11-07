@@ -6,7 +6,12 @@ readme = "README.md"
 license = "AGPL-3.0-or-later"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
-dependencies = [
+# The graph side needs nothing: the STEP reader, the lossless form, importing and exporting records, deleting a model and
+# the packed reports. What converts, writes and checks files runs in workers, and comes with the extra ifcopenshell.
+dependencies = []
+
+[project.optional-dependencies]
+ifcopenshell = [
     # Reads an IDS before IfcTester does, refusing DTDs and entities (docs/adr/0013).
     "defusedxml>=0.7.1",
     "ifcopenshell>=0.9.0",
@@ -15,8 +20,6 @@ dependencies = [
     # IfcOpenShell's EXPRESS rules import _pytest when they run, which it does not declare (docs/adr/0011).
     "pytest>=9.0",
 ]
-
-[project.optional-dependencies]
 # The official driver, for ifc_lpg.graph.Neo4jGraph; it speaks to Neo4j and to Memgraph.
 neo4j = ["neo4j>=5.26"]
 

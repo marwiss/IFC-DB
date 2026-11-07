@@ -47,6 +47,11 @@ An IDS that fails any of this is listed under `rules_not_run`, with the reason, 
 on POSIX and the caller's time limit, as the other checks do. An IDS can hold patterns in XML Schema's regular
 expressions, which IfcTester applies to the file's values. One that takes too long ends that process, not the caller.
 
+**The graph side needs none of it.** IfcOpenShell, IfcTester, defusedxml and the pytest that IfcOpenShell's EXPRESS
+rules import come with the extra `ifcopenshell`, and the package itself requires nothing. Every module imports them
+where it uses them, in the workers, so that a program can import, export and delete models and read the packed reports
+without them. Kontroll does that in its own process, and its slim image has no IfcOpenShell.
+
 **Every failure is an error.** IDS 1.0 has no severity. An issue is a requirement that an element fails, a required
 specification that applies to nothing, or an element that a prohibited specification applies to. Each has the
 specification's identifier, or else its name, as its rule, the index of its IDS, and the element's STEP id and GlobalId
@@ -59,8 +64,9 @@ reports mark as skipped.
 
 - IfcTester requires what its reports, its BCF output and its web app use: Flask with Werkzeug, Jinja2, Click, Blinker
   and itsdangerous; bcf-client with xsdata; odfpy; pystache. The check itself uses xmlschema and elementpath. This
-  package imports none of the others, but they are installed wherever it is.
-- defusedxml is a dependency in its own right, not one that happens to come with odfpy.
+  package imports none of the others, but they are installed wherever the extra is.
+- defusedxml is in the extra in its own right, not because it happens to come with odfpy.
+- The install command names the extra, `ifc-lpg[ifcopenshell,neo4j]`, for the round trip of files.
 - If IfcTester comes to read identifiers, or to build its schema without the network, the code here that does it becomes
   redundant but stays harmless, and can then go.
 - The check is as good as IfcTester's reading of IDS 1.0. Where that differs from buildingSMART's, it differs for

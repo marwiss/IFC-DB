@@ -286,11 +286,17 @@ original and `1.E-05` in the copy, the same number.
 ## Using it
 
 IFC–LPG needs Python 3.11 or later. It is installed from this repository, with
-the `neo4j` extra for the official driver:
+the extra `ifcopenshell` for converting, writing and checking files, and the
+extra `neo4j` for the official driver:
 
 ```sh
-pip install "ifc-lpg[neo4j] @ git+https://github.com/marwiss/IFC-LPG@v1.0.0"
+pip install "ifc-lpg[ifcopenshell,neo4j] @ git+https://github.com/marwiss/IFC-LPG@v1.0.0"
 ```
+
+Without the extra `ifcopenshell` the graph side still works, and needs nothing
+else: the STEP reader, the lossless form, `import_records`, `export_records`
+and `delete_model`. A server can run that in its own process, and leave
+IfcOpenShell to the workers.
 
 A file goes into the graph as a model, and comes back out as a file. With Neo4j:
 

@@ -63,11 +63,14 @@ def replaced(old: str, new: str) -> tuple[str, ...]:
     return tuple(line.replace(old, new) for line in GOOD)
 
 
-def test_the_package_holds_what_the_validator_needs() -> None:
+def test_the_extra_holds_what_the_validator_needs() -> None:
     """The EXPRESS rules import ``_pytest``, which IfcOpenShell does not declare. In the tests it is there anyway, which
-    is why this looks at what an install gets: the package's own dependencies, without the dev group."""
+    is why this looks at what an install gets: the extra that brings IfcOpenShell, without the dev group."""
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert any(requirement.startswith("pytest") for requirement in project["project"]["dependencies"])
+    extra = project["project"]["optional-dependencies"]["ifcopenshell"]
+    assert any(requirement.startswith("pytest") for requirement in extra)
+    assert any(requirement.startswith("ifcopenshell") for requirement in extra)
+    assert project["project"]["dependencies"] == [], "the graph side needs nothing"
 
 
 def test_counting_what_is_new() -> None:
