@@ -13,7 +13,7 @@ import pytest
 
 from ifc_lpg.files import ConversionFailed
 from ifc_lpg.graph import schema_statements
-from ifc_lpg.spatial import FORMAT, SpatialError, box_of, read_records, spatial_file
+from ifc_lpg.spatial import FORMAT, SpatialError, box_of, geometry_issues, read_records, spatial_file
 from tests.conftest import FIXTURES_DIR
 
 SPATIAL = FIXTURES_DIR / "spatial.ifc"
@@ -97,6 +97,20 @@ def test_the_records_are_read_back_whole(tmp_path: Path) -> None:
     assert set(products[0]) == {"step", "global_id", "bbox_min", "bbox_max", "bbox_centre"}
 
 
+def test_a_shape_that_cannot_be_built_is_an_issue_of_a_report(tmp_path: Path) -> None:
+    _, out = geometry_of(tmp_path)
+    assert geometry_issues(out) == [
+        {
+            "kind": "geometry",
+            "severity": "error",
+            "message": "IfcOpenShell could not build the shape of this IfcBuildingElementProxy: IfcOpenShell built no shape",
+            "step_id": 110,
+            "global_id": "0Spatial00000000000022",
+            "attribute": "Representation",
+        }
+    ], "the proxy whose profile is 0 m wide, which the schema lets through"
+
+
 @pytest.mark.parametrize(
     ("change", "message"),
     [
@@ -113,6 +127,7 @@ def test_the_records_are_read_back_whole(tmp_path: Path) -> None:
             "three numbers",
         ),
         (lambda lines: [lines[0], '{"t": "q"}', *lines[1:]], "no known kind"),
+        (lambda lines: [lines[0], '{"t": "x", "step": "1"}', *lines[1:]], "names no product"),
     ],
 )
 def test_a_geometry_file_that_is_not_whole_is_refused(tmp_path: Path, change: Any, message: str) -> None:

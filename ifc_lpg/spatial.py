@@ -11,7 +11,8 @@ file is cut short. Dataregium builds glTF from the same file.
 :func:`import_spatial` sets ``bbox_min``, ``bbox_max`` and ``bbox_centre`` on the products' nodes as 3D points, and needs
 no extra. The boxes are derived: the writer reads only the schema's attributes, so the file written from the graph stays
 the same with or without them. They follow the world's axes, not the element's, and suit selection and nearness.
-:func:`overlapping_boxes` lists the pairs of products whose boxes overlap, the candidates for a clash test.
+:func:`overlapping_boxes` lists the pairs of products whose boxes overlap, the candidates for a clash test, and
+:func:`geometry_issues` the products whose shape could not be built, as issues of a validation report.
 """
 
 from __future__ import annotations
@@ -264,10 +265,25 @@ def main(argv: list[str] | None = None) -> int:
 
 def read_records(records_path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any]]:
     """The header, the products and the end of a geometry file. Refuses one that is not whole."""
+    header, products, _failures, end = _read(records_path)
+    return header, products, end
+
+
+def geometry_issues(records_path: Path) -> list[dict[str, Any]]:
+    """The products of a geometry file whose shape IfcOpenShell could not build, as issues in the form of a validation
+    report (``kind`` ``geometry``), with the GlobalId of each. The schema and buildingSMART's rules let such a shape
+    through, such as a profile 0 m wide."""
+    return _read(records_path)[2]
+
+
+def _read(
+    records_path: Path,
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     header: dict[str, Any] | None = None
     end: dict[str, Any] | None = None
     products: list[dict[str, Any]] = []
-    meshes = failed = 0
+    failures: list[dict[str, Any]] = []
+    meshes = 0
     with records_path.open(encoding="utf-8") as handle:
         for number, line in enumerate(handle, 1):
             if end is not None:
@@ -287,16 +303,31 @@ def read_records(records_path: Path) -> tuple[dict[str, Any], list[dict[str, Any
             elif kind == "p":
                 products.append(_product(record, number))
             elif kind == "x":
-                failed += 1
+                failures.append(_failure(record, number))
             elif kind == "end":
                 end = record
             else:
                 raise SpatialError(f"line {number} is of no known kind")
     if header is None or end is None:
         raise SpatialError("the file is cut short: it has no end")
-    if (end.get("products"), end.get("meshes"), end.get("failed")) != (len(products), meshes, failed):
+    if (end.get("products"), end.get("meshes"), end.get("failed")) != (len(products), meshes, len(failures)):
         raise SpatialError("the file's end does not count what the file holds")
-    return header, products, end
+    return header, products, failures, end
+
+
+def _failure(record: dict[str, Any], number: int) -> dict[str, Any]:
+    fields = (record.get("step"), record.get("global_id"), record.get("class"), record.get("error"))
+    if not isinstance(fields[0], int) or not all(isinstance(value, str) for value in fields[1:]):
+        raise SpatialError(f"line {number} names no product and why its shape failed")
+    step, global_id, ifc_class, error = fields
+    return {
+        "kind": "geometry",
+        "severity": "error",
+        "message": f"IfcOpenShell could not build the shape of this {ifc_class}: {error}"[:1000],
+        "step_id": step,
+        "global_id": global_id,
+        "attribute": "Representation",
+    }
 
 
 def _no_constant(name: str) -> Any:
