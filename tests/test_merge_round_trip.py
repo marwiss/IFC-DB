@@ -11,6 +11,7 @@ import pytest
 from ifc_lpg.equivalence import compare_files
 from ifc_lpg.files import export_file, import_file
 from ifc_lpg.merge import MergeConflict, MergeError, merge_building, merge_report, prepare_other
+from ifc_lpg.paths import unreachable
 from ifc_lpg.prepare import prepare_file
 from tests.conftest import FIXTURES_DIR
 
@@ -218,4 +219,20 @@ async def test_an_application_is_one_in_the_merged_model(graph: Any, tmp_path: P
     assert await names(graph, "MATCH (a:IfcApplication {model_id: 'c'}) RETURN count(a) AS v") == [1], (
         "the schema keeps an application's identifier unique, so the copies use A's"
     )
+    await comes_back(graph, "c", tmp_path)
+
+
+async def test_every_object_of_b_in_place_of_a_s(graph: Any, tmp_path: Path) -> None:
+    await import_file(graph, SPATIAL, "a")
+    report = await merge_report(graph, "a", "a", BUILDING)
+    choices = {c["global_id"]: "b" for c in report["collisions"]}
+    await merge_building(graph, "a", "a", BUILDING, "c", choices=choices)
+    query = "MATCH (n:Entity {model_id: $model}) WHERE n.GlobalId IS NOT NULL RETURN n.GlobalId AS v ORDER BY v"
+    assert [r["v"] for r in await graph.run(query, model="c")] == [r["v"] for r in await graph.run(query, model="a")]
+    assert await names(
+        graph,
+        "MATCH (:IfcSite {model_id: 'c'})<-[:RELATING_OBJECT]-()-[:RELATED_OBJECTS]->(b:IfcBuilding) "
+        "RETURN b.step_id > 114 AS v",
+    ) == [True], "B's building in A's place below the site"
+    assert await unreachable(graph, "c") == [], "what A's objects held alone went with them"
     await comes_back(graph, "c", tmp_path)

@@ -1003,8 +1003,9 @@ async def _build(
     if selection.upward is not None and plan.building not in replaced:
         created.append(await _below_site(graph, plan, selection, model_id, spare, to))
         spare += 1
+    building = {y for x, y in replaced.items() if x == plan.building}  # B's takes A's place below the site
     changed, gone_from_blocks = await _put_in_place(
-        graph, a, model_id, replaced, numbers, set(selection.subst.values())
+        graph, a, model_id, replaced, numbers, set(selection.subst.values()), building
     )
     created += changed
     created += await _add_contexts(graph, a, model_id, [to(s) for s in selection.new_contexts])
@@ -1125,11 +1126,18 @@ async def _rewrite_blocks(graph: Graph, model_id: str, dropped: set[int], splits
 
 
 async def _put_in_place(
-    graph: Graph, a: _Model, model_id: str, replaced: dict[int, int], numbers: dict[int, int], keep: set[int]
+    graph: Graph,
+    a: _Model,
+    model_id: str,
+    replaced: dict[int, int],
+    numbers: dict[int, int],
+    keep: set[int],
+    placed: set[int],
 ) -> tuple[list[int], int]:
     """B's version in place of A's: what of A refers to it refers to B's, a relationship that concerns only replaced
-    objects goes, and one that also concerns others keeps those; what A's held alone goes with it. Returns the nodes
-    whose relationships changed, and how many instances went from the blocks."""
+    objects goes, and one that also concerns others keeps those; what A's held alone goes with it. A replaced object
+    leaves A's structure for B's, except the building, which B's has no structure above: B's takes its place in A's.
+    Returns the nodes whose relationships changed, and how many instances went from the blocks."""
     if not replaced:
         return [], 0
     instead = {y: numbers[x] for x, y in replaced.items()}
@@ -1169,14 +1177,15 @@ async def _put_in_place(
         for rel_type, _position, target in instance.edges:
             groups.setdefault(rel_type, []).append(target)
         related = _related_of(instance)
-        if instance.is_a("IfcRelationship") and (not others or (related in groups and set(groups[related]) <= gone)):
+        leaving = gone - placed  # what leaves A's structure
+        if instance.is_a("IfcRelationship") and (not others or (related in groups and set(groups[related]) <= leaving)):
             removed.add(step)
             continue
         dropped = {
             t
             for rel_type, members in groups.items()
             for t in members
-            if t in gone and (rel_type == related or any(m not in gone for m in members))
+            if t in gone and ((rel_type == related and t in leaving) or any(m not in gone for m in members))
         }
         dropped = dropped if instance.is_a("IfcRelationship") else set()
         kept, _moved = _edges_after(instance, dropped)
