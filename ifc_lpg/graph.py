@@ -16,8 +16,8 @@ from typing import Any, Literal, Protocol
 
 Dialect = Literal["neo4j", "memgraph"]
 
-UNIQUE = (("IfcModel", "id"), ("IfcEntity", "id"), ("StepBlock", "id"))
-INDEXED = (("IfcEntity", "GlobalId"), ("IfcEntity", "model_id"))
+UNIQUE = (("IfcModel", "id"), ("IfcEntity", "id"), ("StepBlock", "id"), ("IfcxModel", "id"), ("IfcxObject", "id"))
+INDEXED = (("IfcEntity", "GlobalId"), ("IfcEntity", "model_id"), ("IfcxObject", "model_id"))
 _NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 _ALREADY = ("already exists", "alreadyexists", "equivalentschemarulealreadyexists", "constraintalreadyexists")
 

@@ -27,6 +27,7 @@ the IFC standard.
 - [Validation](#validation)
 - [Pointing at an instance: STEP id, or GlobalId and path](#pointing-at-an-instance-step-id-or-globalid-and-path)
 - [Neo4j and Memgraph](#neo4j-and-memgraph)
+- [IFC5 (experimental)](#ifc5-experimental)
 - [Measurements](#measurements)
 - [Using it](#using-it)
 - [Licence](#licence)
@@ -288,6 +289,36 @@ The Cypher is parameterised and portable: no APOC, and no `elementId()` or
 `id()` as keys. A model comes back identical from both databases. The tests run
 on Neo4j 5.26 and Memgraph 3.14.
 
+## IFC5 (experimental)
+
+IFC5 is a draft. Its files, IFCX, are JSON in the format `ifcx_alpha`, which
+can still change, and so can this part of IFC-LPG. A file is a list of entries,
+each about a path: its children and what it inherits, by name, and its
+attributes under namespaced keys.
+
+One or more files are composed into one opinion per path. A file comes after
+the files it imports, and each counts once. A later value for the same path and
+name wins, `null` takes one away, and two values that disagree are reported, as
+is an import that is none of the files: it is not fetched.
+
+Each path becomes an `IfcxObject` node, labelled with its class when it has one,
+in a model of its own, an `IfcxModel` with the header, the imports and the
+schemas. Children and what is inherited are `CHILD` and `INHERITS`
+relationships with a `name`, and a `{"ref": path}` value is a `REF`
+relationship as well. The graph is the same on both databases, so an object's
+members are properties under dotted keys, as `bsi::ifc::class.code`; rows of two
+or three numbers, as the points of a mesh, are lists of points; a 4×4 transform
+is a flat list with its shape beside it; and what does not come back the same is
+JSON text.
+
+The round trip gives back the same composition: every path the same children,
+the same inherited definitions and the same attributes, with the same JSON
+types, an integer as an integer and a float to the bit. The file is written with
+one entry per path. Instance paths through children, as `<path>/Window_001`, are
+kept as paths of their own, not resolved. A file of more than 256 MB, one that
+nests deeper than 32, and one that is no JSON or has numbers JSON does not
+have, such as `NaN`, is refused.
+
 ## Measurements
 
 Without a database, all 26 whole files among the samples came back identical, up
@@ -423,6 +454,11 @@ a document version, uses the parts instead: `convert_file` and `write_file` in
 files in a process of its own. Dataregium's
 [IFC-LPG page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-lpg.md)
 describes how a server uses them.
+
+IFC5 files go in and out with `import_ifcx(graph, [Path("base.ifcx"),
+Path("overlay.ifcx")], "hello")` and `export_ifcx(graph, "hello",
+Path("hello-again.ifcx"))` in `ifc_lpg.ifcx`, which read and write in a process
+of their own too, within the same limits.
 
 Three tools work on files alone, without a database. Each answers in JSON and
 exits with 0 when all is well:
