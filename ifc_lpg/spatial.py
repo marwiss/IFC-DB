@@ -11,6 +11,8 @@ file is cut short. Dataregium builds glTF from the same file.
 :func:`import_spatial` sets ``bbox_min``, ``bbox_max`` and ``bbox_centre`` on the products' nodes as 3D points, and needs
 no extra. The boxes are derived: the writer reads only the schema's attributes, so the file written from the graph stays
 the same with or without them. They follow the world's axes, not the element's, and suit selection and nearness.
+With ``meshes=True`` it also sets each product's mesh in project coordinates: ``mesh_points``, a list of 3D points, and
+``mesh_faces``, three indices into them per triangle, so that Cypher can ask about every corner of a shape.
 :func:`overlapping_boxes` lists the pairs of products whose boxes overlap, the candidates for a clash test, and
 :func:`geometry_issues` the products whose shape could not be built, as issues of a validation report.
 """
@@ -265,7 +267,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def read_records(records_path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any]]:
     """The header, the products and the end of a geometry file. Refuses one that is not whole."""
-    header, products, _failures, end = _read(records_path)
+    header, products, _failures, end, _meshes = _read(records_path)
     return header, products, end
 
 
@@ -276,20 +278,22 @@ def geometry_issues(records_path: Path) -> list[dict[str, Any]]:
     return _read(records_path)[2]
 
 
-def _read(
-    records_path: Path,
-) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
+def _read(records_path: Path, *, with_meshes: bool = False) -> tuple[Any, ...]:
+    """The header, the products, the failures, the end and, if asked for, the meshes by id."""
     header: dict[str, Any] | None = None
     end: dict[str, Any] | None = None
     products: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
+    found: dict[str, tuple[list[float], list[int]]] = {}
     meshes = 0
     with records_path.open(encoding="utf-8") as handle:
         for number, line in enumerate(handle, 1):
             if end is not None:
                 raise SpatialError(f"line {number} comes after the end")
             if line.startswith('{"t": "m"'):
-                meshes += 1  # a mesh is for glTF, not for the graph
+                meshes += 1  # a mesh is for glTF, and for the graph only if asked for
+                if with_meshes:
+                    found.update([_mesh(line, number)])
                 continue
             try:
                 record = json.loads(line, parse_constant=_no_constant)
@@ -301,7 +305,7 @@ def _read(
                     raise SpatialError(f"the file is not {FORMAT} version {VERSION}")
                 header = record
             elif kind == "p":
-                products.append(_product(record, number))
+                products.append(_product(record, number, with_meshes))
             elif kind == "x":
                 failures.append(_failure(record, number))
             elif kind == "end":
@@ -312,7 +316,41 @@ def _read(
         raise SpatialError("the file is cut short: it has no end")
     if (end.get("products"), end.get("meshes"), end.get("failed")) != (len(products), meshes, len(failures)):
         raise SpatialError("the file's end does not count what the file holds")
-    return header, products, failures, end
+    if with_meshes and any(product["mesh"] not in found for product in products):
+        raise SpatialError("a product's mesh is not in the file")
+    return header, products, failures, end, found
+
+
+def _mesh(line: str, number: int) -> tuple[str, tuple[list[float], list[int]]]:
+    try:
+        record = json.loads(line, parse_constant=_no_constant)
+    except ValueError as exc:
+        raise SpatialError(f"line {number} is no JSON") from exc
+    mesh, verts, faces = record.get("id"), record.get("verts"), record.get("faces")
+    if not (
+        isinstance(mesh, str)
+        and isinstance(verts, list)
+        and len(verts) % 3 == 0
+        and all(isinstance(v, int | float) and not isinstance(v, bool) for v in verts)
+        and isinstance(faces, list)
+        and len(faces) % 3 == 0
+        and all(isinstance(f, int) and not isinstance(f, bool) and 0 <= f < len(verts) // 3 for f in faces)
+    ):
+        raise SpatialError(f"line {number} is no mesh of corners and triangles")
+    return mesh, ([float(v) for v in verts], faces)
+
+
+def world_points(verts: list[float], matrix: list[float]) -> list[list[float]]:
+    """The corners ``verts`` (flat, three numbers each) through ``matrix`` (16 numbers, column by column)."""
+    m = matrix
+    return [
+        [
+            m[0] * x + m[4] * y + m[8] * z + m[12],
+            m[1] * x + m[5] * y + m[9] * z + m[13],
+            m[2] * x + m[6] * y + m[10] * z + m[14],
+        ]
+        for x, y, z in zip(verts[0::3], verts[1::3], verts[2::3], strict=True)
+    ]
 
 
 def _failure(record: dict[str, Any], number: int) -> dict[str, Any]:
@@ -334,10 +372,17 @@ def _no_constant(name: str) -> Any:
     raise ValueError(f"{name} is not a number")
 
 
-def _product(record: dict[str, Any], number: int) -> dict[str, Any]:
+def _product(record: dict[str, Any], number: int, with_meshes: bool = False) -> dict[str, Any]:
     row: dict[str, Any] = {"step": record.get("step"), "global_id": record.get("global_id")}
     if not isinstance(row["step"], int) or not isinstance(row["global_id"], str):
         raise SpatialError(f"line {number} names no product")
+    if with_meshes:
+        mesh, matrix = record.get("mesh"), record.get("matrix")
+        if not (isinstance(mesh, str) and isinstance(matrix, list) and len(matrix) == 16):
+            raise SpatialError(f"line {number} has no mesh and matrix")
+        if not all(isinstance(v, int | float) and not isinstance(v, bool) for v in matrix):
+            raise SpatialError(f"line {number} has a matrix of something else than numbers")
+        row["mesh"], row["matrix"] = mesh, [float(v) for v in matrix]
     for key in ("bbox_min", "bbox_max", "bbox_centre"):
         value = record.get(key)
         if not (isinstance(value, list) and len(value) == 3 and all(isinstance(v, int | float) for v in value)):
@@ -352,15 +397,20 @@ _SET = ", ".join(
 )
 
 
+MESH_NUMBERS = 300_000  # the corners and indices of the meshes set in one transaction
+
+
 async def import_spatial(
-    graph: Graph, model_id: str, records_path: Path, *, dialect: Dialect | None = None
+    graph: Graph, model_id: str, records_path: Path, *, dialect: Dialect | None = None, meshes: bool = False
 ) -> dict[str, Any]:
     """Set the boxes of ``records_path`` on the products of the model ``model_id``, in place of any from before.
 
     Every product must be a node of the model with the same GlobalId, or nothing is changed. Returns the counts.
-    With ``dialect`` given, the point index is made anew afterwards where the database does not keep it up to date
-    (Memgraph 3.14); that needs a :class:`Neo4jGraph`, for its ``ddl``."""
-    header, products, end = read_records(records_path)
+    With ``meshes``, each product also gets its mesh in project coordinates, in metres: ``mesh_points`` and
+    ``mesh_faces``; they are long lists, and off by default. With ``dialect`` given, the point index is made anew
+    afterwards where the database does not keep it up to date (Memgraph 3.14); that needs a :class:`Neo4jGraph`, for
+    its ``ddl``."""
+    header, products, _failures, end, mesh_map = _read(records_path, with_meshes=meshes)
     rows = await graph.run("MATCH (m:Model {id: $id}) RETURN m.state AS state, m.format AS format", id=model_id)
     if not rows:
         raise SpatialError("there is no such model")
@@ -379,8 +429,9 @@ async def import_spatial(
         raise SpatialError(f"{len(products) - found} of the {len(products)} products are not in the model")
     while True:
         answer = await graph.run(
-            "MATCH (p:Entity {model_id: $id}) WHERE p.bbox_centre IS NOT NULL WITH p LIMIT $batch "
-            "REMOVE p.bbox_min, p.bbox_max, p.bbox_centre RETURN count(*) AS n",
+            "MATCH (p:Entity {model_id: $id}) WHERE p.bbox_centre IS NOT NULL OR p.mesh_faces IS NOT NULL "
+            "WITH p LIMIT $batch REMOVE p.bbox_min, p.bbox_max, p.bbox_centre, p.mesh_points, p.mesh_faces "
+            "RETURN count(*) AS n",
             id=model_id,
             batch=BATCH,
         )
@@ -388,13 +439,20 @@ async def import_spatial(
             break
     for start in range(0, len(products), BATCH):
         await graph.run(
-            f"UNWIND $rows AS row MATCH (p:Entity {{id: row.id}}) SET {_SET}", rows=products[start : start + BATCH]
+            f"UNWIND $rows AS row MATCH (p:Entity {{id: row.id}}) SET {_SET}",
+            rows=[
+                {key: p[key] for key in ("id", "bbox_min", "bbox_max", "bbox_centre")}
+                for p in products[start : start + BATCH]
+            ],
         )
+    if meshes:
+        await _set_meshes(graph, products, mesh_map)
     fields = {
         "spatial_at": _now(),
         "spatial_ifcopenshell": header.get("ifcopenshell"),
         "spatial_products": len(products),
         "spatial_failed": end["failed"],
+        "spatial_meshes": meshes,
     }
     await graph.run("MATCH (m:Model {id: $id}) SET m += $fields", id=model_id, fields=fields)
     if dialect is not None:
@@ -402,6 +460,24 @@ async def import_spatial(
             raise SpatialError("making the point index anew needs a Neo4jGraph")
         await rebuild_point_indexes(graph, dialect)
     return {"products": len(products), "meshes": end["meshes"], "failed": end["failed"]}
+
+
+async def _set_meshes(
+    graph: Graph, products: list[dict[str, Any]], found: dict[str, tuple[list[float], list[int]]]
+) -> None:
+    rows: list[dict[str, Any]] = []
+    numbers = 0
+    for product in products:
+        verts, faces = found[product["mesh"]]
+        rows.append({"id": product["id"], "points": world_points(verts, product["matrix"]), "faces": faces})
+        numbers += len(verts) + len(faces)
+        if numbers >= MESH_NUMBERS or len(rows) >= BATCH or product is products[-1]:
+            await graph.run(
+                "UNWIND $rows AS row MATCH (p:Entity {id: row.id}) "
+                "SET p.mesh_points = [v IN row.points | point({x: v[0], y: v[1], z: v[2]})], p.mesh_faces = row.faces",
+                rows=rows,
+            )
+            rows, numbers = [], 0
 
 
 _OVERLAPPING = (
@@ -472,14 +548,16 @@ async def add_spatial(
     model_id: str,
     *,
     dialect: Dialect | None = None,
+    meshes: bool = False,
     threads: int = 2,
     limits: Limits = DEFAULT_LIMITS,
 ) -> dict[str, Any]:
-    """Work out the boxes of ``source`` and set them on the model ``model_id``, which was imported from it."""
+    """Work out the boxes of ``source`` and set them on the model ``model_id``, which was imported from it; with
+    ``meshes``, the meshes as well."""
     with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
         records = Path(tmp) / "geometry.jsonl"
         await spatial_file(source, records, threads=threads, limits=limits)
-        return await import_spatial(graph, model_id, records, dialect=dialect)
+        return await import_spatial(graph, model_id, records, dialect=dialect, meshes=meshes)
 
 
 if __name__ == "__main__":

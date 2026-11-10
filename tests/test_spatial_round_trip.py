@@ -114,3 +114,29 @@ async def test_the_boxes_that_overlap_are_the_candidates_for_a_clash_test(graph:
     between = await overlapping_boxes(graph, "spatial", "again")
     assert len(between) == 7 + 2 * 3, "each product with its copy, and each pair both ways"
     assert await overlapping_boxes(graph, "spatial", "nowhere") == []
+
+
+async def test_the_meshes_answer_a_question_about_every_corner(graph: Any, target: Target, tmp_path: Path) -> None:
+    await import_file(graph, SPATIAL, "spatial")
+    dialect: Any = target.dialect
+    await add_spatial(graph, SPATIAL, "spatial", dialect=dialect, meshes=True)
+    tall = await graph.run(
+        "MATCH (n:Entity {model_id: 'spatial'}) WHERE any(p IN n.mesh_points WHERE p.z > 2.9) "
+        "RETURN n.Name AS name ORDER BY name"
+    )
+    assert tall == [{"name": "Column A"}, {"name": "Column B"}, {"name": "Wall"}], "what reaches above 2.9 m"
+    [wall] = await graph.run(
+        "MATCH (w:IfcWall {model_id: 'spatial'}) RETURN w.mesh_points AS points, w.mesh_faces AS faces, "
+        "w.mesh_points[0].srid AS srid, w.bbox_min AS low, w.bbox_max AS high"
+    )
+    assert wall["srid"] == 9157 and len(wall["faces"]) % 3 == 0 and max(wall["faces"]) < len(wall["points"])
+    corners = [tuple(p) for p in wall["points"]]
+    assert min(c[0] for c in corners) == pytest.approx(wall["low"][0]) and max(c[2] for c in corners) == pytest.approx(
+        3
+    )
+    back = tmp_path / "back.ifc"
+    await export_file(graph, "spatial", back)
+    assert compare_files(SPATIAL, back).identical, "the writer reads only the schema's attributes"
+    await add_spatial(graph, SPATIAL, "spatial", dialect=dialect)
+    rows = await graph.run("MATCH (n:Entity {model_id: 'spatial'}) WHERE n.mesh_faces IS NOT NULL RETURN count(n) AS n")
+    assert rows == [{"n": 0}], "a pass without them takes them away"

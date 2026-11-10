@@ -13,7 +13,16 @@ import pytest
 
 from ifc_lpg.files import ConversionFailed
 from ifc_lpg.graph import schema_statements
-from ifc_lpg.spatial import FORMAT, SpatialError, box_of, geometry_issues, read_records, spatial_file
+from ifc_lpg.spatial import (
+    FORMAT,
+    SpatialError,
+    _read,
+    box_of,
+    geometry_issues,
+    read_records,
+    spatial_file,
+    world_points,
+)
 from tests.conftest import FIXTURES_DIR
 
 SPATIAL = FIXTURES_DIR / "spatial.ifc"
@@ -88,6 +97,26 @@ def test_a_box_goes_through_the_matrix_column_by_column() -> None:
     quarter_turn = (0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 10.0, 20.0, 30.0, 1.0)
     low, high = box_of((0.0, 0.0, 0.0, 2.0, 1.0, 3.0), quarter_turn)
     assert low == [9.0, 20.0, 30.0] and high == [10.0, 22.0, 33.0]
+
+
+def test_a_mesh_goes_through_the_matrix_into_project_coordinates(tmp_path: Path) -> None:
+    quarter_turn = [0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 10.0, 20.0, 30.0, 1.0]
+    assert world_points([0.0, 0.0, 0.0, 2.0, 1.0, 3.0], quarter_turn) == [[10.0, 20.0, 30.0], [9.0, 22.0, 33.0]]
+    _, out = geometry_of(tmp_path)
+    _header, products, _failures, _end, meshes = _read(out, with_meshes=True)
+    for product in products:
+        verts, faces = meshes[product["mesh"]]
+        assert len(verts) % 3 == 0 and faces and max(faces) < len(verts) // 3
+    broken = tmp_path / "broken.jsonl"
+    lines = out.read_text(encoding="utf-8").splitlines()
+    mesh = _first_mesh(lines)
+    broken.write_text(
+        "\n".join(line.replace('"faces": [', '"faces": [99999, ') if line == mesh else line for line in lines) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SpatialError, match="no mesh of corners and triangles"):
+        _read(broken, with_meshes=True)
+    assert read_records(broken)[1], "without the meshes they are not read"
 
 
 def test_the_records_are_read_back_whole(tmp_path: Path) -> None:

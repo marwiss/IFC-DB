@@ -424,6 +424,12 @@ node of the model with the same GlobalId. With two threads the pass took about 2
 a Revit model of 286 products, 4 s for a Bonsai model of 39 products with large
 meshes, and 154 s for a Tekla model of 10,042 products.
 
+With `meshes=True`, `add_spatial` also puts each product's mesh on its node, in
+the project's coordinates and in metres: `mesh_points`, a list of 3D points, and
+`mesh_faces`, three indices into them for each triangle. Cypher can then ask about
+every corner of a shape, such as what reaches above a slab. They are long lists, so
+they are off by default, and a pass without them takes them away.
+
 `overlapping_boxes(graph, model_id)` lists the pairs of products whose boxes
 overlap, within one model or, with a second model id, between two models whose
 boxes are in the same coordinates. A `clearance` in metres also takes in the
@@ -788,7 +794,7 @@ POSIX and 5 million instances, unless others are given.
 | Write it back | `export_file(graph, model_id, path)` in `ifc_lpg.files` |
 | Take a model out | `delete_model(graph, model_id)` in `ifc_lpg.importer` |
 | Convert or write in steps of your own | `convert_file` and `write_file` in `ifc_lpg.files`, `import_records` in `ifc_lpg.importer`, `export_records` in `ifc_lpg.exporter` |
-| Add the boxes | `add_spatial(graph, path, model_id, dialect=…)` in `ifc_lpg.spatial`; `spatial_file` writes the geometry's file alone, and `import_spatial` reads one in |
+| Add the boxes | `add_spatial(graph, path, model_id, dialect=…, meshes=False)` in `ifc_lpg.spatial`; `spatial_file` writes the geometry's file alone, and `import_spatial` reads one in |
 | Report the shapes that cannot be built | `geometry_issues(records)` in `ifc_lpg.spatial` |
 | Find the parts that may collide | `overlapping_boxes(graph, model_id, other_model_id=None, clearance=0.0, exclude=())` in `ifc_lpg.spatial` |
 | Follow or give a path | `resolve` and `canonical_path` in `ifc_lpg.paths` |
