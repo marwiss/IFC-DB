@@ -84,6 +84,7 @@ browser, and never install it themselves.
 | STEP | The text format IFC files are written in; each record has a number, its STEP id, as `#123` |
 | GlobalId | The lasting id IFC gives the main parts of a model, such as walls and storeys |
 | Graph database | A database of nodes (things) and relationships (links between them) |
+| LPG | Labelled property graph: the kind of graph Neo4j and Memgraph keep, where each node has labels that say what kind of thing it is, and both nodes and relationships hold their values as named properties. IFC–LPG is named for turning IFC into such a graph |
 | Neo4j, Memgraph | Two graph databases; IFC–LPG works the same on both |
 | Cypher | The question language of both databases |
 | IFC5 | The next version of IFC, still a draft, written as JSON |
