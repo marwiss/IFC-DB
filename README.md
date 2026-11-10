@@ -32,6 +32,7 @@ rules and IDS.
   [validation](#validation),
   [pointing at an instance](#pointing-at-an-instance),
   [changing the graph](#changing-the-graph),
+  [a building into another project](#a-building-into-another-project),
   [Neo4j and Memgraph](#neo4j-and-memgraph),
   [IFC5](#ifc5-experimental)
 - [Measurements](#measurements)
@@ -66,6 +67,8 @@ other data.
 - It **names every part** of the building by its lasting id and the way to it, not
   by the file's numbering, so that a proposed change can say exactly what it
   changes.
+- It **brings a building into another project**: a building from one model goes
+  into the project of another as a new model, and both stay as they were.
 - It **checks a file** against the IFC standard, against buildingSMART's rules
   (buildingSMART is the organisation behind IFC) and against IDS, a format for
   writing down what a model must contain.
@@ -500,7 +503,8 @@ validated, not the graph:
   schema: the type and number of attributes, enumerations, the cardinality of
   inverse attributes, the form and uniqueness of GlobalIds, and WHERE rules and
   global rules. Files in use often break a rule already, so after a change what
-  counts is an issue the original file does not have (`--against`).
+  counts is an issue the original file does not have (`--against`, which takes
+  several files).
 - **buildingSMART's
   [ifc-gherkin-rules](https://github.com/buildingSMART/ifc-gherkin-rules)**, the
   normative rules and industry practice of buildingSMART's validation service.
@@ -586,6 +590,53 @@ deleted on its own, since the written file would then refer to nothing.
 `unreachable(graph, model_id)` in `ifc_lpg.paths` lists the nodes that no
 GlobalId reaches, which a change can remove. Dataregium uses these in its change
 sets, which are checked and approved before they become a new version.
+
+## A building into another project
+
+**In short:** a building from one model can be put into the project of another,
+for example an annex drawn on its own into the model of the whole site. The result
+is a third model, and the two it came from do not change. Where both models have
+the same part, the same lasting id, IFC–LPG says so, and the person merging
+chooses which version to keep. The new model is checked against the IFC standard
+before it is ready.
+
+**In detail:**
+
+`merge_report(graph, base_id, other_id, building)` in `ifc_lpg.merge` says what
+bringing the building `building`, a GlobalId, of the model B into the project of
+the model A would do, and `merge_building(graph, base_id, other_id, building,
+model_id)` does it, as the new model C. Both work in the graph and need no
+IfcOpenShell; the check at the end does.
+
+- **What comes along:** what lies below the building, through aggregation,
+  nesting, containment, openings, fillings, coverings and projections; the
+  relationships that concern it, with the types and property sets they define; the
+  styles and layers of its shapes; and everything those refer to. A relationship
+  that also concerns something outside the building keeps only what is inside. One
+  that points outside alone, such as a group, a system or a connection to another
+  building, is left out, and the report lists it.
+- **Where it stands:** the building stands below A's site as it stood below its own,
+  and its shapes use A's representation contexts where A has the same ones; a
+  context A lacks is added to A's project. `site` names A's site when A has more
+  than one.
+- **The same part in both:** a GlobalId names one object, whatever its STEP id.
+  Where B's object has the same content as A's, with what it refers to, C has A's.
+  Where they differ, the report lists it with `same` false, and a choice is needed
+  before anything is made: `"a"` keeps A's, and B's relationships keep it only
+  where they also concern something else of B; `"b"` puts B's in its place, and
+  A's relationships that concern it alone go; `"new"` makes two objects, B's with
+  a new GlobalId. `choices` maps a GlobalId to its choice, and `default` holds for
+  the rest. Without them, `MergeConflict` carries the report.
+- **The numbers:** C keeps A's STEP ids, and the instances from B are numbered
+  after them.
+- **The check:** C is `running` until it has been written out and validated
+  against A and against B numbered as C numbers it. An issue that neither has
+  takes C out again and makes it `failed`, with the issues in the error. A choice
+  that gives an object two places, such as two storeys, is caught there.
+
+The schema, the units and the form of the geometry must be the same in A and B
+for now; a worker that migrates B and converts its units comes next. The boxes are
+not copied, so the geometry pass is run again for C.
 
 ## Neo4j and Memgraph
 
@@ -712,9 +763,9 @@ original and `1.E-05` in the copy, the same number.
 
 The package without extras needs nothing, and holds the graph side: the STEP
 reader and writer, the lossless form, importing and exporting records, deleting a
-model, the boxes' import, the paths, the support for changes and IFC5's graph side. A server can run that
-in its own process and leave IfcOpenShell to the workers, which need the extra
-`ifcopenshell`. Everything that reads, converts, writes or checks a file runs in a
+model, the boxes' import, the paths, the support for changes, the merge and
+IFC5's graph side. A server can run that in its own process and leave
+IfcOpenShell to the workers, which need the extra `ifcopenshell`. Everything that reads, converts, writes or checks a file runs in a
 process of its own, within `ifc_lpg.files.Limits`: 900 s, 4,096 MB of memory on
 POSIX and 5 million instances, unless others are given.
 
@@ -731,6 +782,7 @@ POSIX and 5 million instances, unless others are given.
 | List what no path reaches | `unreachable(graph, model_id)` in `ifc_lpg.paths` |
 | See what refers to an instance | `referrers(graph, model_id, step)` in `ifc_lpg.editing` |
 | Put the inverse relationships right after a change | `refresh_inverses(graph, model_id, steps)` in `ifc_lpg.editing` |
+| Bring a building into another project | `merge_report(graph, base_id, other_id, building)` and `merge_building(graph, base_id, other_id, building, model_id, choices=…)` in `ifc_lpg.merge` |
 | Put IFC5 files in, and write them back | `import_ifcx(graph, [paths], model_id)` and `export_ifcx(graph, model_id, path)` in `ifc_lpg.ifcx` |
 | Write a change as an IFC5 layer | `export_ifcx_overlay(graph, base_model_id, model_id, path)` in `ifc_lpg.ifcx` |
 | Compare two files | `compare_files(first, second)` in `ifc_lpg.equivalence` |
@@ -745,7 +797,7 @@ The command lines, each in a process of its own:
 | `python -m ifc_lpg.spatial IFC OUT [--threads T]` | writes the geometry's file: meshes, matrices and boxes |
 | `python -m ifc_lpg.ifcx read FILE... OUT`, `write RECORDS OUT` and `overlay BASE RECORDS OUT --layer-id ID` | reads and writes IFC5 files and layers |
 | `python -m ifc_lpg.equivalence A B [--geometry]` | compares two files |
-| `python -m ifc_lpg.validation FILE [--against SRC]` | checks a file against the IFC schema |
+| `python -m ifc_lpg.validation FILE [--against SRC...]` | checks a file against the IFC schema |
 | `python -m ifc_lpg.ids FILE IDS...` | checks a file against IDS |
 | `python -m ifc_lpg.gherkin_install DIR` and `python -m ifc_lpg.gherkin FILE --env DIR` | buildingSMART's rules |
 
