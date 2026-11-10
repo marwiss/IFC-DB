@@ -391,7 +391,7 @@ blocks is what it costs to store and import, not what it costs to ask.
 
 **In short:** a file only says where things are relative to each other. IFC–LPG works out
 a box in metres around every part of the building, so that you can ask what lies
-near what, and it prepares the shapes for a 3D view.
+near what and which parts may collide, and it prepares the shapes for a 3D view.
 
 **In detail:**
 
@@ -417,6 +417,17 @@ named, not boxed. Boxes from another file are refused: every product must be a
 node of the model with the same GlobalId. With two threads the pass took about 2 s for
 a Revit model of 286 products, 4 s for a Bonsai model of 39 products with large
 meshes, and 154 s for a Tekla model of 10,042 products.
+
+`overlapping_boxes(graph, model_id)` lists the pairs of products whose boxes
+overlap, within one model or, with a second model id, between two models whose
+boxes are in the same coordinates. A `clearance` in metres also takes in the
+boxes that come that near, a negative one leaves out the boxes that only touch,
+and `exclude` leaves out classes such as `IfcOpeningElement`. The point index
+finds each product's candidates, so the whole model is not compared pair by
+pair. The pairs are the candidates for a clash test: boxes that do not overlap
+show that two parts cannot collide, but boxes that do overlap do not show that
+the parts do. The exact test is made on the shapes, in a file. A model that
+exists only in the graph is written out first.
 
 The pass also writes a file of its own, which a server can turn into glTF for a
 3D view: each mesh once, in its own coordinates, and per product its storey, its
@@ -715,6 +726,7 @@ POSIX and 5 million instances, unless others are given.
 | Take a model out | `delete_model(graph, model_id)` in `ifc_lpg.importer` |
 | Convert or write in steps of your own | `convert_file` and `write_file` in `ifc_lpg.files`, `import_records` in `ifc_lpg.importer`, `export_records` in `ifc_lpg.exporter` |
 | Add the boxes | `add_spatial(graph, path, model_id, dialect=…)` in `ifc_lpg.spatial`; `spatial_file` writes the geometry's file alone, and `import_spatial` reads one in |
+| Find the parts that may collide | `overlapping_boxes(graph, model_id, other_model_id=None, clearance=0.0, exclude=())` in `ifc_lpg.spatial` |
 | Follow or give a path | `resolve` and `canonical_path` in `ifc_lpg.paths` |
 | List what no path reaches | `unreachable(graph, model_id)` in `ifc_lpg.paths` |
 | See what refers to an instance | `referrers(graph, model_id, step)` in `ifc_lpg.editing` |

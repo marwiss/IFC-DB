@@ -11,6 +11,7 @@ file is cut short. Dataregium builds glTF from the same file.
 :func:`import_spatial` sets ``bbox_min``, ``bbox_max`` and ``bbox_centre`` on the products' nodes as 3D points, and needs
 no extra. The boxes are derived: the writer reads only the schema's attributes, so the file written from the graph stays
 the same with or without them. They follow the world's axes, not the element's, and suit selection and nearness.
+:func:`overlapping_boxes` lists the pairs of products whose boxes overlap, the candidates for a clash test.
 """
 
 from __future__ import annotations
@@ -370,6 +371,51 @@ async def import_spatial(
             raise SpatialError("making the point index anew needs a Neo4jGraph")
         await rebuild_point_indexes(graph, dialect)
     return {"products": len(products), "meshes": end["meshes"], "failed": end["failed"]}
+
+
+_OVERLAPPING = (
+    "MATCH (a:Entity {model_id: $model}) WHERE a.bbox_centre IS NOT NULL AND NOT a.ifc_class IN $exclude "
+    "MATCH (b:Entity) WHERE point.withinBBox(b.bbox_centre, "
+    "point({x: a.bbox_min.x - $x, y: a.bbox_min.y - $y, z: a.bbox_min.z - $z}), "
+    "point({x: a.bbox_max.x + $x, y: a.bbox_max.y + $y, z: a.bbox_max.z + $z})) "
+    "AND b.model_id = $other AND NOT b.ifc_class IN $exclude AND ($other <> $model OR a.step_id < b.step_id) "
+    "AND a.bbox_min.x <= b.bbox_max.x + $c AND b.bbox_min.x <= a.bbox_max.x + $c "
+    "AND a.bbox_min.y <= b.bbox_max.y + $c AND b.bbox_min.y <= a.bbox_max.y + $c "
+    "AND a.bbox_min.z <= b.bbox_max.z + $c AND b.bbox_min.z <= a.bbox_max.z + $c "
+    "RETURN a.step_id AS step, a.GlobalId AS global_id, a.ifc_class AS ifc_class, b.step_id AS other_step, "
+    "b.GlobalId AS other_global_id, b.ifc_class AS other_ifc_class ORDER BY step, other_step"
+)
+
+
+async def overlapping_boxes(
+    graph: Graph,
+    model_id: str,
+    other_model_id: str | None = None,
+    *,
+    clearance: float = 0.0,
+    exclude: tuple[str, ...] = (),
+) -> list[dict[str, Any]]:
+    """The pairs of products whose boxes overlap or come within ``clearance`` metres of each other: in one model, or
+    between ``model_id`` and ``other_model_id``, whose boxes must then be in the same coordinates. A negative clearance
+    asks for that much overlap, which leaves out boxes that only touch. Products of the classes in ``exclude`` are left
+    out. The pairs are candidates for a clash test on the shapes, which the boxes cannot settle.
+
+    The point index on ``bbox_centre`` finds each product's candidates: a box that overlaps another has its centre
+    within the other's box widened by half the largest box of the model."""
+    other = other_model_id or model_id
+    rows = await graph.run(
+        "MATCH (b:Entity {model_id: $other}) WHERE b.bbox_centre IS NOT NULL AND NOT b.ifc_class IN $exclude "
+        "RETURN max(b.bbox_max.x - b.bbox_min.x) AS x, max(b.bbox_max.y - b.bbox_min.y) AS y, "
+        "max(b.bbox_max.z - b.bbox_min.z) AS z",
+        other=other,
+        exclude=list(exclude),
+    )
+    if not rows or rows[0]["x"] is None:
+        return []
+    reach = {axis: rows[0][axis] / 2 + clearance + 1e-6 for axis in "xyz"}
+    return await graph.run(
+        _OVERLAPPING, model=model_id, other=other, exclude=list(exclude), c=float(clearance), **reach
+    )
 
 
 async def spatial_file(

@@ -10,7 +10,7 @@ import pytest
 
 from ifc_lpg.equivalence import compare_files
 from ifc_lpg.files import export_file, import_file
-from ifc_lpg.spatial import SpatialError, add_spatial
+from ifc_lpg.spatial import SpatialError, add_spatial, overlapping_boxes
 from tests.conftest import FIXTURES_DIR, Target
 
 pytestmark = pytest.mark.integration
@@ -74,3 +74,43 @@ async def test_boxes_from_another_file_change_nothing(graph: Any) -> None:
     assert rows == [{"n": 0}]
     with pytest.raises(SpatialError, match="no such model"):
         await add_spatial(graph, SPATIAL, "nowhere")
+
+
+async def test_the_boxes_that_overlap_are_the_candidates_for_a_clash_test(graph: Any, target: Target) -> None:
+    dialect: Any = target.dialect
+    for model in ("spatial", "again"):
+        await import_file(graph, SPATIAL, model)
+        await add_spatial(graph, SPATIAL, model, dialect=dialect)
+    boxes = await graph.run(
+        "MATCH (n:Entity {model_id: 'spatial'}) WHERE n.bbox_centre IS NOT NULL RETURN n.step_id AS step, "
+        "[n.bbox_min.x, n.bbox_min.y, n.bbox_min.z] AS low, [n.bbox_max.x, n.bbox_max.y, n.bbox_max.z] AS high"
+    )
+
+    def by_hand(clearance: float) -> list[tuple[int, int]]:
+        return sorted(
+            (a["step"], b["step"])
+            for a in boxes
+            for b in boxes
+            if a["step"] < b["step"]
+            and all(
+                a["low"][i] <= b["high"][i] + clearance and b["low"][i] <= a["high"][i] + clearance for i in range(3)
+            )
+        )
+
+    pairs = await overlapping_boxes(graph, "spatial")
+    assert [(p["step"], p["other_step"]) for p in pairs] == [(30, 61), (30, 70), (61, 70)] == by_hand(0.0)
+    assert pairs[1] == {
+        "step": 30,
+        "global_id": "0Spatial00000000000010",
+        "ifc_class": "IfcWall",
+        "other_step": 70,
+        "other_global_id": "0Spatial00000000000015",
+        "other_ifc_class": "IfcDoor",
+    }
+    near = await overlapping_boxes(graph, "spatial", clearance=2.0)
+    assert [(p["step"], p["other_step"]) for p in near] == by_hand(2.0) and len(near) > 3
+    without = await overlapping_boxes(graph, "spatial", exclude=("IfcOpeningElement",))
+    assert [(p["step"], p["other_step"]) for p in without] == [(30, 70)]
+    between = await overlapping_boxes(graph, "spatial", "again")
+    assert len(between) == 7 + 2 * 3, "each product with its copy, and each pair both ways"
+    assert await overlapping_boxes(graph, "spatial", "nowhere") == []
