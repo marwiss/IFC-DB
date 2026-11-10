@@ -640,9 +640,15 @@ IfcOpenShell; the check at the end does.
   takes C out again and makes it `failed`, with the issues in the error. A choice
   that gives an object two places, such as two storeys, is caught there.
 
-The schema, the units and the form of the geometry must be the same in A and B
-for now; a worker that migrates B and converts its units comes next. The boxes are
-not copied, so the geometry pass is run again for C.
+The schema, the units and the form of the geometry must be the same in A and B.
+Where B's schema or its length unit differ, `prepare_other(graph, other_id,
+prepared_id, base_id=…)` makes B ready first, as a new model: a worker migrates it
+to A's schema with IfcOpenShell's `Migrator`, which does its best and makes a proxy
+of a class the schema lacks, listing each, and turns its lengths into A's unit,
+such as millimetres into metres. Any other unit that differs is refused with what
+it is, for it is not converted. IfcOpenShell reads and writes the file there, so
+the prepared model is a conversion, not the same file. The boxes are not copied, so
+the geometry pass is run again for C.
 
 ## Neo4j and Memgraph
 
@@ -790,6 +796,7 @@ POSIX and 5 million instances, unless others are given.
 | See what refers to an instance | `referrers(graph, model_id, step)` in `ifc_lpg.editing` |
 | Delete nodes that nothing else refers to | `delete_nodes(graph, model_id, steps)` in `ifc_lpg.editing` |
 | Put the inverse relationships right after a change | `refresh_inverses(graph, model_id, steps)` in `ifc_lpg.editing` |
+| Make a model ready to be merged | `prepare_other(graph, other_id, prepared_id, base_id=…)` in `ifc_lpg.merge` |
 | Bring a building into another project | `merge_report(graph, base_id, other_id, building)` and `merge_building(graph, base_id, other_id, building, model_id, choices=…)` in `ifc_lpg.merge` |
 | Put IFC5 files in, and write them back | `import_ifcx(graph, [paths], model_id)` and `export_ifcx(graph, model_id, path)` in `ifc_lpg.ifcx` |
 | Write a change as an IFC5 layer | `export_ifcx_overlay(graph, base_model_id, model_id, path)` in `ifc_lpg.ifcx` |
@@ -806,6 +813,7 @@ The command lines, each in a process of its own:
 | `python -m ifc_lpg.ifcx read FILE... OUT`, `write RECORDS OUT` and `overlay BASE RECORDS OUT --layer-id ID` | reads and writes IFC5 files and layers |
 | `python -m ifc_lpg.equivalence A B [--geometry]` | compares two files |
 | `python -m ifc_lpg.validation FILE [--against SRC...]` | checks a file against the IFC schema |
+| `python -m ifc_lpg.prepare IFC OUT [--schema S] [--length-unit U]` | migrates a file and turns its lengths into another unit |
 | `python -m ifc_lpg.ids FILE IDS...` | checks a file against IDS |
 | `python -m ifc_lpg.gherkin_install DIR` and `python -m ifc_lpg.gherkin FILE --env DIR` | buildingSMART's rules |
 

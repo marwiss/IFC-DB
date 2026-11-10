@@ -10,7 +10,8 @@ import pytest
 
 from ifc_lpg.equivalence import compare_files
 from ifc_lpg.files import export_file, import_file
-from ifc_lpg.merge import MergeConflict, MergeError, merge_building, merge_report
+from ifc_lpg.merge import MergeConflict, MergeError, merge_building, merge_report, prepare_other
+from ifc_lpg.prepare import prepare_file
 from tests.conftest import FIXTURES_DIR
 
 pytestmark = pytest.mark.integration
@@ -160,3 +161,44 @@ async def test_other_units_or_another_schema_are_refused(graph: Any, tmp_path: P
     await import_file(graph, FIXTURES_DIR / "three_walls_gtin.ifc", "old")
     with pytest.raises(MergeError, match="schema of A is IFC4 and of B IFC2X3"):
         await merge_report(graph, "a", "old", ANNEX_BUILDING)
+
+
+DEPTH = (
+    "MATCH (:IfcWall {model_id: $model, Name: 'Annex wall'})-[:REPRESENTATION]->()-[:REPRESENTATIONS]->()"
+    "-[:ITEMS]->(s:IfcExtrudedAreaSolid) RETURN s.Depth AS depth"
+)
+
+
+async def test_a_building_in_millimetres_is_prepared_first(graph: Any, tmp_path: Path) -> None:
+    millimetres = tmp_path / "annex-mm.ifc"
+    prepare_file(ANNEX, millimetres, schema=None, length_unit="MILLIMETER")
+    await import_file(graph, SPATIAL, "a")
+    await import_file(graph, millimetres, "mm")
+    assert await graph.run(DEPTH, model="mm") == [{"depth": 2500.0}]
+    with pytest.raises(MergeError, match="prepare_other converts"):
+        await merge_report(graph, "a", "mm", ANNEX_BUILDING)
+    done = await prepare_other(graph, "mm", "mm-ready", base_id="a")
+    assert done["length_unit"][1] == "METER" and done["changed_count"] == 0
+    assert done["model"]["state"] == "done"
+    await merge_building(graph, "a", "mm-ready", ANNEX_BUILDING, "c", choices={WALL: "new"})
+    assert await graph.run(DEPTH, model="c") == [{"depth": pytest.approx(2.5)}]
+    with pytest.raises(MergeError, match="nothing to prepare"):
+        await prepare_other(graph, "mm-ready", "again", base_id="a")
+
+
+async def test_a_building_of_another_schema_is_migrated_first(graph: Any, tmp_path: Path) -> None:
+    await import_file(graph, FIXTURES_DIR / "three_walls_gtin.ifc", "old")
+    await import_file(graph, ANNEX, "b")
+    with pytest.raises(MergeError, match="prepare_other migrates"):
+        await merge_report(graph, "old", "b", ANNEX_BUILDING)
+    done = await prepare_other(graph, "b", "b-ready", base_id="old")
+    assert done["schema"] == ["IFC4", "IFC2X3"] and done["length_unit"][1] == "MILLIMETER"
+    merged = await merge_building(graph, "old", "b-ready", ANNEX_BUILDING, "c")
+    assert merged["model"]["schema"] == "IFC2X3"
+    assert await graph.run(DEPTH, model="c") == [{"depth": pytest.approx(2500.0)}]
+    owners = await graph.run(
+        "MATCH (r:IfcRelAggregates {model_id: 'c'})-[:RELATED_OBJECTS]->(:IfcBuilding {Name: 'Annex'}) "
+        "OPTIONAL MATCH (r)-[:OWNER_HISTORY]->(o) RETURN o IS NOT NULL OR r.OwnerHistory__step IS NOT NULL AS owned"
+    )
+    assert owners == [{"owned": True}], "IFC2X3 needs an owner history: the building's, or else the base project's"
+    await comes_back(graph, "c", tmp_path)

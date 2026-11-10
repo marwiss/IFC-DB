@@ -17,7 +17,8 @@ instances from B are numbered after them.
 
 C is ``running`` until it is checked: it is written out, and IfcOpenShell's validator must find nothing in it that A and B
 do not have. Otherwise C is taken out again and the merge fails with the issues. The schema and the units of A and B must
-be the same, and so must the form of their geometry.
+be the same, and so must the form of their geometry; :func:`prepare_other` makes B ready first where its schema or its
+length unit differ.
 """
 
 from __future__ import annotations
@@ -36,7 +37,7 @@ from typing import Any
 from ifc_lpg.convert import BLOCK_BYTES
 from ifc_lpg.editing import refresh_inverses
 from ifc_lpg.exporter import export_records
-from ifc_lpg.files import DEFAULT_LIMITS, Limits, _now, export_file, run_worker, write_file
+from ifc_lpg.files import DEFAULT_LIMITS, Limits, _now, export_file, import_file, run_worker, write_file
 from ifc_lpg.graph import FORM_VERSION, Graph
 from ifc_lpg.importer import BATCH, BLOCK_BATCH, delete_model
 from ifc_lpg.lossless import ALL_ARGUMENTS, STEP_SUFFIX, TAGGED, TYPE_SUFFIX, decode_block, encode_block
@@ -576,7 +577,9 @@ async def _units(graph: Graph, a: _Model, b: _Model) -> None:
             f"{b.props[unit].get('UnitType')} {b.props[unit].get('Prefix') or ''}{b.props[unit].get('Name') or ''}"
             for unit in missing
         ]
-        raise MergeError(f"the units differ: A does not have {'; '.join(names)} of B")
+        raise MergeError(
+            f"the units differ: A does not have {'; '.join(names)} of B; prepare_other converts B's lengths"
+        )
 
 
 def _check_choice(choice: str | None) -> None:
@@ -599,7 +602,10 @@ async def _plan(
     a, b = await _load(graph, base_id), await _load(graph, other_id)
     for name in ("schema", "geometry"):
         if a.fields[name] != b.fields[name]:
-            raise MergeError(f"the {name} of A is {a.fields[name]} and of B {b.fields[name]}; they must be the same")
+            raise MergeError(
+                f"the {name} of A is {a.fields[name]} and of B {b.fields[name]}; they must be the same"
+                + ("; prepare_other migrates B" if name == "schema" else "")
+            )
     found = [s for s, i in b.instances.items() if i.global_id == building and i.is_a("IfcBuilding")]
     if not found:
         raise MergeError(f"the model {other_id!r} has no building {building!r}")
@@ -646,6 +652,80 @@ async def _plan(
         "placements": first.placements,
     }
     return _Plan(a, b, found[0], sites[0], site_placement, contexts, collisions, report)
+
+
+_IMPERIAL = ("thou", "inch", "foot", "yard", "mile")
+
+
+async def _project_units(graph: Graph, model_id: str) -> dict[str, dict[str, Any]]:
+    rows = await graph.run(
+        "MATCH (:IfcProject {model_id: $id})-[:UNITS_IN_CONTEXT]->(:Entity)-[:UNITS]->(u:Entity) "
+        "RETURN properties(u) AS props",
+        id=model_id,
+    )
+    return {row["props"]["UnitType"]: row["props"] for row in rows if row["props"].get("UnitType")}
+
+
+def _unit_key(props: dict[str, Any]) -> tuple[Any, ...]:
+    return (props.get("ifc_class"), props.get("Prefix"), props.get("Name"))
+
+
+def _length_unit_name(props: dict[str, Any]) -> str:
+    """A length unit as ``convert_file_length_units`` names it, such as ``MILLIMETER`` or ``foot``."""
+    if props.get("ifc_class") == "IfcSIUnit" and props.get("Name") == "METRE":
+        return (props.get("Prefix") or "") + "METER"
+    name = str(props.get("Name") or "").lower()
+    if props.get("ifc_class") == "IfcConversionBasedUnit" and name in _IMPERIAL:
+        return name
+    raise MergeError(f"A's length unit, {props.get('Prefix') or ''}{props.get('Name')}, is not one lengths convert to")
+
+
+async def prepare_other(
+    graph: Graph, other_id: str, model_id: str, *, base_id: str, limits: Limits = DEFAULT_LIMITS
+) -> dict[str, Any]:
+    """Make the model ``other_id`` ready to be merged into ``base_id``, as the new model ``model_id``: migrated to the
+    base's schema, and with its lengths in the base's length unit, by IfcOpenShell in a worker, which needs the extra
+    ``ifcopenshell``. Any other unit that differs is refused with what it is, for it is not converted. Returns what was
+    done, with the instances whose class changed, and the new model's properties. The other model does not change."""
+    rows = await graph.run(
+        "UNWIND $ids AS id MATCH (m:Model {id: id}) RETURN m.id AS id, m.schema AS schema, m.geometry AS geometry",
+        ids=[base_id, other_id],
+    )
+    fields = {row["id"]: row for row in rows}
+    if set(fields) != {base_id, other_id}:
+        raise MergeError("there is no such model")
+    base, other = await _project_units(graph, base_id), await _project_units(graph, other_id)
+    differing = [
+        f"{kind} {props.get('Prefix') or ''}{props.get('Name')}"
+        for kind, props in sorted(other.items())
+        if kind != "LENGTHUNIT" and (kind not in base or _unit_key(base[kind]) != _unit_key(props))
+    ]
+    if differing:
+        raise MergeError(f"B has units that A does not have, which are not converted: {'; '.join(differing)}")
+    command = [sys.executable, "-m", "ifc_lpg.prepare"]
+    options: list[str] = []
+    if fields[base_id]["schema"] != fields[other_id]["schema"]:
+        options += ["--schema", str(fields[base_id]["schema"])]
+    lengths = base.get("LENGTHUNIT"), other.get("LENGTHUNIT")
+    if lengths[0] and lengths[1] and _unit_key(lengths[0]) != _unit_key(lengths[1]):
+        options += ["--length-unit", _length_unit_name(lengths[0])]
+    if not options:
+        raise MergeError("B has the schema and the length unit of A already; there is nothing to prepare")
+    geometry = fields[other_id]["geometry"]
+    with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
+        source, target = Path(tmp) / "other.ifc", Path(tmp) / "prepared.ifc"
+        await export_file(graph, other_id, source, limits=limits)
+        command += [str(source), str(target), *options, "--memory-mb", str(limits.memory_mb)]
+        answer = json.loads((await run_worker(command, "preparing the model", limits.timeout_seconds)).strip())
+        model = await import_file(
+            graph,
+            target,
+            model_id,
+            include_geometry=geometry == "nodes",
+            geometry_in_blocks=geometry == "blocks",
+            limits=limits,
+        )
+    return {**answer, "model": model}
 
 
 async def merge_report(
@@ -934,7 +1014,12 @@ async def _below_site(
     props["GlobalId"] = new_global_id()
     building = plan.b.instances[plan.building]
     owner = building.attribute("OwnerHistory") or [building.steps.get("OwnerHistory" + STEP_SUFFIX)]
-    if owner[0] is not None and plan.b.instances[owner[0]].in_block:
+    owned_by_a = False
+    if owner[0] is None:  # the base project's, which IFC2X3 has, so that the aggregation has one as well
+        project = plan.a.instances[plan.a.single("IfcProject")]
+        owner = project.attribute("OwnerHistory") or [project.steps.get("OwnerHistory" + STEP_SUFFIX)]
+        owned_by_a = owner[0] is not None
+    if owner[0] is not None and not owned_by_a and plan.b.instances[owner[0]].in_block:
         props["OwnerHistory" + STEP_SUFFIX] = to(owner[0])
     clause = ":".join(["Entity", *map(safe_identifier, sorted(upward.labels - {"Entity"}))])
     await graph.run(
@@ -944,7 +1029,9 @@ async def _below_site(
         step=step,
     )
     edges = [(step, "RELATING_OBJECT", 0, plan.site), (step, "RELATED_OBJECTS", 0, to(plan.building))]
-    if owner[0] is not None and not plan.b.instances[owner[0]].in_block:
+    if owned_by_a:
+        edges.append((step, _OWNER, 0, owner[0]))
+    elif owner[0] is not None and not plan.b.instances[owner[0]].in_block:
         edges.append((step, _OWNER, 0, to(owner[0])))
     await _create_edges(graph, model_id, edges)
     return step
