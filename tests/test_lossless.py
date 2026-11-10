@@ -359,9 +359,9 @@ def test_the_ordinary_form_has_the_same_points(tmp_path: Path) -> None:
     source.write_bytes(
         exchange("#1=IFCCARTESIANPOINTLIST2D(((0.,1.),(2.,3.)));", "#2=IFCCARTESIANPOINTLIST3D(((1.,2.)));")
     )
-    nodes = [record for record in convert(source, include_geometry=True) if record["t"] == "n"]
-    assert nodes[0]["props"]["CoordList"] == {"$points": [[0.0, 1.0], [2.0, 3.0]]}
-    assert nodes[1]["props"]["CoordList"] == "[[1.0, 2.0]]"
+    records = list(convert(source, include_geometry=True))
+    assert node_of(records, 1)["props"]["CoordList"] == {"$points": [[0.0, 1.0], [2.0, 3.0]]}
+    assert node_of(records, 2)["props"]["CoordList"] == "[[1.0, 2.0]]"
 
 
 @pytest.mark.parametrize(
