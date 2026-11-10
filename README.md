@@ -683,7 +683,8 @@ differ, IFC–LPG keeps to what both do alike:
 ## IFC5 (experimental)
 
 **In short:** IFC5, the next version of IFC, is still a draft. IFC–LPG can already read
-and write its files, on trial.
+and write its files, and check that their values are of the kinds their schemas
+say, on trial.
 
 **In detail:**
 
@@ -722,6 +723,19 @@ was composed of and holds only the paths, children, inherited definitions and
 attributes that differ, with `null` for what was taken away. Composed after those
 files, the layer gives the changed model. IFCX has no way to take away a path, so
 a path that is gone keeps an entry with all its parts set to `null`.
+
+An IFCX file says what its attributes are in `schemas`, and imports more schemas
+by their URI. `python -m ifc_lpg.ifcx_check FILE... --schemas DIR`, or
+`check_ifcx([paths], schemas=DIR)` in `ifc_lpg.ifcx_check`, composes the files and
+checks every attribute against the schema for its key: its data type, the options
+of an enumeration, every member of an array, and the members of an object, of
+which only those marked optional may be missing. The issues come in the form of a
+validation report. The imported schemas are not fetched while a file is checked:
+`python -m ifc_lpg.ifcx_check --fetch DIR` fetches the ones IFC–LPG has pinned,
+those that buildingSMART's examples import, each checked against its SHA-256. An
+import that is not pinned is a warning, and so is an attribute without a schema
+while such an import is there. buildingSMART's examples "Hello Wall" and the
+georeferenced bridge deck give no issue.
 
 ## Measurements
 
@@ -805,6 +819,7 @@ POSIX and 5 million instances, unless others are given.
 | Make a model ready to be merged | `prepare_other(graph, other_id, prepared_id, base_id=…)` in `ifc_lpg.merge` |
 | Bring a building into another project | `merge_report(graph, base_id, other_id, building)` and `merge_building(graph, base_id, other_id, building, model_id, choices=…)` in `ifc_lpg.merge` |
 | Put IFC5 files in, and write them back | `import_ifcx(graph, [paths], model_id)` and `export_ifcx(graph, model_id, path)` in `ifc_lpg.ifcx` |
+| Check IFC5 files against their schemas | `check_ifcx([paths], schemas=dir)` in `ifc_lpg.ifcx_check` |
 | Write a change as an IFC5 layer | `export_ifcx_overlay(graph, base_model_id, model_id, path)` in `ifc_lpg.ifcx` |
 | Compare two files | `compare_files(first, second)` in `ifc_lpg.equivalence` |
 | Check against IDS | `check_ids(path, [ids_paths])` in `ifc_lpg.files` |
@@ -819,6 +834,7 @@ The command lines, each in a process of its own:
 | `python -m ifc_lpg.ifcx read FILE... OUT`, `write RECORDS OUT` and `overlay BASE RECORDS OUT --layer-id ID` | reads and writes IFC5 files and layers |
 | `python -m ifc_lpg.equivalence A B [--geometry]` | compares two files |
 | `python -m ifc_lpg.validation FILE [--against SRC...]` | checks a file against the IFC schema |
+| `python -m ifc_lpg.ifcx_check FILE... [--schemas DIR]` and `--fetch DIR` | checks IFC5 files against their schemas, and fetches the pinned ones |
 | `python -m ifc_lpg.prepare IFC OUT [--schema S] [--length-unit U]` | migrates a file and turns its lengths into another unit |
 | `python -m ifc_lpg.ids FILE IDS...` | checks a file against IDS |
 | `python -m ifc_lpg.gherkin_install DIR` and `python -m ifc_lpg.gherkin FILE --env DIR` | buildingSMART's rules |
