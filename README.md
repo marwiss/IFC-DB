@@ -325,11 +325,25 @@ The second was tried on 28 sample files of up to 224,496 instances:
 
 Dataregium, which takes such changes, writes them this way:
 
-- **A path** starts at a GlobalId and is written with IFC's attribute names
-  and list positions, such as `IsDefinedBy[0].RelatingPropertyDefinition`. The
-  STEP id is the shorter way to the same instance.
+- **A path** starts at the nearest instance with a GlobalId and is written with
+  IFC's attribute names and list positions, such as
+  `IsDefinedBy[0].RelatingPropertyDefinition`. It goes backward through IFC's
+  inverse attributes by their own names:
+  `Representation.Representations[0].Items[0].StyledByItem[0].Styles[0]` is a
+  wall's style. A name on a class is either forward or inverse, so a path leads
+  to one node or to none. An inverse attribute is a set, so its members are
+  ordered by what they hold, not by STEP id.
+- **The STEP id** names only what no GlobalId reaches.
 - **A change to a shared instance** applies to every instance that shares it.
   Only an explicit copy changes one alone.
+
+`resolve(graph, model_id, global_id, path)` in `ifc_lpg.paths` follows a path to
+its node, and `canonical_path(graph, model_id, step)` gives a node the one path
+it is named by when several reach it: the shortest, forward steps before inverse
+ones, then the names in alphabetical order, the lowest position and the lowest
+GlobalId. Any path that reaches a node resolves to it. Both read the graph, so
+in the skeleton form a path stops where the geometry is kept in a block, and an
+instance only a block refers to has no path there.
 
 ## Neo4j and Memgraph
 
