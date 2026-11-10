@@ -154,8 +154,11 @@ geometry in the sample models belongs to more than one product, and some of it t
 none. That is also why geometry cannot be properties of the products it shapes.
 
 What is in a block is in the graph, but out of Cypher's reach, and it cannot be
-changed there. A product that refers to it keeps the STEP id of what it refers
-to, as a number a query can read. Every instance can be a node instead, at
+changed there. A reference from a block to a node is not known to the database
+either, so deleting a node that a block refers to leaves a reference to nothing
+in the written file, which validation reports. A product that refers to what is
+in a block keeps the STEP id of what it refers to, as a number a query can
+read. Every instance can be a node instead, at
 several times the size and the import time. Typed queries took about as long
 either way in the [measurements](#measurements), so the reason to keep geometry
 in blocks is what it costs to store and import, not what it costs to ask.
@@ -193,6 +196,12 @@ the same" but not a wrong "the same". It can also build every product's mesh
 with IfcOpenShell and compare the meshes bit for bit, and it names the
 georeference in its report.
 
+A check took about 10 s for 224,496 instances and 19 MB, single-threaded. On a
+model with many instances that look alike the search costs more. It is bounded,
+and reaching the bound gives no answer, which counts as not the same. For a file
+that is not trusted it runs as a process of its own,
+`python -m ifc_lpg.equivalence`.
+
 ## Validation
 
 A graph database has no schema that could refuse a wrong value, and the rules of
@@ -210,7 +219,13 @@ validated, not the graph:
   They run as the rule set's own tests run them, in an environment of their own
   with IfcOpenShell 0.8.6, and without the rule set's Django parts, which only
   write results to the validation service's database. On the rule set's 722
-  test files this gives the expected verdict for every one.
+  test files this gives the expected verdict for every one. Each finding keeps
+  its severity, and the report counts errors apart (`error_count`), since
+  buildingSMART's service holds a file valid when all it finds are warnings,
+  which the rules of industry practice give. At the pinned commit GEM004 does
+  not run on IFC2X3 files, GRP001
+  fails on subtypes of `IfcGroup` and PSE001 on some files; a rule that raises
+  an exception is listed under `rules_not_run`, apart from the findings.
 - **Information Delivery Specifications**, buildingSMART's IDS 1.0, with
   IfcOpenShell's IfcTester and its own defaults. An IDS is read with
   defusedxml, which refuses DTDs and entities, and checked against IDS 1.0's
@@ -390,17 +405,6 @@ checks against pinned digests:
 python -m ifc_lpg.gherkin_install rules          # the rules and their IfcOpenShell, in the folder rules
 python -m ifc_lpg.gherkin model.ifc --env rules  # their verdict on a file, in JSON
 ```
-
-The decisions in [docs/adr](docs/adr) record why it works as it does:
-[0009](docs/adr/0009-what-makes-two-ifc-files-the-same-model.md) on what makes
-two files the same model,
-[0010](docs/adr/0010-a-lossless-graph-reads-and-writes-step-itself.md) on reading
-and writing STEP itself,
-[0011](docs/adr/0011-a-file-written-from-the-graph-is-validated.md) on validating
-the written file,
-[0012](docs/adr/0012-buildingsmarts-rules-run-in-an-environment-of-their-own.md)
-on buildingSMART's rules, and
-[0013](docs/adr/0013-ids-is-checked-with-ifctester-and-read-safely.md) on IDS.
 
 ## Licence
 

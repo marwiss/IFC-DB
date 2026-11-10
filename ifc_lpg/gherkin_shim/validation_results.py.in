@@ -1,5 +1,5 @@
 # This file was generated with the assistance of an AI coding tool.
-# IFC-LPG runs buildingSMART's ifc-gherkin-rules without Django (docs/adr/0012). The installer writes this file over the
+# IFC-LPG runs buildingSMART's ifc-gherkin-rules without Django (ADR 0012). The installer writes this file over the
 # rule set's validation_results.py.
 #
 # The rule set imports its result codes and its outcome record from this module. Upstream, it sets up Django to take
