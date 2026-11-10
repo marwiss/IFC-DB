@@ -119,7 +119,8 @@ How the values of the file are kept:
 | A reference to an instance in a block | Its STEP id, as in `Representation__step: 1234` |
 | A typed value, `IFCLABEL('3')` | `NominalValue: "3"`, and `NominalValue__type: "IFCLABEL"` beside it |
 | A list | A list property |
-| A list of lists of numbers | JSON text, since Neo4j has no nested lists |
+| A list the schema gives rows of exactly two or three REALs, such as `CoordList` | A list of 2D or 3D Cartesian points |
+| Another list of lists of numbers | JSON text, since Neo4j has no nested lists |
 | What has no plain form, such as a list of typed values | Tagged JSON, with `$json` as its type |
 | The header | `ifc_header` on the `IfcModel` node |
 | An instance in a block | STEP text in a `StepBlock` node |
@@ -142,12 +143,31 @@ file.
 
 ## How geometry is stored
 
-Geometry is most of a model and seldom what a query asks for. So representation
-items, representations, profiles, placements and styles, and owner histories
-other than the project's, are no nodes by default. They are written out as STEP,
-in order of id, and compressed into text on `StepBlock` nodes that hang off the
-`IfcModel`: at most 256 KiB of STEP per block, deflated and in base64, since a
-string is the one thing both databases store alike.
+Geometry is most of a model, and most of it is what shapes are built of. So by
+default a skeleton of it is nodes: the shapes of products, their representations
+with their types, solids and boolean results, mapped items and the definitions
+they share, profiles, placements, contexts, styles, colours and layers. Points,
+directions, point lists, meshes and their faces, B-rep faces and loops, curves
+and style assignments are no nodes, and nor are owner histories other than the
+project's. They are written out as STEP, in order of id, and compressed into text
+on `StepBlock` nodes that hang off the `IfcModel`: at most 256 KiB of STEP per
+block, deflated and in base64, since a string is the one thing both databases
+store alike.
+
+The skeleton answers which kind of body a product has, how deep an extrusion is
+and what its profile is, which definitions products share and on which layers
+they lie. It does not answer where something is or how large: coordinates in IFC
+are relative to placements and mapped through transformations, and the values
+are in the file's units.
+
+Two other forms can be chosen. In one all geometry is in blocks: representation
+items, representations, profiles, placements and styles. In the other every
+instance is a node. A list the schema gives rows of exactly two or three REALs
+is then a list of 2D or 3D Cartesian points, which both databases store alike
+and their point functions read: the coordinates of a mesh (`CoordList`), and its
+normals, texture coordinates and colours. The schema decides, not the values,
+so an attribute is points on every node or on none; a row the schema does not
+allow stays JSON text. The coordinates are those of the file there too.
 
 The blocks are drawn by class, not by product, because 17 to 94 per cent of the
 geometry in the sample models belongs to more than one product, and some of it to
@@ -158,10 +178,10 @@ changed there. A reference from a block to a node is not known to the database
 either, so deleting a node that a block refers to leaves a reference to nothing
 in the written file, which validation reports. A product that refers to what is
 in a block keeps the STEP id of what it refers to, as a number a query can
-read. Every instance can be a node instead, at
-several times the size and the import time. Typed queries took about as long
-either way in the [measurements](#measurements), so the reason to keep geometry
-in blocks is what it costs to store and import, not what it costs to ask.
+read. Making every instance a node costs several times the size and the import
+time. Typed queries took about as long in every form in the
+[measurements](#measurements), so the reason to keep geometry in blocks is what
+it costs to store and import, not what it costs to ask.
 
 ## How a model is exported
 
@@ -290,6 +310,19 @@ node.
 | SierraSoft, road | 14.6 MB | 127,491 | 4.8 / 10.6 / 54.7 | 21 / 27 / 130 | 9 / 7 / 38 |
 | Tekla | 19.2 MB | 224,496 | 55.8 / 108.9 / 137.2 | 144 / 149 / 264 | 58 / 32 / 94 |
 
+The skeleton was measured on three other models, over an empty database, so
+its numbers are not those of the table above. What it costs
+depends on the program that wrote the file: for Bonsai little more than blocks,
+and for Tekla, whose skeleton is most of its instances, nearly as much as
+nodes. It gave the same answers as the nodes form to eight queries on geometry,
+on both databases, and every model came back identical in every form.
+
+| Model | Instances | Nodes: blocks / skeleton / nodes | Neo4j store, MB | Memgraph memory, MB |
+|---|---|---|---|---|
+| Bonsai, IFC4X3 | 26,222 | 293 / 724 / 26,222 | 0.6 / 0.7 / 8.8 | 2.6 / 12.1 / 28.9 |
+| Revit, IFC2X3 | 38,898 | 9,786 / 15,064 / 38,898 | 4.1 / 5.6 / 12.3 | 17.6 / 23.4 / 38.0 |
+| Tekla, IFC2X3 | 224,496 | 104,918 / 193,045 / 224,496 | 67 / 115 / 124 | 136 / 214 / 237 |
+
 Queries from a storey to its elements and through property sets took 7 to 25 and
 11 to 90 ms on Neo4j in all three forms, with no pattern among them. This is one
 run on one machine with other work going on, on models of moderate size; a model
@@ -373,10 +406,12 @@ the constraints and indexes the queries rely on, and leaves those that exist.
 `import_file` refuses a model id that is taken. While it loads, the model's
 `IfcModel` node is `running`. Afterwards it is `done`, with its counts, or
 `failed`, with the error and nothing else of the model left; `delete_model` in
-`ifc_lpg.importer` takes a model out of the graph. Geometry goes into blocks by
-default. `include_geometry=True` makes every instance a node, and
-`lossless=False` leaves the geometry out, so that the model cannot be written
-back: the three forms of the [measurements](#measurements). A conversion and a
+`ifc_lpg.importer` takes a model out of the graph. The geometry is a skeleton by
+default. `geometry_in_blocks=True` keeps all of it in blocks,
+`include_geometry=True` makes every instance a node, and `lossless=False` leaves
+the geometry out, so that the model cannot be written back: the forms of the
+[measurements](#measurements). The `IfcModel` says which form a model has in
+`geometry`: `skeleton`, `blocks` or `nodes`. A conversion and a
 writing each run in a process of their own, within the limits of
 `ifc_lpg.files.Limits`: 900 s, 4,096 MB of memory on POSIX and 5 million
 instances, unless others are given.

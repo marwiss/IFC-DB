@@ -6,6 +6,7 @@ Neo4j always; Memgraph too when ``IFC_LPG_TEST_MEMGRAPH=1``. One container per t
 
 from __future__ import annotations
 
+import asyncio
 import os
 import re
 from collections.abc import AsyncIterator, Iterator
@@ -62,12 +63,20 @@ def target(request: pytest.FixtureRequest) -> Iterator[Target]:
 @pytest.fixture
 async def graph(target: Target) -> AsyncIterator[object]:
     from neo4j import AsyncGraphDatabase
+    from neo4j.exceptions import ServiceUnavailable
 
     from ifc_lpg.graph import Neo4jGraph, ensure_schema
 
     driver = AsyncGraphDatabase.driver(target.uri, auth=target.auth)
     try:
-        await driver.verify_connectivity()
+        for wait in range(60, -1, -1):  # Memgraph logs that it runs a moment before it answers on Bolt
+            try:
+                await driver.verify_connectivity()
+                break
+            except ServiceUnavailable:
+                if not wait:
+                    raise
+                await asyncio.sleep(0.5)
         graph = Neo4jGraph(driver)
         await graph.run("MATCH (n) DETACH DELETE n")
         await ensure_schema(graph, "neo4j" if target.dialect == "neo4j" else "memgraph")

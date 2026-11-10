@@ -34,13 +34,15 @@ def relationship_type(attribute: str) -> str:
 @dataclass(frozen=True, slots=True)
 class Attribute:
     """One attribute of a class. ``kinds`` are its aggregates, outermost first (``("list", "list")``), and ``leaf``
-    what they hold: ``entity``, ``select``, ``enumeration``, or a simple type such as ``real`` or ``string``."""
+    what they hold: ``entity``, ``select``, ``enumeration``, or a simple type such as ``real`` or ``string``. ``points``
+    is the length of the rows of a list of points, such as a ``CoordList``, and 0 for every other attribute."""
 
     name: str
     kinds: tuple[str, ...]
     leaf: str
     derived: bool
     relationship: str
+    points: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,6 +71,16 @@ def _shape(declared: Any) -> tuple[tuple[str, ...], str]:
             return (), "select"
         return (), "entity"
     return (), declared.as_simple_type().declared_type()
+
+
+def point_size(declared: Any) -> int:
+    """2 or 3 for a list of rows of exactly that many REALs, as the schema declares a ``CoordList``, and 0 for any other
+    type. The schema decides, not the values, so that an attribute is points on every node of a valid file or on none."""
+    outer = declared.as_aggregation_type()
+    inner = outer.type_of_element().as_aggregation_type() if outer else None
+    if not inner or inner.bound1() != inner.bound2() or inner.bound1() not in (2, 3):
+        return 0
+    return inner.bound1() if _shape(inner.type_of_element()) == ((), "real") else 0
 
 
 class Schema:
@@ -104,9 +116,12 @@ class Schema:
                 derived = entity.derived()
                 attributes = []
                 for position, attribute in enumerate(entity.all_attributes()):
-                    kinds, leaf = _shape(attribute.type_of_attribute())
+                    declared = attribute.type_of_attribute()
+                    kinds, leaf = _shape(declared)
                     name = attribute.name()
-                    attributes.append(Attribute(name, kinds, leaf, bool(derived[position]), relationship_type(name)))
+                    relationship = relationship_type(name)
+                    points = point_size(declared)
+                    attributes.append(Attribute(name, kinds, leaf, bool(derived[position]), relationship, points))
                 self._attributes[keyword] = tuple(attributes)
             else:
                 self._attributes[keyword] = None

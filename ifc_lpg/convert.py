@@ -30,8 +30,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.lossless import encode_block, encode_header, encode_instance
-from ifc_lpg.schema import Schema
+from ifc_lpg.lossless import as_points, encode_block, encode_header, encode_instance
+from ifc_lpg.schema import Schema, point_size
 from ifc_lpg.step import StepError, StepFile, statement_text
 
 GEOMETRY_ROOTS = (
@@ -46,6 +46,22 @@ GEOMETRY_ROOTS = (
     "IfcObjectPlacement",
     "IfcPlacement",
     "IfcPresentationItem",
+)
+# What stays text in the skeleton, the default form: the many small instances that shapes are built of. The rest of the
+# geometry is nodes: representations, solids, profiles, mapped items, placements, styles, colours and layers.
+BULK_GEOMETRY = (
+    "IfcPoint",
+    "IfcDirection",
+    "IfcVector",
+    "IfcCartesianPointList",
+    "IfcTessellatedItem",
+    "IfcTopologicalRepresentationItem",
+    "IfcCurve",
+    "IfcStyledItem",
+    "IfcColourRgbList",
+    "IfcTextureVertexList",
+    "IfcTextureCoordinate",
+    "IfcIndexedColourMap",
 )
 _IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 BLOCK_BYTES = 256 * 1024  # before compression; what a read of one instance's geometry would have to unpack
@@ -65,8 +81,9 @@ class ConversionError(RuntimeError):
     pass
 
 
-def _literal(value: Any) -> Any:
-    """A JSON-storable scalar or list, or ``None`` when the value is an entity (handled as an edge)."""
+def _literal(value: Any, points: int = 0) -> Any:
+    """A JSON-storable scalar or list, or ``None`` when the value is an entity (handled as an edge). ``points`` is the
+    length of the rows when the schema says the value is a list of points."""
     if value is None or isinstance(value, bool | int | float | str):
         return value
     if hasattr(value, "wrappedValue"):  # a select type such as IfcLabel('3')
@@ -77,12 +94,16 @@ def _literal(value: Any) -> Any:
             return None
         if all(isinstance(item, bool | int | float | str) for item in items):
             return items
-        return json.dumps(items)  # nested lists (e.g. coordinate lists) as JSON text
+        marked = as_points(items, points)
+        return marked if marked is not None else json.dumps(items)  # other nested lists as JSON text
     return None
 
 
-def convert(path: Path, *, include_geometry: bool = False, max_entities: int = 5_000_000) -> Iterator[dict[str, Any]]:
-    """Yield a header record, then node records, then edge records."""
+def convert(
+    path: Path, *, include_geometry: bool = False, geometry_in_blocks: bool = False, max_entities: int = 5_000_000
+) -> Iterator[dict[str, Any]]:
+    """Yield a header record, then node records, then edge records. The ordinary form leaves all geometry out unless it is
+    asked to be nodes, so ``geometry_in_blocks`` changes nothing here."""
     try:
         import ifcopenshell
     except ImportError as exc:  # pragma: no cover - depends on the optional extra
@@ -92,6 +113,7 @@ def convert(path: Path, *, include_geometry: bool = False, max_entities: int = 5
     schema = ifcopenshell.schema_by_name(model.schema)
     summary = Summary(schema=model.schema)
     label_cache: dict[str, list[str]] = {}
+    point_cache: dict[str, dict[str, int]] = {}
 
     def labels_of(class_name: str) -> list[str]:
         if class_name not in label_cache:
@@ -102,6 +124,13 @@ def convert(path: Path, *, include_geometry: bool = False, max_entities: int = 5
                 declaration = declaration.supertype()
             label_cache[class_name] = [name for name in chain if _IDENTIFIER.match(name)]
         return label_cache[class_name]
+
+    def points_of(class_name: str) -> dict[str, int]:
+        if class_name not in point_cache:
+            declaration: Any = schema.declaration_by_name(class_name)
+            attributes = declaration.all_attributes()
+            point_cache[class_name] = {item.name(): point_size(item.type_of_attribute()) for item in attributes}
+        return point_cache[class_name]
 
     def skipped(entity: Any) -> bool:
         if entity.is_a("IfcOwnerHistory"):
@@ -141,6 +170,7 @@ def convert(path: Path, *, include_geometry: bool = False, max_entities: int = 5
             continue
         class_name = entity.is_a()
         props: dict[str, Any] = {"ifc_class": class_name}
+        points = points_of(class_name)
         for index, name in enumerate(entity.get_attribute_names()):
             if not _IDENTIFIER.match(name):
                 continue
@@ -151,7 +181,7 @@ def convert(path: Path, *, include_geometry: bool = False, max_entities: int = 5
                 continue
             if value is None:
                 continue
-            literal = _literal(value)
+            literal = _literal(value, points.get(name, 0))
             if literal is not None:
                 props[name] = literal
                 continue
@@ -191,7 +221,11 @@ def convert(path: Path, *, include_geometry: bool = False, max_entities: int = 5
 
 
 def convert_lossless(
-    path: Path, *, include_geometry: bool = False, max_entities: int = 5_000_000
+    path: Path,
+    *,
+    include_geometry: bool = False,
+    geometry_in_blocks: bool = False,
+    max_entities: int = 5_000_000,
 ) -> Iterator[dict[str, Any]]:
     """Yield the records of a graph a file can be written back from: nothing the file says is left out.
 
@@ -200,10 +234,15 @@ def convert_lossless(
     ``lossless.py`` for where each value goes, and ADR 0010. Inverse attributes are here for the queries' sake; they
     are worked out from the schema, and the writer does not read them.
 
-    The nodes are those of the ordinary form, with the rest in blocks, unless geometry is asked to be nodes too. An
-    owner history is linked from its project alone in both, since every ``IfcRoot`` usually shares it, and an edge from
-    each of them would make that one node the centre of the graph.
+    Three forms. The skeleton, the default, keeps only ``BULK_GEOMETRY`` in blocks: what shapes are built of, the points,
+    the meshes, the curves. ``geometry_in_blocks`` keeps all geometry there, which leaves the nodes of the ordinary form,
+    and ``include_geometry`` makes every instance a node. An owner history is linked from its project alone in each,
+    since every ``IfcRoot`` usually shares it, and an edge from each of them would make that one node the centre of the
+    graph.
     """
+    if include_geometry and geometry_in_blocks:
+        raise ValueError("geometry is either nodes or in blocks, not both")
+    form = "nodes" if include_geometry else "blocks" if geometry_in_blocks else "skeleton"
     try:
         file = StepFile(path.read_bytes())
         if len(file) > max_entities:
@@ -216,11 +255,12 @@ def convert_lossless(
         raise ConversionError(str(exc)) from exc
 
     classes = set(keywords.values())
-    geometry_classes = {keyword for keyword in classes if set(schema.chain(keyword)) & set(GEOMETRY_ROOTS)}
+    roots = set(GEOMETRY_ROOTS if form == "blocks" else BULK_GEOMETRY)
+    geometry_classes = {keyword for keyword in classes if set(schema.chain(keyword)) & roots}
     history_classes = {keyword for keyword in classes if "IfcOwnerHistory" in schema.chain(keyword)}
     histories = {step for step, keyword in keywords.items() if keyword in history_classes}
     in_blocks: set[int] = set()
-    if not include_geometry:
+    if form != "nodes":
         in_blocks = {step for step, keyword in keywords.items() if keyword in geometry_classes}
         in_blocks |= histories - {project_history}
     nodes = keywords.keys() - in_blocks
@@ -265,6 +305,7 @@ def convert_lossless(
         "ifc_project_guid": summary.ifc_project_guid,
         "classes": summary.classes,
         "lossless": True,
+        "geometry": form,
         "ifc_header": encode_header(file.header_values),
     }
     for step, attribute, position, target in references:

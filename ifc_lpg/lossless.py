@@ -2,10 +2,11 @@
 """Between the values of a STEP instance and what a node of the graph holds, in both directions and without loss.
 
 A value goes where a query would look for it. A number, a string or an enumeration is a property named after its
-attribute, a flat list of them a list property, and a nested list JSON text, since Neo4j has no nested lists. A
-reference is a relationship named after its attribute, and the relationship's ``position`` says where in the attribute
-it stands, ``[row, column]`` in a nested list. A typed value such as ``IFCLABEL('x')`` is its value, with the keyword in
-``<attribute>__type``. What the file leaves out (``$``, and ``*`` where the schema derives the attribute) is left out.
+attribute, a flat list of them a list property, a list the schema gives rows of 2 or 3 REALs, such as a ``CoordList``, a
+list of points, and any other nested list JSON text, since Neo4j has no nested lists. A reference is a relationship
+named after its attribute, and the relationship's ``position`` says where in the attribute it stands, ``[row, column]``
+in a nested list. A typed value such as ``IFCLABEL('x')`` is its value, with the keyword in ``<attribute>__type``. What
+the file leaves out (``$``, and ``*`` where the schema derives the attribute) is left out.
 
 Anything that does not come back the same from that form goes in tagged JSON instead, under the property of the
 attribute with ``$json`` as its type: lists of typed values, a mix of values and references in one SET, a string that
@@ -42,6 +43,7 @@ TAGGED = "$json"
 ALL_ARGUMENTS = "ifc_args"
 ARGUMENT_RELATIONSHIP = "ARGUMENT"
 NATIVE = "$native"  # marks a value JSON has no form for, such as a date or bytes, on its way out of the graph
+POINTS = "$points"  # marks rows of 2 or 3 REALs, by the schema, which the importer stores as a list of points
 _NEO4J_INTEGER = 2**63
 
 
@@ -103,8 +105,11 @@ def _atom_of(value: Any, leaf: str) -> bytes:
     raise _NotNatural
 
 
-def _natural(value: Any, kinds: tuple[str, ...], leaf: str, known: Container[int]) -> tuple[Any, list[tuple[Any, int]]]:
-    """A value as a property and as references, by position. Raises when it has no such form."""
+def _natural(
+    value: Any, kinds: tuple[str, ...], leaf: str, known: Container[int], points: int = 0
+) -> tuple[Any, list[tuple[Any, int]]]:
+    """A value as a property and as references, by position. Raises when it has no such form. ``points`` is the length
+    of the rows when the schema says the value is a list of points."""
     if isinstance(value, int):
         if kinds or value not in known:
             raise _NotNatural
@@ -132,7 +137,19 @@ def _natural(value: Any, kinds: tuple[str, ...], leaf: str, known: Container[int
         if not all(item in known for row in value for item in row):
             raise _NotNatural
         return None, [([row, column], item) for row, items in enumerate(value) for column, item in enumerate(items)]
-    return json.dumps([[_natural_atom(item, leaf) for item in row] for row in value]), []
+    rows = [[_natural_atom(item, leaf) for item in row] for row in value]
+    marked = as_points(rows, points)
+    return (marked if marked is not None else json.dumps(rows)), []
+
+
+def as_points(rows: list[Any], size: int) -> dict[str, list[list[float]]] | None:
+    """Rows of ``size`` REALs, 2 or 3, as the importer stores them: a list of points, which both databases have. Any
+    other list of lists is None here, and stays JSON text, since Neo4j has no nested lists."""
+    if size not in (2, 3) or not rows or not all(isinstance(row, list) and len(row) == size for row in rows):
+        return None
+    if not all(type(item) is float for row in rows for item in row):
+        return None
+    return {POINTS: rows}
 
 
 def _from_natural(prop: Any, references: Sequence[tuple[Any, int]], kinds: tuple[str, ...], leaf: str) -> Any:
@@ -154,6 +171,10 @@ def _from_natural(prop: Any, references: Sequence[tuple[Any, int]], kinds: tuple
         return rows
     if not kinds:
         return _atom_of(prop, leaf)
+    if isinstance(prop, dict) and POINTS in prop:
+        prop = prop[POINTS]
+    if isinstance(prop, list) and len(kinds) == 2:  # points, as the graph gives them back
+        return [[_atom_of(item, leaf) for item in row] for row in prop]
     if isinstance(prop, list):
         return [_atom_of(item, leaf) for item in prop]
     if isinstance(prop, str):
@@ -238,15 +259,15 @@ def _encode_natural(
     value: Any, attribute: Attribute, schema: Schema, known: Container[int]
 ) -> tuple[Any, str | None, list[tuple[Any, int]]]:
     """A value's property, its type's name and its references, when it comes back the same from them."""
-    kinds, leaf, type_name = attribute.kinds, attribute.leaf, None
+    kinds, leaf, points, type_name = attribute.kinds, attribute.leaf, attribute.points, None
     inner = value
     if isinstance(value, tuple):
         shape = schema.defined_type(value[0])
         if shape is None or len(value[1]) != 1:
             raise _NotNatural
-        kinds, leaf = shape
+        (kinds, leaf), points = shape, 0
         type_name, inner = value[0].decode("ascii"), value[1][0]
-    prop, references = _natural(inner, kinds, leaf, known)
+    prop, references = _natural(inner, kinds, leaf, known, points)
     if _from_natural(prop, references, kinds, leaf) != inner:
         raise _NotNatural
     return prop, type_name, references

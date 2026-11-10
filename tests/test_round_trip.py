@@ -22,9 +22,14 @@ MODEL = FIXTURES_DIR / "three_walls_gtin.ifc"
 WALL = "1Xezbq735AdBO_4DerG66G"
 
 
-async def test_a_model_comes_back_identical(graph: Any, tmp_path: Path) -> None:
-    model = await import_file(graph, MODEL, "walls")
+FORMS = {"skeleton": {}, "nodes": {"include_geometry": True}, "blocks": {"geometry_in_blocks": True}}
+
+
+@pytest.mark.parametrize("form", list(FORMS))
+async def test_a_model_comes_back_identical(graph: Any, form: str, tmp_path: Path) -> None:
+    model = await import_file(graph, MODEL, "walls", **FORMS[form])
     assert model["state"] == "done" and model["lossless"] is True and model["entities"] > 0
+    assert model["geometry"] == form
     target = tmp_path / "back.ifc"
     written = await export_file(graph, "walls", target)
     assert written == len(StepFile(MODEL.read_bytes())), "every instance, the nodes' and the blocks'"
@@ -61,6 +66,34 @@ async def test_a_date_a_program_puts_on_a_node_stays_out_of_the_file(graph: Any,
     target = tmp_path / "back.ifc"
     await export_file(graph, "walls", target)
     assert compare_files(MODEL, target).identical
+
+
+async def test_a_list_of_coordinates_is_a_list_of_points_the_database_can_query(graph: Any, tmp_path: Path) -> None:
+    source = tmp_path / "points.ifc"
+    source.write_bytes(
+        b"ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition [x]'),'2;1');\n"
+        b"FILE_NAME('p.ifc','2026-11-10T00:00:00',(''),(''),'','',$);\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n"
+        b"#1=IFCCARTESIANPOINTLIST3D(((0.,-0.,5.E-324),(1.7976931348623157E+308,-2.5,1.E-07),(1.,2.,3.)));\n"
+        b"#2=IFCCARTESIANPOINTLIST2D(((0.,1.),(2.,3.)));\n"
+        b"#3=IFCTRIANGULATEDFACESET(#1,$,$,((1,2,3)),$);\nENDSEC;\nEND-ISO-10303-21;\n"
+    )
+    await import_file(graph, source, "points", include_geometry=True)
+    rows = await graph.run(
+        "MATCH (n:IfcCartesianPointList {model_id: 'points'}) "
+        "RETURN n.step_id AS step, n.CoordList[1].x AS x, n.CoordList[0].srid AS srid ORDER BY step"
+    )
+    assert [(row["step"], row["x"], row["srid"]) for row in rows] == [(1, 1.7976931348623157e308, 9157), (2, 2.0, 7203)]
+    text = await graph.run("MATCH (n:IfcTriangulatedFaceSet {model_id: 'points'}) RETURN n.CoordIndex AS v")
+    assert text[0]["v"] == "[[1, 2, 3]]", "what is no list of points stays text"
+    near = await graph.run(
+        "MATCH (n:IfcCartesianPointList3D {model_id: 'points'}) "
+        "WHERE any(p IN n.CoordList WHERE point.distance(p, point({x: 1.0, y: 2.0, z: 3.5})) < 1.0) "
+        "RETURN n.step_id AS step"
+    )
+    assert [row["step"] for row in near] == [1]
+    target = tmp_path / "back.ifc"
+    await export_file(graph, "points", target)
+    assert compare_files(source, target).identical
 
 
 async def test_a_model_is_imported_once_and_a_failure_leaves_nothing_behind(graph: Any, tmp_path: Path) -> None:

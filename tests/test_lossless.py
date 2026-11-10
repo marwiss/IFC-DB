@@ -22,11 +22,12 @@ pytest.importorskip("ifcopenshell", reason="the ifc-lpg extra is not installed")
 import ifcopenshell
 
 from ifc_lpg import lossless
-from ifc_lpg.convert import ConversionError, convert, convert_lossless
+from ifc_lpg.convert import BULK_GEOMETRY, ConversionError, convert, convert_lossless
 from ifc_lpg.equivalence import compare
 from ifc_lpg.exporter import block_lines, node_line, write_merged
 from ifc_lpg.lossless import (
     ALL_ARGUMENTS,
+    POINTS,
     TAGGED,
     decode_block,
     decode_instance,
@@ -50,11 +51,14 @@ def exchange(*statements: bytes | str, schema: str = "IFC4") -> bytes:
     return head + body + b"\nENDSEC;\nEND-ISO-10303-21;\n"
 
 
-def records_of(data: bytes, tmp_path: Path, *, include_geometry: bool = True) -> list[dict[str, Any]]:
+def records_of(
+    data: bytes, tmp_path: Path, *, include_geometry: bool = True, geometry_in_blocks: bool = False
+) -> list[dict[str, Any]]:
     """What the worker writes, having been through JSON, as it is on the way to the database."""
     path = tmp_path / "source.ifc"
     path.write_bytes(data)
-    return [json.loads(json.dumps(record)) for record in convert_lossless(path, include_geometry=include_geometry)]
+    records = convert_lossless(path, include_geometry=include_geometry, geometry_in_blocks=geometry_in_blocks)
+    return [json.loads(json.dumps(record)) for record in records]
 
 
 def as_the_graph_holds_them(records: list[dict[str, Any]], out: Path) -> Path:
@@ -70,14 +74,23 @@ def as_the_graph_holds_them(records: list[dict[str, Any]], out: Path) -> Path:
         handle.write(json.dumps({"schema": header["schema"], "ifc_header": header["ifc_header"]}) + "\n")
         write_merged(
             handle,
-            [node_line(node["step"], node["props"], references[node["step"]]) for node in nodes],
+            [node_line(node["step"], _as_read(node["props"]), references[node["step"]]) for node in nodes],
             [line for block in blocks for line in block_lines(block["text"])],
         )
     return out
 
 
-def there_and_back(data: bytes, tmp_path: Path, *, include_geometry: bool = True) -> bytes:
-    records = records_of(data, tmp_path, include_geometry=include_geometry)
+def _as_read(props: dict[str, Any]) -> dict[str, Any]:
+    """A list of points comes back from the graph as rows of numbers."""
+    return {
+        key: value[POINTS] if isinstance(value, dict) and POINTS in value else value for key, value in props.items()
+    }
+
+
+def there_and_back(
+    data: bytes, tmp_path: Path, *, include_geometry: bool = True, geometry_in_blocks: bool = False
+) -> bytes:
+    records = records_of(data, tmp_path, include_geometry=include_geometry, geometry_in_blocks=geometry_in_blocks)
     instances = as_the_graph_holds_them(records, tmp_path / "instances.jsonl")
     written = tmp_path / "written.ifc"
     write_records(instances, written)
@@ -183,44 +196,49 @@ COMMENTS_AND_LAYOUT = (
 )
 
 
-BOTH_FORMS = pytest.mark.parametrize("as_nodes", [True, False], ids=["geometry as nodes", "geometry in blocks"])
+FORMS: dict[str, dict[str, bool]] = {
+    "geometry as nodes": {"include_geometry": True},
+    "a skeleton of it": {"include_geometry": False},
+    "geometry in blocks": {"include_geometry": False, "geometry_in_blocks": True},
+}
+EVERY_FORM = pytest.mark.parametrize("form", list(FORMS))
 
 
-@BOTH_FORMS
+@EVERY_FORM
 @pytest.mark.parametrize("statement", EVERY_KIND_OF_VALUE, ids=lambda statement: statement.split("=")[0])
-def test_every_kind_of_value_comes_back(statement: str, as_nodes: bool, tmp_path: Path) -> None:
+def test_every_kind_of_value_comes_back(statement: str, form: str, tmp_path: Path) -> None:
     # Whatever the statement refers to is here, so that it is the statement that is being tested.
     others = [line for line in EVERY_KIND_OF_VALUE if line != statement]
     data = exchange(statement, *others)
-    comparison = compare(data, there_and_back(data, tmp_path, include_geometry=as_nodes))
+    comparison = compare(data, there_and_back(data, tmp_path, **FORMS[form]))
     assert comparison.identical, comparison.checks
 
 
-@BOTH_FORMS
-def test_all_of_them_together_come_back_and_stay_as_they_are(as_nodes: bool, tmp_path: Path) -> None:
+@EVERY_FORM
+def test_all_of_them_together_come_back_and_stay_as_they_are(form: str, tmp_path: Path) -> None:
     data = exchange(*EVERY_KIND_OF_VALUE, *RAW_BYTES, *COMMENTS_AND_LAYOUT)
-    once = there_and_back(data, tmp_path, include_geometry=as_nodes)
+    once = there_and_back(data, tmp_path, **FORMS[form])
     comparison = compare(data, once)
     assert comparison.identical, comparison.checks
-    assert there_and_back(once, tmp_path, include_geometry=as_nodes) == once, "a second round changes not one byte"
+    assert there_and_back(once, tmp_path, **FORMS[form]) == once, "a second round changes not one byte"
 
 
-@BOTH_FORMS
-def test_the_same_goes_for_a_real_model_and_its_geometry(as_nodes: bool, tmp_path: Path) -> None:
+@EVERY_FORM
+def test_the_same_goes_for_a_real_model_and_its_geometry(form: str, tmp_path: Path) -> None:
     from ifc_lpg.equivalence import compare_files
 
     written = tmp_path / "out.ifc"
-    written.write_bytes(there_and_back(MODEL.read_bytes(), tmp_path, include_geometry=as_nodes))
+    written.write_bytes(there_and_back(MODEL.read_bytes(), tmp_path, **FORMS[form]))
     comparison = compare_files(MODEL, written, geometry=True)
     assert comparison.identical, comparison.checks
     assert comparison.passed("geometry") is True
 
 
-@BOTH_FORMS
-def test_ifcopenshell_reads_the_written_file_as_it_reads_the_original(as_nodes: bool, tmp_path: Path) -> None:
+@EVERY_FORM
+def test_ifcopenshell_reads_the_written_file_as_it_reads_the_original(form: str, tmp_path: Path) -> None:
     """A second opinion that shares nothing with this project's reader."""
     original = MODEL.read_bytes()
-    written = there_and_back(original, tmp_path, include_geometry=as_nodes)
+    written = there_and_back(original, tmp_path, **FORMS[form])
     ours = ifcopenshell.file.from_string(original.decode("ascii"))
     theirs = ifcopenshell.file.from_string(written.decode("ascii"))
     assert ours.to_string() == theirs.to_string()
@@ -228,7 +246,7 @@ def test_ifcopenshell_reads_the_written_file_as_it_reads_the_original(as_nodes: 
 
 def test_geometry_in_blocks_leaves_the_nodes_of_the_ordinary_form(tmp_path: Path) -> None:
     """The same nodes, the same relationships and the same values, with all the rest in the blocks."""
-    records = records_of(MODEL.read_bytes(), tmp_path, include_geometry=False)
+    records = records_of(MODEL.read_bytes(), tmp_path, include_geometry=False, geometry_in_blocks=True)
     header = next(record for record in records if record["t"] == "h")
     nodes = {record["step"]: record for record in records if record["t"] == "n"}
     ordinary = list(convert(MODEL))
@@ -256,11 +274,94 @@ def statements_in(block: dict[str, Any]) -> list[tuple[int, bytes]]:
 
 
 def test_a_reference_into_a_block_is_kept_as_an_id(tmp_path: Path) -> None:
-    records = records_of(MODEL.read_bytes(), tmp_path, include_geometry=False)
+    records = records_of(MODEL.read_bytes(), tmp_path, include_geometry=False, geometry_in_blocks=True)
     wall = next(record for record in records if record["t"] == "n" and "IfcWall" in record["labels"])
     assert isinstance(wall["props"]["Representation__step"], int)
     assert isinstance(wall["props"]["ObjectPlacement__step"], int)
     assert "Representation" not in wall["props"] and "Representation__type" not in wall["props"]
+
+
+def test_a_skeleton_keeps_in_blocks_only_what_shapes_are_built_of(tmp_path: Path) -> None:
+    """The representations, the placements and the profiles are nodes, and the points and the curves stay text."""
+    records = records_of(MODEL.read_bytes(), tmp_path, include_geometry=False)
+    header = next(record for record in records if record["t"] == "h")
+    nodes = {record["step"]: record for record in records if record["t"] == "n"}
+    held = [step for block in records if block["t"] == "g" for step, _line in statements_in(block)]
+    schema, file = Schema(header["schema"]), StepFile(MODEL.read_bytes())
+
+    def bulk(step: int) -> bool:
+        return bool(set(schema.chain(file.keyword_of(step))) & set(BULK_GEOMETRY))
+
+    assert header["geometry"] == "skeleton" and header["skipped"] == len(held) > 0
+    assert all(bulk(step) for step in held) and not any(bulk(step) for step in nodes)
+    assert len(held) + len(nodes) == 248
+    labels = {label for record in nodes.values() for label in record["labels"]}
+    assert {"IfcShapeRepresentation", "IfcProductDefinitionShape", "IfcLocalPlacement"} <= labels
+    wall = next(record for record in nodes.values() if "IfcWall" in record["labels"])
+    assert "Representation__step" not in wall["props"]
+    assert [kind for kind, _position, _target in references_of(records, wall["step"])].count("Representation") == 1
+
+
+def test_one_form_at_a_time(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="not both"):
+        records_of(MODEL.read_bytes(), tmp_path, include_geometry=True, geometry_in_blocks=True)
+
+
+def test_the_header_says_which_form_the_geometry_has(tmp_path: Path) -> None:
+    for form, options in zip(("nodes", "skeleton", "blocks"), FORMS.values(), strict=True):
+        records = records_of(MODEL.read_bytes(), tmp_path, **options)
+        assert next(record for record in records if record["t"] == "h")["geometry"] == form
+
+
+@pytest.mark.parametrize(
+    ("statement", "points"),
+    [
+        pytest.param("#1=IFCCARTESIANPOINTLIST2D(((0.,1.),(2.,3.)));", [[0.0, 1.0], [2.0, 3.0]], id="2D"),
+        pytest.param(
+            "#1=IFCCARTESIANPOINTLIST3D(((0.,-0.,5.E-324),(1.7976931348623157E+308,-2.5,1.E-07)));",
+            [[0.0, -0.0, 5e-324], [1.7976931348623157e308, -2.5, 1e-07]],
+            id="3D, at the edges of a double",
+        ),
+    ],
+)
+def test_a_list_of_coordinates_is_a_list_of_points(statement: str, points: list[Any], tmp_path: Path) -> None:
+    data = exchange(statement)
+    coordinates = node_of(records_of(data, tmp_path), 1)["props"]["CoordList"]
+    assert repr(coordinates) == repr({"$points": points}), "bit for bit, the sign of a zero too"
+    assert compare(data, there_and_back(data, tmp_path)).identical
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        pytest.param("#1=IFCCARTESIANPOINTLIST3D(((0.,1.,2.),(3.,4.)));", id="rows of different length"),
+        pytest.param("#1=IFCCARTESIANPOINTLIST2D(((0,1),(2,3)));", id="integers"),
+        pytest.param("#1=IFCCARTESIANPOINTLIST3D(((1.,2.,3.,4.)));", id="four numbers to a row"),
+        pytest.param("#1=IFCCARTESIANPOINTLIST3D(((1.E+999,0.,0.)));", id="a REAL no double can hold"),
+        pytest.param("#1=IFCCARTESIANPOINTLIST3D(((1.,$,2.)));", id="a hole"),
+        pytest.param("#1=IFCCARTESIANPOINTLIST3D(((1.,2.),(3.,4.)));", id="rows the schema does not have"),
+        pytest.param(
+            "#1=IFCRATIONALBSPLINESURFACEWITHKNOTS(1,1,((#2,#2),(#2,#2)),.UNSPECIFIED.,.F.,.F.,.F.,(2),(2),(0.,1.),"
+            "(0.,1.),.UNSPECIFIED.,((1.,1.),(1.,1.)));",
+            id="rows of numbers that are no points",
+        ),
+    ],
+)
+def test_what_is_no_point_stays_json(statement: str, tmp_path: Path) -> None:
+    data = exchange(statement, "#2=IFCCARTESIANPOINT((0.,0.,0.));")
+    properties = node_of(records_of(data, tmp_path), 1)["props"]
+    assert isinstance(properties.get("CoordList", properties.get("WeightsData")), str)
+    assert compare(data, there_and_back(data, tmp_path)).identical
+
+
+def test_the_ordinary_form_has_the_same_points(tmp_path: Path) -> None:
+    source = tmp_path / "points.ifc"
+    source.write_bytes(
+        exchange("#1=IFCCARTESIANPOINTLIST2D(((0.,1.),(2.,3.)));", "#2=IFCCARTESIANPOINTLIST3D(((1.,2.)));")
+    )
+    nodes = [record for record in convert(source, include_geometry=True) if record["t"] == "n"]
+    assert nodes[0]["props"]["CoordList"] == {"$points": [[0.0, 1.0], [2.0, 3.0]]}
+    assert nodes[1]["props"]["CoordList"] == "[[1.0, 2.0]]"
 
 
 @pytest.mark.parametrize(
@@ -290,10 +391,10 @@ def test_a_list_of_references_keeps_the_ones_that_are_nodes_as_relationships(tmp
     assert compare(data, there_and_back(data, tmp_path)).identical
 
 
-@BOTH_FORMS
-def test_an_owner_history_is_linked_from_its_project_alone(as_nodes: bool, tmp_path: Path) -> None:
+@EVERY_FORM
+def test_an_owner_history_is_linked_from_its_project_alone(form: str, tmp_path: Path) -> None:
     """Every root shares it, and an edge from each would make it the centre of the graph."""
-    records = records_of(MODEL.read_bytes(), tmp_path, include_geometry=as_nodes)
+    records = records_of(MODEL.read_bytes(), tmp_path, **FORMS[form])
     edges = [record for record in records if record["t"] == "e" and record["type"] == "OwnerHistory"]
     project = next(record for record in records if record["t"] == "n" and "IfcProject" in record["labels"])
     assert [edge["a"] for edge in edges] == [project["step"]]
@@ -383,7 +484,7 @@ def test_a_value_goes_where_a_query_looks_for_it(tmp_path: Path) -> None:
             "#3=IFCPOLYLINE((#2,#2));",
             "#4=IFCWALL('0000000000000000000004',$,'Wall',$,$,$,$,$,.SOLIDWALL.);",
             "#5=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
-            "#6=IFCCARTESIANPOINTLIST3D(((0.,1.),(2.,3.)));",
+            "#6=IFCCARTESIANPOINTLIST2D(((0.,1.),(2.,3.)));",
             "#7=IFCBSPLINESURFACE(1,1,((#2,#2),(#2)),.UNSPECIFIED.,.T.,.F.,.U.);",
             "#8=IFCRELDEFINESBYPROPERTIES('0000000000000000000008',$,$,$,(#4),IFCPROPERTYSETDEFINITIONSET((#9)));",
             "#9=IFCPROPERTYSET('0000000000000000000009',$,$,$,());",
@@ -410,7 +511,7 @@ def test_a_value_goes_where_a_query_looks_for_it(tmp_path: Path) -> None:
         "Prefix": "MILLI",
         "Name": "METRE",
     }
-    assert json.loads(node_of(records, 6)["props"]["CoordList"]) == [[0.0, 1.0], [2.0, 3.0]]
+    assert node_of(records, 6)["props"]["CoordList"] == {"$points": [[0.0, 1.0], [2.0, 3.0]]}
     assert references_of(records, 7) == [
         ("ControlPointsList", [0, 0], 2),
         ("ControlPointsList", [0, 1], 2),
@@ -653,6 +754,9 @@ def test_the_worker_and_the_writer_run_as_processes_would(tmp_path: Path, capsys
     assert worker_main([str(MODEL), str(records), "--lossless"]) == 0
     header = json.loads(capsys.readouterr().out)
     assert header["lossless"] is True and header["entities"] + header["skipped"] == 248 and header["skipped"] > 0
+    assert header["geometry"] == "skeleton"
+    assert worker_main([str(MODEL), str(records), "--lossless", "--geometry-in-blocks"]) == 0
+    assert json.loads(capsys.readouterr().out)["geometry"] == "blocks"
     lines = [json.loads(line) for line in records.read_text(encoding="utf-8").splitlines()]
     instances = as_the_graph_holds_them(lines, tmp_path / "instances.jsonl")
     written = tmp_path / "written.ifc"

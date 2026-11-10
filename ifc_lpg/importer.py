@@ -8,28 +8,34 @@ from pathlib import Path
 from typing import Any
 
 from ifc_lpg.graph import Graph
+from ifc_lpg.lossless import POINTS
 from ifc_lpg.schema import relationship_type
 from ifc_lpg.schema import safe_identifier as _safe
 
 BATCH = 2_000
 MAX_BATCH_BYTES = 16 * 1024 * 1024  # a coordinate list can be megabytes, and a transaction's memory has a limit
 BLOCK_BATCH = 100
+# A row of a list of points, built in Cypher, since the records are JSON and the package needs no driver of its own.
+_POINT = "CASE size(p) WHEN 2 THEN point({x: p[0], y: p[1]}) ELSE point({x: p[0], y: p[1], z: p[2]}) END"
 
 
 async def import_records(graph: Graph, model_id: str, records_path: Path) -> dict[str, int]:
     """Create the ``IfcEntity`` nodes and their relationships for one model. Returns counts."""
     nodes = relationships = 0
     block_rows: list[dict[str, Any]] = []
-    node_groups: dict[tuple[str, ...], list[dict[str, Any]]] = {}
+    node_groups: dict[tuple[tuple[str, ...], tuple[str, ...]], list[dict[str, Any]]] = {}
     edge_groups: dict[tuple[str, bool], list[dict[str, Any]]] = {}
 
     async def flush_nodes() -> None:
         nonlocal nodes
-        for labels, rows in node_groups.items():
+        for (labels, point_keys), rows in node_groups.items():
             label_clause = ":".join(["IfcEntity", *labels])
+            points = "".join(
+                f", n.{_safe(key)} = [p IN row.points.{_safe(key)} | " + _POINT + "]" for key in point_keys
+            )
             await graph.run(
                 f"UNWIND $rows AS row CREATE (n:{label_clause}) SET n = row.props, n.id = row.id, "
-                f"n.step_id = row.step, n.model_id = $model_id",
+                f"n.step_id = row.step, n.model_id = $model_id{points}",
                 rows=rows,
                 model_id=model_id,
             )
@@ -69,8 +75,14 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
             kind = record["t"]
             if kind == "n":
                 labels = tuple(_safe(label) for label in record["labels"])
-                node_groups.setdefault(labels, []).append(
-                    {"id": f"{model_id}:{record['step']}", "step": record["step"], "props": record["props"]}
+                props = record["props"]
+                points = {
+                    key: value[POINTS] for key, value in props.items() if isinstance(value, dict) and POINTS in value
+                }
+                if points:
+                    props = {key: value for key, value in props.items() if key not in points}
+                node_groups.setdefault((labels, tuple(sorted(points))), []).append(
+                    {"id": f"{model_id}:{record['step']}", "step": record["step"], "props": props, "points": points}
                 )
             elif kind == "g":
                 block_rows.append({key: record[key] for key in ("first", "instances", "text")})

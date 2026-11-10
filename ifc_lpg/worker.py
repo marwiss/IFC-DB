@@ -1,6 +1,6 @@
 # This file was generated with the assistance of an AI coding tool.
 """The conversion worker: ``python -m ifc_lpg.worker IFC OUT [--memory-mb N] [--max-entities N]
-[--include-geometry] [--lossless]``.
+[--include-geometry | --geometry-in-blocks] [--lossless]``.
 
 IfcOpenShell parses untrusted files, so it runs here, in its own process:
 a crash, a hang or a memory explosion ends this process, not the server.
@@ -45,7 +45,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("out", type=Path)
     parser.add_argument("--memory-mb", type=int, default=0)
     parser.add_argument("--max-entities", type=int, default=5_000_000)
-    parser.add_argument("--include-geometry", action="store_true")
+    parser.add_argument("--include-geometry", action="store_true", help="every instance a node")
+    parser.add_argument("--geometry-in-blocks", action="store_true", help="all geometry in blocks, not the skeleton")
     parser.add_argument("--lossless", action="store_true")
     args = parser.parse_args(argv)
     if args.memory_mb:
@@ -59,6 +60,7 @@ def main(argv: list[str] | None = None) -> int:
             args.out,
             lossless=args.lossless,
             include_geometry=args.include_geometry,
+            geometry_in_blocks=args.geometry_in_blocks,
             max_entities=args.max_entities,
         )
     except ConversionError as exc:

@@ -74,9 +74,13 @@ async def convert_file(
     *,
     lossless: bool = True,
     include_geometry: bool = False,
+    geometry_in_blocks: bool = False,
     limits: Limits = DEFAULT_LIMITS,
 ) -> dict[str, Any]:
-    """Convert ``source`` into records at ``records``. Returns the header: schema, the file's header and the counts."""
+    """Convert ``source`` into records at ``records``. Returns the header: schema, the file's header and the counts.
+
+    The geometry is a skeleton by default: what shapes are made of stays STEP text in blocks, and the rest are nodes.
+    ``include_geometry`` makes every instance a node, and ``geometry_in_blocks`` keeps all geometry in blocks."""
     command = [
         sys.executable,
         "-m",
@@ -90,6 +94,8 @@ async def convert_file(
     ]
     if include_geometry:
         command.append("--include-geometry")
+    if geometry_in_blocks:
+        command.append("--geometry-in-blocks")
     if lossless:
         command.append("--lossless")
     answer = await run_worker(command, "the conversion", limits.timeout_seconds)
@@ -119,6 +125,7 @@ async def import_file(
     *,
     lossless: bool = True,
     include_geometry: bool = False,
+    geometry_in_blocks: bool = False,
     limits: Limits = DEFAULT_LIMITS,
 ) -> dict[str, Any]:
     """Convert ``source`` and load it into the graph as the model ``model_id``, which must not exist yet.
@@ -138,7 +145,12 @@ async def import_file(
         with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
             records = Path(tmp) / "records.jsonl"
             header = await convert_file(
-                source, records, lossless=lossless, include_geometry=include_geometry, limits=limits
+                source,
+                records,
+                lossless=lossless,
+                include_geometry=include_geometry,
+                geometry_in_blocks=geometry_in_blocks,
+                limits=limits,
             )
             counts = await import_records(graph, model_id, records)
     except Exception as exc:
@@ -159,6 +171,7 @@ async def import_file(
         "relationships": counts["relationships"],
         "skipped": header.get("skipped", 0),
         "lossless": header.get("lossless", False),
+        "geometry": header.get("geometry"),
         "ifc_header": header.get("ifc_header"),
         "done_at": _now(),
     }
