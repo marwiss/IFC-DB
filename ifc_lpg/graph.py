@@ -18,6 +18,7 @@ Dialect = Literal["neo4j", "memgraph"]
 
 UNIQUE = (("Model", "id"), ("Entity", "id"), ("StepBlock", "id"), ("Object", "id"))
 INDEXED = (("Entity", "GlobalId"), ("Entity", "model_id"), ("Object", "model_id"))
+POINT_INDEXED = (("Entity", "bbox_centre"),)  # the spatial layer, ifc_lpg.spatial
 FORM_VERSION = 1  # the version of the graph's shape on every Model, raised when the shape changes
 _NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 _ALREADY = ("already exists", "alreadyexists", "equivalentschemarulealreadyexists", "constraintalreadyexists")
@@ -70,7 +71,31 @@ def schema_statements(dialect: Dialect) -> list[str]:
         else:
             statements += [f"CREATE CONSTRAINT ON (n:{label}) ASSERT n.{prop} IS UNIQUE", _index(dialect, label, prop)]
     statements += [_index(dialect, label, prop) for label, prop in INDEXED]
+    statements += [_point_index(dialect, label, prop) for label, prop in POINT_INDEXED]
     return statements
+
+
+def _point_index(dialect: Dialect, label: str, prop: str) -> str:
+    _check(label, prop)
+    if dialect == "neo4j":
+        return f"CREATE POINT INDEX {label}_{prop}_point IF NOT EXISTS FOR (n:{label}) ON (n.{prop})"
+    return f"CREATE POINT INDEX ON :{label}({prop})"
+
+
+async def rebuild_point_indexes(graph: Neo4jGraph, dialect: Dialect) -> None:
+    """Make the point indexes anew, after points have been set. Memgraph 3.14 does not keep a point index up to date:
+    a point set after the index was made is not found through it, so the index is dropped and made again there. Neo4j
+    keeps its indexes up to date, so nothing is done."""
+    if dialect != "memgraph":
+        return
+    for label, prop in POINT_INDEXED:
+        _check(label, prop)
+        try:
+            await graph.ddl(f"DROP POINT INDEX ON :{label}({prop})")
+        except Exception as exc:
+            if "not exist" not in str(exc).lower() and "doesn't exist" not in str(exc).lower():
+                raise
+        await graph.ddl(_point_index(dialect, label, prop))
 
 
 def _index(dialect: Dialect, label: str, prop: str) -> str:

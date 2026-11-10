@@ -22,6 +22,7 @@ the IFC standard.
 - [The graph](#the-graph)
 - [How STEP ids are kept](#how-step-ids-are-kept)
 - [How geometry is stored](#how-geometry-is-stored)
+- [Where the products are](#where-the-products-are)
 - [How a model is exported](#how-a-model-is-exported)
 - [When two files hold the same model](#when-two-files-hold-the-same-model)
 - [Validation](#validation)
@@ -190,6 +191,41 @@ read. Making every instance a node costs several times the size and the import
 time. Typed queries took about as long in every form in the
 [measurements](#measurements), so the reason to keep geometry in blocks is what
 it costs to store and import, not what it costs to ask.
+
+## Where the products are
+
+The coordinates in a file are local: an element is placed relative to its
+storey, the storey to the building, and so on, and a shape is often placed again
+through a mapped item. In the renovation model of the
+[measurements](#measurements), 64 of the 213 points are the origin, and 42 of
+its 43 placements are relative to another. The coordinates in the graph answer
+what a shape is made of, not where it is.
+
+A pass of IfcOpenShell's geometry answers where. It builds every product's shape
+once and puts a box around it in the project's coordinates, IFC's "world", in
+metres: `bbox_min`, `bbox_max` and `bbox_centre` on the product's node, as 3D
+Cartesian points, with a point index on the centre. The same Cypher then asks on
+both databases what lies within 1.2 m of a door, what has its centre in a box,
+or which boxes overlap a door's:
+
+```cypher
+MATCH (d:IfcDoor {model_id: 'house'}), (n:Entity {model_id: 'house'})
+WHERE n <> d AND point.distance(n.bbox_centre, d.bbox_centre) < 1.2
+RETURN n.Name
+```
+
+The boxes follow the world's axes, not the element's, so they suit selection and
+nearness, not exact geometry. They are derived, not part of the file: the writer
+reads only the schema's attributes, so the file comes back the same with them or
+without them, and a new pass replaces them. Every product with a body is boxed,
+openings and spaces included; one whose shape cannot be built is counted and
+named, not boxed. The pass took 51 s for a Revit model of 286 products and 228 s
+for a Tekla model of 10,042, with two threads.
+
+The pass writes a file of its own, which a server can turn into glTF: each mesh
+once, in its own coordinates, and per product its storey, its mesh, the matrix
+that places it, column by column as glTF has it, and its box. A shape that
+several products share is one mesh placed several times.
 
 ## How a model is exported
 
@@ -466,6 +502,16 @@ a document version, uses the parts instead: `convert_file` and `write_file` in
 files in a process of its own. Dataregium's
 [IFC-LPG page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-lpg.md)
 describes how a server uses them.
+
+`add_spatial(graph, Path("house.ifc"), "house")` in `ifc_lpg.spatial` sets the
+boxes on a model imported from that file, and refuses a file whose products are
+not the model's. `spatial_file` writes the geometry's file alone, and
+`import_spatial` reads one into the graph. The pass runs in a process of its
+own, within the same limits, with `threads=2` unless told otherwise. Memgraph
+3.14 does not keep a point index up to date: a point set after the index was
+made is not found through it. Given `dialect="memgraph"`, `add_spatial` and
+`import_spatial` therefore make the index anew when the boxes are in place;
+Neo4j needs nothing.
 
 IFC5 files go in and out with `import_ifcx(graph, [Path("base.ifcx"),
 Path("overlay.ifcx")], "hello")` and `export_ifcx(graph, "hello",
