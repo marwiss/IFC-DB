@@ -198,7 +198,12 @@ async def test_a_building_of_another_schema_is_migrated_first(graph: Any, tmp_pa
     assert await graph.run(DEPTH, model="c") == [{"depth": pytest.approx(2500.0)}]
     owners = await graph.run(
         "MATCH (r:IfcRelAggregates {model_id: 'c'})-[:RELATED_OBJECTS]->(:IfcBuilding {Name: 'Annex'}) "
-        "OPTIONAL MATCH (r)-[:OWNER_HISTORY]->(o) RETURN o IS NOT NULL OR r.OwnerHistory__step IS NOT NULL AS owned"
+        "RETURN r.OwnerHistory__step IS NOT NULL AS owned"
     )
     assert owners == [{"owned": True}], "IFC2X3 needs an owner history: the building's, or else the base project's"
+    lacking = await graph.run(
+        "MATCH (n:Entity {model_id: 'c'}) WHERE n.GlobalId IS NOT NULL AND n.OwnerHistory__step IS NULL "
+        "AND NOT n:IfcProject RETURN count(n) AS n"
+    )
+    assert lacking == [{"n": 0}], "what came from IFC4 without one has the base project's"
     await comes_back(graph, "c", tmp_path)

@@ -400,6 +400,21 @@ def _anchors(instance: _Instance) -> list[int] | None:
     return None
 
 
+def _has_owner(instance: _Instance) -> bool:
+    return bool(instance.attribute("OwnerHistory")) or "OwnerHistory" + STEP_SUFFIX in instance.steps
+
+
+def _owner_of_base(a: _Model) -> int | None:
+    """The owner history of A's project, when A's schema needs one on every rooted instance (IFC2X3): what of B has none
+    gets it, as a model migrated from IFC4 has none. Only the project links to its owner history; every other instance
+    holds its STEP id in ``OwnerHistory__step``, as the import does."""
+    if not str(a.fields["schema"]).upper().startswith("IFC2X3"):
+        return None
+    project = a.instances[a.single("IfcProject")]
+    found = project.attribute("OwnerHistory")
+    return found[0] if found else None
+
+
 def _placement_of(instance: _Instance) -> int | None:
     found = instance.attribute("ObjectPlacement") or [instance.steps.get("ObjectPlacement" + STEP_SUFFIX)]
     return found[0]
@@ -936,11 +951,14 @@ async def _build(
     await _create_nodes(graph, b.id, model_id, [(s, numbers[s], b.instances[s].labels) for s in nodes])
     edges: list[tuple[int, str, Any, int]] = []
     patches: list[dict[str, Any]] = []
+    owner = _owner_of_base(a)
     for step in nodes:
         instance, dropped = b.instances[step], selection.drop.get(step, set())
         kept, moved = _edges_after(instance, dropped)
         edges.extend((numbers[step], rel_type, position, to(target)) for rel_type, position, target in kept)
         props: dict[str, Any] = {}
+        if owner is not None and instance.global_id is not None and not _has_owner(instance):
+            props["OwnerHistory" + STEP_SUFFIX] = owner  # IFC2X3 has one on every rooted instance
         for key, value in instance.steps.items():
             props[key] = [to(t) for t in value if t not in dropped] if isinstance(value, list) else to(value)
         for key, text in instance.tagged.items():
@@ -1019,8 +1037,8 @@ async def _below_site(
         project = plan.a.instances[plan.a.single("IfcProject")]
         owner = project.attribute("OwnerHistory") or [project.steps.get("OwnerHistory" + STEP_SUFFIX)]
         owned_by_a = owner[0] is not None
-    if owner[0] is not None and not owned_by_a and plan.b.instances[owner[0]].in_block:
-        props["OwnerHistory" + STEP_SUFFIX] = to(owner[0])
+    if owner[0] is not None:  # by its STEP id, as every instance but the project holds its owner history
+        props["OwnerHistory" + STEP_SUFFIX] = owner[0] if owned_by_a else to(owner[0])
     clause = ":".join(["Entity", *map(safe_identifier, sorted(upward.labels - {"Entity"}))])
     await graph.run(
         f"CREATE (c:{clause}) SET c = $props, c.id = $id + ':' + toString($step), c.step_id = $step, c.model_id = $id",
@@ -1029,10 +1047,6 @@ async def _below_site(
         step=step,
     )
     edges = [(step, "RELATING_OBJECT", 0, plan.site), (step, "RELATED_OBJECTS", 0, to(plan.building))]
-    if owned_by_a:
-        edges.append((step, _OWNER, 0, owner[0]))
-    elif owner[0] is not None and not plan.b.instances[owner[0]].in_block:
-        edges.append((step, _OWNER, 0, to(owner[0])))
     await _create_edges(graph, model_id, edges)
     return step
 
