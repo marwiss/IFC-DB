@@ -220,7 +220,10 @@ def test_a_date_on_a_node_is_no_attribute() -> None:
         pytest.param(b'{"data": [{"path": "a", "children": {"x": 1}}]}', "are paths", id="a child that is no path"),
         pytest.param(b'{"data": [], "imports": [{}]}', "with a uri", id="an import without a uri"),
         pytest.param(b'{"data": [' + b"[" * MAX_DEPTH + b"]" * MAX_DEPTH + b"]}", "nests deeper", id="too deep"),
-        pytest.param(b'{"data": [' + b"[" * 100_000 + b"]" * 100_000 + b"]}", "no JSON", id="deeper than Python"),
+        # Python's parser gives up before 3.14, and from 3.14 it reads it, which the depth check then refuses.
+        pytest.param(
+            b'{"data": [' + b"[" * 100_000 + b"]" * 100_000 + b"]}", "no JSON|nests deeper", id="deeper than Python"
+        ),
         pytest.param(b"\xff\xfe", "no JSON", id="not UTF-8"),
     ],
 )
