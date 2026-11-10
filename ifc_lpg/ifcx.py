@@ -7,7 +7,7 @@ One or more files are composed into one opinion per path. A file comes after the
 once. A later value for the same path and name wins, ``null`` removes one, and two that disagree are reported. An
 import that is none of the files is not fetched, and gives a warning.
 
-Each path is an ``IfcxObject`` node, labelled with its class, the ``code`` of ``bsi::ifc::class``, when that is an
+Each path is an ``Object`` node, labelled with its class, the ``code`` of ``bsi::ifc::class``, when that is an
 identifier. Its children and what it inherits are ``CHILD`` and ``INHERITS`` relationships with a ``name``. A
 ``{"ref": path}`` value is a ``REF`` relationship too, named after where it stands; the writer reads the value, not the
 relationship. The graph is the same on Neo4j and Memgraph:
@@ -18,8 +18,8 @@ relationship. The graph is the same on Neo4j and Memgraph:
 - what does not come back the same is JSON text in ``<key>#json``, and attributes whose keys could be taken for
   these are JSON text in ``#rest``.
 
-A path that is a child or inherited but has no entry is a node with ``#stub``. The model is an ``IfcxModel`` node, with
-the header, the imports, the schemas, the warnings and the conflicts. The file is read and written in a process of its
+A path that is a child or inherited but has no entry is a node with ``#stub``. The model is a ``Model`` node with
+``format`` ``ifcx``, the header, the imports, the schemas, the warnings and the conflicts. The file is read and written in a process of its
 own: ``python -m ifc_lpg.ifcx read FILE... OUT`` and ``python -m ifc_lpg.ifcx write RECORDS OUT``, with ``--memory-mb N``.
 """
 
@@ -38,7 +38,7 @@ from typing import Any
 
 from ifc_lpg.exporter import PAGE
 from ifc_lpg.files import DEFAULT_LIMITS, Limits, _now, run_worker
-from ifc_lpg.graph import Graph
+from ifc_lpg.graph import FORM_VERSION, Graph
 from ifc_lpg.importer import BATCH, MAX_BATCH_BYTES
 from ifc_lpg.lossless import NATIVE
 
@@ -373,7 +373,7 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
     async def flush() -> None:
         nonlocal nodes, relationships
         for (labels, keys), rows in groups.items():
-            label_clause = ":".join(["IfcxObject", *labels])
+            label_clause = ":".join(["Object", *labels])
             points = "".join(f", n.`{key}` = [p IN row.points[{i}] | {_POINT}]" for i, key in enumerate(keys))
             await graph.run(
                 f"UNWIND $rows AS row CREATE (n:{label_clause}) SET n = row.props, n.id = row.id, n.path = row.path, "
@@ -385,7 +385,7 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
         groups.clear()
         for kind, rows in edges.items():
             await graph.run(
-                f"UNWIND $rows AS row MATCH (a:IfcxObject {{id: row.a}}), (b:IfcxObject {{id: row.b}}) "
+                f"UNWIND $rows AS row MATCH (a:Object {{id: row.a}}), (b:Object {{id: row.b}}) "
                 f"CREATE (a)-[:{kind} {{name: row.name}}]->(b)",
                 rows=rows,
             )
@@ -426,18 +426,17 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
 async def export_records(graph: Graph, model_id: str, out: Path) -> int:
     """Write the model and its nodes to ``out``, for the writer. Returns the number of nodes."""
     rows = await graph.run(
-        "MATCH (m:IfcxModel {id: $id}) RETURN m.state AS state, m.header AS header, m.imports AS imports, "
+        "MATCH (m:Model {id: $id, format: 'ifcx'}) RETURN m.state AS state, m.header AS header, m.imports AS imports, "
         "m.schemas AS schemas",
         id=model_id,
     )
     if not rows:
-        raise ValueError("there is no such model")
+        raise ValueError("there is no such IFCX model")
     if rows[0]["state"] != "done":
         raise ValueError(f"the model is {rows[0]['state']}, not done")
     model = {key: json.loads(rows[0][key]) for key in ("header", "imports", "schemas")}
     paths = sorted(
-        row["path"]
-        for row in await graph.run("MATCH (n:IfcxObject {model_id: $id}) RETURN n.path AS path", id=model_id)
+        row["path"] for row in await graph.run("MATCH (n:Object {model_id: $id}) RETURN n.path AS path", id=model_id)
     )
     with out.open("w", encoding="utf-8") as handle:
         handle.write(json.dumps(model) + "\n")
@@ -445,8 +444,8 @@ async def export_records(graph: Graph, model_id: str, out: Path) -> int:
             page = await graph.run(
                 """
                 UNWIND $ids AS node_id
-                MATCH (n:IfcxObject {id: node_id})
-                OPTIONAL MATCH (n)-[r:CHILD|INHERITS]->(t:IfcxObject)
+                MATCH (n:Object {id: node_id})
+                OPTIONAL MATCH (n)-[r:CHILD|INHERITS]->(t:Object)
                 WITH n, CASE WHEN r IS NULL THEN NULL ELSE [type(r), r.name, t.path] END AS link
                 RETURN n.path AS path, properties(n) AS props, collect(link) AS links
                 """,
@@ -465,17 +464,17 @@ def write_records(records_path: Path, target: Path) -> None:
 
 
 async def delete_ifcx(graph: Graph, model_id: str, *, keep_model: bool = False) -> None:
-    """Remove a model's nodes in batches, and the ``IfcxModel`` itself unless ``keep_model``."""
+    """Remove a model's nodes in batches, and the ``Model`` itself unless ``keep_model``."""
     while True:
         rows = await graph.run(
-            "MATCH (n:IfcxObject {model_id: $id}) WITH n LIMIT $batch DETACH DELETE n RETURN count(*) AS n",
+            "MATCH (n:Object {model_id: $id}) WITH n LIMIT $batch DETACH DELETE n RETURN count(*) AS n",
             id=model_id,
             batch=BATCH,
         )
         if not rows or int(rows[0]["n"]) < BATCH:
             break
     if not keep_model:
-        await graph.run("MATCH (m:IfcxModel {id: $id}) DETACH DELETE m", id=model_id)
+        await graph.run("MATCH (m:Model {id: $id, format: 'ifcx'}) DETACH DELETE m", id=model_id)
 
 
 async def import_ifcx(
@@ -484,9 +483,11 @@ async def import_ifcx(
     """Compose ``sources`` and load them as the model ``model_id``, which must not exist yet. As ``import_file`` does
     for STEP: ``running`` while it loads, ``done`` with its counts, or ``failed`` with the error and nothing left."""
     rows = await graph.run(
-        "MERGE (m:IfcxModel {id: $id}) ON CREATE SET m.state = 'running', m.running_at = $now, m.file_names = $names "
+        "MERGE (m:Model {id: $id}) ON CREATE SET m.format = 'ifcx', m.schema = 'IFC5', m.form_version = $form, "
+        "m.state = 'running', m.running_at = $now, m.file_names = $names "
         "RETURN m.running_at = $now AS new",
         id=model_id,
+        form=FORM_VERSION,
         now=_now(),
         names=[source.name for source in sources],
     )
@@ -503,7 +504,7 @@ async def import_ifcx(
         with contextlib.suppress(Exception):
             await delete_ifcx(graph, model_id, keep_model=True)
         await graph.run(
-            "MATCH (m:IfcxModel {id: $id}) SET m.state = 'failed', m.failed_at = $now, m.error = $error",
+            "MATCH (m:Model {id: $id}) SET m.state = 'failed', m.failed_at = $now, m.error = $error",
             id=model_id,
             now=_now(),
             error=f"{type(exc).__name__}: {exc}"[:500],
@@ -512,7 +513,7 @@ async def import_ifcx(
     fields: dict[str, Any] = {key: json.dumps(header[key]) for key in ("header", "imports", "schemas")}
     fields |= {key: json.dumps(header[key]) for key in ("warnings", "conflicts")}
     fields |= {"layers": header["layers"], **counts, "done_at": _now()}
-    await graph.run("MATCH (m:IfcxModel {id: $id}) SET m.state = 'done', m += $fields", id=model_id, fields=fields)
+    await graph.run("MATCH (m:Model {id: $id}) SET m.state = 'done', m += $fields", id=model_id, fields=fields)
     return {"id": model_id, "state": "done", **fields}
 
 

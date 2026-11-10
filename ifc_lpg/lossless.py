@@ -22,7 +22,7 @@ nodes, and only a reference to what is no node stays in the text.
 Geometry is kept in blocks, unless it is asked to be nodes. It is most of a model and a graph of its own: 17-94% of it
 in the samples belongs to more than one product, so it cannot be properties of the products. So every instance below a
 line drawn by class is written out as STEP, in order of id, and compressed into blocks of text on ``StepBlock`` nodes
-that hang off the ``IfcModel``. Those instances are in the graph, but out of Cypher's reach.
+that hang off the ``Model``. Those instances are in the graph, but out of Cypher's reach.
 """
 
 from __future__ import annotations

@@ -87,12 +87,19 @@ Several models share one database, told apart by `model_id`.
 
 ## The graph
 
-Every instance becomes an `IfcEntity` node with its class and all its
-supertypes as labels:
+Every instance becomes an `Entity` node with its class and all its supertypes
+as labels:
 
 ```text
-(:IfcEntity:IfcWallStandardCase:IfcWall:IfcBuildingElement:IfcElement:IfcProduct:IfcObject:IfcObjectDefinition:IfcRoot)
+(:Entity:IfcWallStandardCase:IfcWall:IfcBuildingElement:IfcElement:IfcProduct:IfcObject:IfcObjectDefinition:IfcRoot)
 ```
+
+The labels that begin with `Ifc` are IFC's classes. IFC-LPG's own labels never
+do: `Entity` on every instance, `Model` for a model, `StepBlock` for STEP text
+kept in blocks, and `Object` for an IFC5 object. Models of both formats share
+one series of ids, and each says where it came from: `format` is `step` or
+`ifcx`, `schema` the version of IFC, as `IFC4` or `IFC5`, and `form_version`
+the version of the graph's shape, raised when the shape changes.
 
 | Property | Meaning |
 |---|---|
@@ -123,7 +130,7 @@ How the values of the file are kept:
 | A list the schema gives rows of exactly two or three REALs, such as `CoordList` | A list of 2D or 3D Cartesian points |
 | Another list of lists of numbers | JSON text, since Neo4j has no nested lists |
 | What has no plain form, such as a list of typed values | Tagged JSON, with `$json` as its type |
-| The header | `ifc_header` on the `IfcModel` node |
+| The header | `ifc_header` on the `Model` node |
 | An instance in a block | STEP text in a `StepBlock` node |
 
 An `IfcOwnerHistory` is linked from its `IfcProject` only. Linked from every
@@ -151,7 +158,7 @@ they share, profiles, placements, contexts, styles, colours and layers. Points,
 directions, point lists, meshes and their faces, B-rep faces and loops, curves
 and style assignments are no nodes, and nor are owner histories other than the
 project's. They are written out as STEP, in order of id, and compressed into text
-on `StepBlock` nodes that hang off the `IfcModel`: at most 256 KiB of STEP per
+on `StepBlock` nodes that hang off the `Model`: at most 256 KiB of STEP per
 block, deflated and in base64, since a string is the one thing both databases
 store alike.
 
@@ -188,7 +195,7 @@ it costs to store and import, not what it costs to ask.
 
 The file is written from what the graph holds, not copied: the nodes in order of
 STEP id with their properties and relationships, the instances in the blocks, and
-the header from the `IfcModel`. A property or a relationship changed in the
+the header from the `Model`. A property or a relationship changed in the
 graph therefore shows up in the file.
 
 The writer reads only what the schema says is an attribute, so inverse
@@ -306,9 +313,9 @@ the files it imports, and each counts once. A later value for the same path and
 name wins, `null` takes one away, and two values that disagree are reported, as
 is an import that is none of the files: it is not fetched.
 
-Each path becomes an `IfcxObject` node, labelled with its class when it has one,
-in a model of its own, an `IfcxModel` with the header, the imports and the
-schemas. Children and what is inherited are `CHILD` and `INHERITS`
+Each path becomes an `Object` node, labelled with its class when it has one, in
+a model of its own, a `Model` with the `format` `ifcx`, the header, the imports
+and the schemas. Children and what is inherited are `CHILD` and `INHERITS`
 relationships with a `name`, and a `{"ref": path}` value is a `REF`
 relationship as well. The graph is the same on both databases, so an object's
 members are properties under dotted keys, as `bsi::ifc::class.code`; rows of two
@@ -440,13 +447,13 @@ asyncio.run(main())
 the constraints and indexes the queries rely on, and leaves those that exist.
 
 `import_file` refuses a model id that is taken. While it loads, the model's
-`IfcModel` node is `running`. Afterwards it is `done`, with its counts, or
+`Model` node is `running`. Afterwards it is `done`, with its counts, or
 `failed`, with the error and nothing else of the model left; `delete_model` in
 `ifc_lpg.importer` takes a model out of the graph. The geometry is a skeleton by
 default. `geometry_in_blocks=True` keeps all of it in blocks,
 `include_geometry=True` makes every instance a node, and `lossless=False` leaves
 the geometry out, so that the model cannot be written back: the forms of the
-[measurements](#measurements). The `IfcModel` says which form a model has in
+[measurements](#measurements). The `Model` says which form a model has in
 `geometry`: `skeleton`, `blocks` or `nodes`. A conversion and a
 writing each run in a process of their own, within the limits of
 `ifc_lpg.files.Limits`: 900 s, 4,096 MB of memory on POSIX and 5 million

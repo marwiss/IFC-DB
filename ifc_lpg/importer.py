@@ -20,7 +20,7 @@ _POINT = "CASE size(p) WHEN 2 THEN point({x: p[0], y: p[1]}) ELSE point({x: p[0]
 
 
 async def import_records(graph: Graph, model_id: str, records_path: Path) -> dict[str, int]:
-    """Create the ``IfcEntity`` nodes and their relationships for one model. Returns counts."""
+    """Create the ``Entity`` nodes and their relationships for one model. Returns counts."""
     nodes = relationships = 0
     block_rows: list[dict[str, Any]] = []
     node_groups: dict[tuple[tuple[str, ...], tuple[str, ...]], list[dict[str, Any]]] = {}
@@ -29,7 +29,7 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
     async def flush_nodes() -> None:
         nonlocal nodes
         for (labels, point_keys), rows in node_groups.items():
-            label_clause = ":".join(["IfcEntity", *labels])
+            label_clause = ":".join(["Entity", *labels])
             points = "".join(
                 f", n.{_safe(key)} = [p IN row.points.{_safe(key)} | " + _POINT + "]" for key in point_keys
             )
@@ -44,7 +44,7 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
         if block_rows:
             await graph.run(
                 """
-                MATCH (m:IfcModel {id: $model_id})
+                MATCH (m:Model {id: $model_id})
                 UNWIND $rows AS row
                 CREATE (m)-[:HAS_STEP_BLOCK]->(:StepBlock {
                     id: $model_id + ':' + toString(row.first), first_step: row.first, instances: row.instances,
@@ -61,7 +61,7 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
         for (rel_type, positioned), rows in edge_groups.items():
             relationship = f"{rel_type} {{position: row.position}}" if positioned else rel_type
             await graph.run(
-                f"UNWIND $rows AS row MATCH (a:IfcEntity {{id: row.a}}), (b:IfcEntity {{id: row.b}}) "
+                f"UNWIND $rows AS row MATCH (a:Entity {{id: row.a}}), (b:Entity {{id: row.b}}) "
                 f"CREATE (a)-[:{relationship}]->(b)",
                 rows=rows,
             )
@@ -105,7 +105,7 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
     await flush_edges()
     await graph.run(
         """
-        MATCH (m:IfcModel {id: $model_id}), (p:IfcEntity:IfcProject {model_id: $model_id})
+        MATCH (m:Model {id: $model_id}), (p:Entity:IfcProject {model_id: $model_id})
         MERGE (m)-[:HAS_PROJECT]->(p)
         """,
         model_id=model_id,
@@ -118,7 +118,7 @@ async def delete_blocks(graph: Graph, model_id: str) -> None:
     while True:
         rows = await graph.run(
             """
-            MATCH (:IfcModel {id: $model_id})-[:HAS_STEP_BLOCK]->(b:StepBlock)
+            MATCH (:Model {id: $model_id})-[:HAS_STEP_BLOCK]->(b:StepBlock)
             WITH b LIMIT $batch DETACH DELETE b RETURN count(*) AS n
             """,
             model_id=model_id,
@@ -129,12 +129,12 @@ async def delete_blocks(graph: Graph, model_id: str) -> None:
 
 
 async def delete_model(graph: Graph, model_id: str, *, keep_model: bool = False) -> int:
-    """Remove a model's entities and blocks in batches, and the ``IfcModel`` itself unless ``keep_model``."""
+    """Remove a model's entities and blocks in batches, and the ``Model`` itself unless ``keep_model``."""
     deleted = 0
     await delete_blocks(graph, model_id)
     while True:
         rows = await graph.run(
-            "MATCH (n:IfcEntity {model_id: $model_id}) WITH n LIMIT $batch DETACH DELETE n RETURN count(*) AS n",
+            "MATCH (n:Entity {model_id: $model_id}) WITH n LIMIT $batch DETACH DELETE n RETURN count(*) AS n",
             model_id=model_id,
             batch=BATCH,
         )
@@ -143,5 +143,8 @@ async def delete_model(graph: Graph, model_id: str, *, keep_model: bool = False)
         if count < BATCH:
             break
     if not keep_model:
-        await graph.run("MATCH (m:IfcModel {id: $model_id}) DETACH DELETE m", model_id=model_id)
+        await graph.run(
+            "MATCH (m:Model {id: $model_id}) WHERE coalesce(m.format, 'step') = 'step' DETACH DELETE m",
+            model_id=model_id,
+        )
     return deleted

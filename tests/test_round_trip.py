@@ -104,9 +104,9 @@ async def test_a_model_is_imported_once_and_a_failure_leaves_nothing_behind(grap
     broken.write_bytes(MODEL.read_bytes()[:2000])
     with pytest.raises(RuntimeError):
         await import_file(graph, broken, "broken")
-    rows = await graph.run("MATCH (m:IfcModel {id: 'broken'}) RETURN m.state AS state, m.error AS error")
+    rows = await graph.run("MATCH (m:Model {id: 'broken'}) RETURN m.state AS state, m.error AS error")
     assert rows[0]["state"] == "failed" and rows[0]["error"]
-    left = await graph.run("MATCH (n:IfcEntity {model_id: 'broken'}) RETURN count(n) AS n")
+    left = await graph.run("MATCH (n:Entity {model_id: 'broken'}) RETURN count(n) AS n")
     assert left[0]["n"] == 0
     with pytest.raises(NotExportable, match="failed"):
         await export_file(graph, "broken", tmp_path / "never.ifc")

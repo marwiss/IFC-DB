@@ -7,7 +7,7 @@ nodes, relationships and values are all in the other one too.
 
 Every entity becomes a node labelled with its class and all its supertypes
 (``IfcWallStandardCase``, ``IfcWall``, ``IfcBuildingElement``, …, ``IfcRoot``)
-plus ``IfcEntity``. Literal attributes become properties; attributes that point
+plus ``Entity``. Literal attributes become properties; attributes that point
 at other entities become relationships named after the attribute, and so do
 inverse attributes (``IsDefinedBy``, ``ContainsElements``), which is what makes
 queries such as the GTIN lookup readable. Geometry (representation items,

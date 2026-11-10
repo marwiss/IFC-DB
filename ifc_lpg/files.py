@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from ifc_lpg.exporter import export_records
-from ifc_lpg.graph import Graph
+from ifc_lpg.graph import FORM_VERSION, Graph
 from ifc_lpg.importer import delete_model, import_records
 
 
@@ -130,12 +130,14 @@ async def import_file(
 ) -> dict[str, Any]:
     """Convert ``source`` and load it into the graph as the model ``model_id``, which must not exist yet.
 
-    The ``IfcModel`` node is ``running`` while it loads and ``done`` with its counts afterwards. If anything fails, what
+    The ``Model`` node is ``running`` while it loads and ``done`` with its counts afterwards. If anything fails, what
     was loaded is taken out again and the model is ``failed``, with the error. Returns the model's properties."""
     rows = await graph.run(
-        "MERGE (m:IfcModel {id: $id}) ON CREATE SET m.state = 'running', m.running_at = $now, m.file_name = $name "
+        "MERGE (m:Model {id: $id}) ON CREATE SET m.format = 'step', m.form_version = $form, m.state = 'running', "
+        "m.running_at = $now, m.file_name = $name "
         "RETURN m.state AS state, m.running_at = $now AS new",
         id=model_id,
+        form=FORM_VERSION,
         now=_now(),
         name=source.name,
     )
@@ -158,7 +160,7 @@ async def import_file(
             await delete_model(graph, model_id, keep_model=True)
         error = f"{type(exc).__name__}: {exc}"[:500]
         await graph.run(
-            "MATCH (m:IfcModel {id: $id}) SET m.state = 'failed', m.failed_at = $now, m.error = $error",
+            "MATCH (m:Model {id: $id}) SET m.state = 'failed', m.failed_at = $now, m.error = $error",
             id=model_id,
             now=_now(),
             error=error,
@@ -175,7 +177,7 @@ async def import_file(
         "ifc_header": header.get("ifc_header"),
         "done_at": _now(),
     }
-    await graph.run("MATCH (m:IfcModel {id: $id}) SET m.state = 'done', m += $fields", id=model_id, fields=fields)
+    await graph.run("MATCH (m:Model {id: $id}) SET m.state = 'done', m += $fields", id=model_id, fields=fields)
     return {"id": model_id, "state": "done", **fields}
 
 

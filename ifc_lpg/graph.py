@@ -16,8 +16,9 @@ from typing import Any, Literal, Protocol
 
 Dialect = Literal["neo4j", "memgraph"]
 
-UNIQUE = (("IfcModel", "id"), ("IfcEntity", "id"), ("StepBlock", "id"), ("IfcxModel", "id"), ("IfcxObject", "id"))
-INDEXED = (("IfcEntity", "GlobalId"), ("IfcEntity", "model_id"), ("IfcxObject", "model_id"))
+UNIQUE = (("Model", "id"), ("Entity", "id"), ("StepBlock", "id"), ("Object", "id"))
+INDEXED = (("Entity", "GlobalId"), ("Entity", "model_id"), ("Object", "model_id"))
+FORM_VERSION = 1  # the version of the graph's shape on every Model, raised when the shape changes
 _NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 _ALREADY = ("already exists", "alreadyexists", "equivalentschemarulealreadyexists", "constraintalreadyexists")
 
