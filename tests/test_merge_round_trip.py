@@ -207,3 +207,15 @@ async def test_a_building_of_another_schema_is_migrated_first(graph: Any, tmp_pa
     )
     assert lacking == [{"n": 0}], "what came from IFC4 without one has the base project's"
     await comes_back(graph, "c", tmp_path)
+
+
+async def test_an_application_is_one_in_the_merged_model(graph: Any, tmp_path: Path) -> None:
+    await import_file(graph, FIXTURES_DIR / "three_walls_gtin.ifc", "old")
+    [building] = await names(graph, "MATCH (b:IfcBuilding {model_id: 'old'}) RETURN b.GlobalId AS v")
+    report = await merge_report(graph, "old", "old", building)
+    choices = {c["global_id"]: "new" for c in report["collisions"]}
+    await merge_building(graph, "old", "old", building, "c", choices=choices)
+    assert await names(graph, "MATCH (a:IfcApplication {model_id: 'c'}) RETURN count(a) AS v") == [1], (
+        "the schema keeps an application's identifier unique, so the copies use A's"
+    )
+    await comes_back(graph, "c", tmp_path)

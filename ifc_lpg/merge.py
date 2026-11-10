@@ -280,8 +280,10 @@ async def _load(graph: Graph, model_id: str) -> _Model:
         for target in instance.targets():
             referrers.setdefault(target, []).append(instance.step)
     model = _Model(model_id, fields, instances, referrers)
-    contexts = [s for s, i in instances.items() if i.is_a("IfcGeometricRepresentationContext")]
-    await _fetch(graph, model, contexts)
+    shared = [
+        s for s, i in instances.items() if i.is_a("IfcGeometricRepresentationContext") or i.is_a("IfcApplication")
+    ]
+    await _fetch(graph, model, shared)
     return model
 
 
@@ -398,6 +400,18 @@ def _anchors(instance: _Instance) -> list[int] | None:
             found = instance.attribute(name) + (value if isinstance(value, list) else [] if value is None else [value])
             return found + (_tagged_ids(json.loads(instance.tagged[name])) if name in instance.tagged else [])
     return None
+
+
+def _application_keys(model: _Model, step: int) -> list[tuple[Any, ...]]:
+    """What the schema keeps unique among applications: the identifier, and the full name with the version."""
+    instance = model.instances.get(step)
+    if instance is None or not instance.is_a("IfcApplication"):
+        return []
+    props = model.props.get(step, {})
+    return [
+        ("IfcApplication", props.get("ApplicationIdentifier")),
+        ("IfcApplication", props.get("ApplicationFullName"), props.get("Version")),
+    ]
 
 
 def _has_owner(instance: _Instance) -> bool:
@@ -525,6 +539,10 @@ def _select(
                 if key is not None and key in contexts:
                     selection.subst[target] = contexts[key]
                     continue
+                same = [contexts[k] for k in _application_keys(b, target) if k in contexts]
+                if same:  # the schema has one application of an identifier, and of a name and version
+                    selection.subst[target] = same[0]
+                    continue
                 if key is not None and not key[0] and target not in selection.chosen:
                     selection.new_contexts.append(target)
                 take(target)
@@ -631,11 +649,13 @@ async def _plan(
     if site_placement is None:
         raise MergeError("A's site has no placement")
     await _units(graph, a, b)
-    contexts: dict[Any, int] = {}
+    contexts: dict[Any, int] = {}  # what B's contexts and applications become, when A has the same
     for step in sorted(a.instances):
         key = _context_key(a, step)
         if key is not None:
             contexts.setdefault(key, step)
+        for unique in _application_keys(a, step):
+            contexts.setdefault(unique, step)
     first = _select(b, found[0], site_placement, contexts, {})
     by_id = {i.global_id: s for s, i in a.instances.items() if i.global_id is not None}
     pairs = [(x, by_id[g]) for x in sorted(first.chosen) if (g := b.instances[x].global_id) is not None and g in by_id]
