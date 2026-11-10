@@ -1,5 +1,5 @@
 # This file was generated with the assistance of an AI coding tool.
-"""Whether a file keeps to the IFC standard: ``python -m ifc_lpg.validation FILE [--against OTHER | --report]``.
+"""Whether a file keeps to the IFC standard: ``python -m ifc_lpg.validation FILE [--against OTHER... | --report]``.
 
 A graph database has no schema to hold a change to, so a property or a relationship changed in the graph can make a file
 that breaks the standard. IfcOpenShell's validator checks a file against the schema compiled from IFC's EXPRESS: the type
@@ -160,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ifc-lpg-validation")
     parser.add_argument("file", type=Path)
     which = parser.add_mutually_exclusive_group()
-    which.add_argument("--against", type=Path)
+    which.add_argument("--against", type=Path, nargs="+", help="the files it came from; their issues do not count")
     which.add_argument("--report", action="store_true", help="every issue, for the report of an uploaded file")
     parser.add_argument("--memory-mb", type=int, default=0)
     args = parser.parse_args(argv)
@@ -173,7 +173,7 @@ def main(argv: list[str] | None = None) -> int:
             sys.stdout.flush()
             return 1 if report["issue_count"] else 0
         ours = issues_of(args.file)
-        theirs = issues_of(args.against) if args.against else []
+        theirs = [issue for other in args.against or () for issue in issues_of(other)]
     except CannotValidate as exc:
         sys.stderr.write(json.dumps({"error": str(exc)}) + "\n")
         return 2
