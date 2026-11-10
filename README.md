@@ -31,6 +31,7 @@ rules and IDS.
   [comparing two files](#when-two-files-hold-the-same-model),
   [validation](#validation),
   [pointing at an instance](#pointing-at-an-instance),
+  [changing the graph](#changing-the-graph),
   [Neo4j and Memgraph](#neo4j-and-memgraph),
   [IFC5](#ifc5-experimental)
 - [Measurements](#measurements)
@@ -550,6 +551,30 @@ a change can remove them; a model with them is imported all the same. A node tha
 a block refers to counts as reached, since the database does not know that
 reference, and instances kept in blocks are not listed.
 
+## Changing the graph
+
+**In short:** a model can be changed in the database before it is written back.
+IFC–LPG helps a program that does so to keep the graph right: it says what
+refers to a part before the part is deleted, it puts the links that run backwards
+right after a change, and it lists what nothing reaches.
+
+**In detail:**
+
+The writer reads the forward relationships, so a change made to one of them
+reaches the file. The inverse relationships are there for queries, and a change
+to a forward relationship leaves them as they were. `refresh_inverses(graph,
+model_id, steps)` in `ifc_lpg.editing` makes them anew for the nodes whose forward
+relationships changed, exactly as the import makes them, from a table of the
+inverse attributes of IFC2X3, IFC4 and IFC4X3 that needs no IfcOpenShell.
+
+`referrers(graph, model_id, step)` lists what refers to an instance: the nodes,
+with the attribute and position, and the instances kept in blocks, whose
+references the database does not know. A node with referrers should not be
+deleted on its own, since the written file would then refer to nothing.
+`unreachable(graph, model_id)` in `ifc_lpg.paths` lists the nodes that no
+GlobalId reaches, which a change can remove. Dataregium uses these in its change
+sets, which are checked and approved before they become a new version.
+
 ## Neo4j and Memgraph
 
 **In short:** the two databases differ in small ways. IFC–LPG uses only what both do
@@ -609,6 +634,7 @@ kept as paths of their own, not resolved. A file of more than 256 MB, one that
 nests deeper than 32, and one that is no JSON or has numbers JSON does not
 have, such as `NaN`, is refused.
 
+
 ## Measurements
 
 **In short:** what was tried, on which real models, and how large and fast it was.
@@ -667,7 +693,7 @@ original and `1.E-05` in the copy, the same number.
 
 The package without extras needs nothing, and holds the graph side: the STEP
 reader and writer, the lossless form, importing and exporting records, deleting a
-model, the boxes' import, the paths, what no path reaches and IFC5's graph side. A server can run that
+model, the boxes' import, the paths, the support for changes and IFC5's graph side. A server can run that
 in its own process and leave IfcOpenShell to the workers, which need the extra
 `ifcopenshell`. Everything that reads, converts, writes or checks a file runs in a
 process of its own, within `ifc_lpg.files.Limits`: 900 s, 4,096 MB of memory on
@@ -683,6 +709,8 @@ POSIX and 5 million instances, unless others are given.
 | Add the boxes | `add_spatial(graph, path, model_id, dialect=…)` in `ifc_lpg.spatial`; `spatial_file` writes the geometry's file alone, and `import_spatial` reads one in |
 | Follow or give a path | `resolve` and `canonical_path` in `ifc_lpg.paths` |
 | List what no path reaches | `unreachable(graph, model_id)` in `ifc_lpg.paths` |
+| See what refers to an instance | `referrers(graph, model_id, step)` in `ifc_lpg.editing` |
+| Put the inverse relationships right after a change | `refresh_inverses(graph, model_id, steps)` in `ifc_lpg.editing` |
 | Put IFC5 files in, and write them back | `import_ifcx(graph, [paths], model_id)` and `export_ifcx(graph, model_id, path)` in `ifc_lpg.ifcx` |
 | Compare two files | `compare_files(first, second)` in `ifc_lpg.equivalence` |
 | Check against IDS | `check_ids(path, [ids_paths])` in `ifc_lpg.files` |

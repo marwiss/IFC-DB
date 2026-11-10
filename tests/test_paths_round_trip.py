@@ -112,8 +112,8 @@ async def test_what_no_global_id_reaches_is_listed(graph: Any) -> None:
     assert await unreachable(graph, "skeleton") == [
         {"step": 41, "ifc_class": "IfcAxis2Placement3D"},
         {"step": 42, "ifc_class": "IfcLocalPlacement"},
-    ], "an unused placement; the styles and the layer of the mesh in its block are reached, and the point is in a block"
+    ], "an unused placement; the styles and the layer of the mesh are reached, and #43 is referred to from a block"
     await import_file(graph, FIXTURES_DIR / "styled_mesh.ifc", "nodes", include_geometry=True)
-    assert [node["step"] for node in await unreachable(graph, "nodes")] == [40, 41, 42]
+    assert [node["step"] for node in await unreachable(graph, "nodes")] == [40, 41, 42, 43, 44, 45]
     await import_file(graph, FIXTURES_DIR / "spatial.ifc", "spatial")
     assert await unreachable(graph, "spatial") == [], "everything in the spatial fixture is used"
