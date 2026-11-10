@@ -48,7 +48,8 @@ GEOMETRY_ROOTS = (
     "IfcPresentationItem",
 )
 # What stays text in the skeleton, the default form: the many small instances that shapes are built of. The rest of the
-# geometry is nodes: representations, solids, profiles, mapped items, placements, styles, colours and layers.
+# geometry is nodes: representations, solids, profiles, mapped items, placements, styled items, styles, colours and
+# layers, so that every style can be edited (Martin 2026-11-10).
 BULK_GEOMETRY = (
     "IfcPoint",
     "IfcDirection",
@@ -57,7 +58,6 @@ BULK_GEOMETRY = (
     "IfcTessellatedItem",
     "IfcTopologicalRepresentationItem",
     "IfcCurve",
-    "IfcStyledItem",
     "IfcColourRgbList",
     "IfcTextureVertexList",
     "IfcTextureCoordinate",

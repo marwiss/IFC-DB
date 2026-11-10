@@ -5,7 +5,8 @@ from __future__ import annotations
 
 import pytest
 
-from ifc_lpg.paths import MAX_STEPS, PathError, Step, attribute_name, parse
+from ifc_lpg.convert import BULK_GEOMETRY
+from ifc_lpg.paths import _FROM_BLOCK, MAX_STEPS, PathError, Step, attribute_name, parse
 from ifc_lpg.schema import relationship_type
 
 
@@ -46,3 +47,25 @@ def test_every_reference_attribute_name_comes_back_from_its_relationship_type() 
                 assert attribute_name(relationship_type(name)) == name, (schema_name, entity.name(), name)
                 checked += 1
     assert checked > 10_000
+
+
+def test_the_inverses_that_start_in_a_block_are_the_schemas() -> None:
+    wrapper = pytest.importorskip("ifcopenshell.ifcopenshell_wrapper", reason="IfcOpenShell is not installed")
+
+    def chain(entity: object) -> set[str]:
+        names = set()
+        while entity is not None:
+            names.add(entity.name())  # type: ignore[attr-defined]
+            entity = entity.supertype()  # type: ignore[attr-defined]
+        return names
+
+    found: dict[str, tuple[str, str]] = {}
+    for schema_name in ("IFC2X3", "IFC4", "IFC4X3_ADD2"):
+        entities = wrapper.schema_by_name(schema_name).entities()
+        in_blocks = [chain(entity) for entity in entities if chain(entity) & set(BULK_GEOMETRY)]
+        for entity in entities:
+            if any(entity.name() in names for names in in_blocks):  # kept in a block, or a supertype of what is
+                for inverse in entity.inverse_attributes():
+                    pair = (inverse.entity_reference().name(), inverse.attribute_reference().name())
+                    found[inverse.name()] = pair
+    assert found == _FROM_BLOCK

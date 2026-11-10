@@ -155,10 +155,10 @@ file.
 Geometry is most of a model, and most of it is what shapes are built of. So by
 default a skeleton of it is nodes: the shapes of products, their representations
 with their types, solids and boolean results, mapped items and the definitions
-they share, profiles, placements, contexts, styles, colours and layers. Points,
-directions, point lists, meshes and their faces, B-rep faces and loops, curves
-and style assignments are no nodes, and nor are owner histories other than the
-project's. They are written out as STEP, in order of id, and compressed into text
+they share, profiles, placements, contexts, the items that give a shape its
+style, styles, colours and layers, so that every style can be edited. Points,
+directions, point lists, meshes and their faces, B-rep faces and loops, and
+curves are no nodes, and nor are owner histories other than the project's. They are written out as STEP, in order of id, and compressed into text
 on `StepBlock` nodes that hang off the `Model`: at most 256 KiB of STEP per
 block, deflated and in base64, since a string is the one thing both databases
 store alike.
@@ -341,9 +341,11 @@ Dataregium, which takes such changes, writes them this way:
 its node, and `canonical_path(graph, model_id, step)` gives a node the one path
 it is named by when several reach it: the shortest, forward steps before inverse
 ones, then the names in alphabetical order, the lowest position and the lowest
-GlobalId. Any path that reaches a node resolves to it. Both read the graph, so
-in the skeleton form a path stops where the geometry is kept in a block, and an
-instance only a block refers to has no path there.
+GlobalId. Any path that reaches a node resolves to it. Both read the graph. In
+the skeleton form a path can reach an instance kept in a block, as a mesh, and
+goes on from it only backwards, to what a node says about it: from a mesh to
+its `StyledByItem` and its `LayerAssignment`, so that the style of a mesh can be
+named and changed too. What a block holds is reached by its STEP id.
 
 ## Neo4j and Memgraph
 
@@ -405,16 +407,21 @@ node.
 
 The skeleton was measured on three other models, over an empty database, so
 its numbers are not those of the table above. What it costs
-depends on the program that wrote the file: for Bonsai little more than blocks,
-and for Tekla, whose skeleton is most of its instances, nearly as much as
-nodes. It gave the same answers as the nodes form to eight queries on geometry,
+depends on the program that wrote the file: for Bonsai, which gives every mesh a
+style of its own, a fifth of the nodes, and for Tekla, whose skeleton is most of
+its instances, nearly as much as nodes. It gave the same answers as the nodes form to eight queries on geometry,
 on both databases, and every model came back identical in every form.
 
 | Model | Instances | Nodes: blocks / skeleton / nodes | Neo4j store, MB | Memgraph memory, MB |
 |---|---|---|---|---|
-| Bonsai, IFC4X3 | 26,222 | 293 / 724 / 26,222 | 0.6 / 0.7 / 8.8 | 2.6 / 12.1 / 28.9 |
-| Revit, IFC2X3 | 38,898 | 9,786 / 15,064 / 38,898 | 4.1 / 5.6 / 12.3 | 17.6 / 23.4 / 38.0 |
-| Tekla, IFC2X3 | 224,496 | 104,918 / 193,045 / 224,496 | 67 / 115 / 124 | 136 / 214 / 237 |
+| Bonsai, IFC4X3 | 26,222 | 293 / 5,617 / 26,222 | 0.6 / 0.7 / 8.8 | 2.6 / 12.1 / 28.9 |
+| Revit, IFC2X3 | 38,898 | 9,786 / 15,331 / 38,898 | 4.1 / 5.6 / 12.3 | 17.6 / 23.4 / 38.0 |
+| Tekla, IFC2X3 | 224,496 | 104,918 / 197,985 / 224,496 | 67 / 115 / 124 | 136 / 214 / 237 |
+
+The skeleton's nodes count the items that give a shape its style, which are
+nodes since November 2026; its store and memory were measured before, when they
+were text in blocks. They are 4,893 instances in the Bonsai model, 267 in the
+Revit model and 4,940 in the Tekla model.
 
 Queries from a storey to its elements and through property sets took 7 to 25 and
 11 to 90 ms on Neo4j in all three forms, with no pattern among them. This is one

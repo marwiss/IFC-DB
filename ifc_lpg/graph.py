@@ -19,7 +19,7 @@ Dialect = Literal["neo4j", "memgraph"]
 UNIQUE = (("Model", "id"), ("Entity", "id"), ("StepBlock", "id"), ("Object", "id"))
 INDEXED = (("Entity", "GlobalId"), ("Entity", "model_id"), ("Object", "model_id"))
 POINT_INDEXED = (("Entity", "bbox_centre"),)  # the spatial layer, ifc_lpg.spatial
-FORM_VERSION = 1  # the version of the graph's shape on every Model, raised when the shape changes
+FORM_VERSION = 2  # the version of the graph's shape on every Model, raised when the shape changes
 _NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 _ALREADY = ("already exists", "alreadyexists", "equivalentschemarulealreadyexists", "constraintalreadyexists")
 

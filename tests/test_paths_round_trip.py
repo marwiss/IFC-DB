@@ -52,16 +52,45 @@ async def test_the_canonical_path_names_a_node_and_leads_back_to_it(graph: Any) 
         assert (await resolve(graph, "m", named["global_id"], named["path"]))["step"] == step, named
 
 
-async def test_in_the_skeleton_form_a_path_stops_at_a_block(graph: Any) -> None:
+async def test_in_the_skeleton_form_a_path_goes_on_backwards_from_a_block(graph: Any) -> None:
     await import_file(graph, FIXTURES_DIR / "spatial.ifc", "m")
     point = await resolve(graph, "m", WALL, "ObjectPlacement.RelativePlacement.Location")
     assert point == {"step": 32, "in_block": True}, "a point is kept in a block, and is no node"
-    with pytest.raises(PathError, match="no path goes on"):
+    with pytest.raises(PathError, match="only backwards"):
         await resolve(graph, "m", WALL, "ObjectPlacement.RelativePlacement.Location.Coordinates")
-    with pytest.raises(PathError, match="has no reference StyledByItem"):
-        await resolve(graph, "m", WALL, "Representation.Representations.Items.StyledByItem")
-    with pytest.raises(PathError, match="no GlobalId reaches #39"):
-        await canonical_path(graph, "m", 39), "only the styled item in a block refers to the style"
+    style = await resolve(graph, "m", WALL, "Representation.Representations.Items.StyledByItem.Styles")
+    assert style["step"] == 39, "a styled item is a node in the skeleton too"
+    assert await canonical_path(graph, "m", 39) == {
+        "global_id": WALL,
+        "path": "Representation.Representations.Items.StyledByItem[0].Styles",
+    }
+
+    await import_file(graph, FIXTURES_DIR / "styled_mesh.ifc", "mesh")
+    mesh = "0StyledMesh00000000002"
+    assert await resolve(graph, "mesh", mesh, "Representation.Representations.Items") == {"step": 24, "in_block": True}
+    first = await resolve(graph, "mesh", mesh, "Representation.Representations.Items.StyledByItem[0].Styles")
+    second = await resolve(graph, "mesh", mesh, "Representation.Representations.Items.StyledByItem[1].Styles")
+    assert (first["step"], second["step"]) == (32, 27), "two styled items on a mesh, ordered by what they hold"
+    layer = await resolve(graph, "mesh", mesh, "Representation.Representations.Items.LayerAssignment")
+    assert layer["step"] == 30 and layer["ifc_class"] == "IfcPresentationLayerAssignment"
+    with pytest.raises(PathError, match="has no HasColours"):
+        await resolve(graph, "mesh", mesh, "Representation.Representations.Items.HasColours")
+    colour = await canonical_path(graph, "mesh", 29)
+    assert colour == {
+        "global_id": mesh,
+        "path": "Representation.Representations.Items.StyledByItem[1].Styles.Styles.SurfaceColour",
+    }
+    assert (await resolve(graph, "mesh", colour["global_id"], colour["path"]))["step"] == 29
+    assert await canonical_path(graph, "mesh", 30) == {
+        "global_id": mesh,
+        "path": "Representation.Representations.Items.LayerAssignment[0]",
+    }
+    assert await canonical_path(graph, "mesh", 24) == {
+        "global_id": mesh,
+        "path": "Representation.Representations.Items",
+    }
+    with pytest.raises(PathError, match="no GlobalId reaches it through a block"):
+        await canonical_path(graph, "mesh", 25), "only the mesh in its block refers to its points"
 
 
 async def test_what_leads_to_no_node_is_an_error(graph: Any) -> None:
