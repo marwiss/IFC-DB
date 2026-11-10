@@ -11,7 +11,7 @@ import pytest
 from ifc_lpg.exporter import NotExportable
 from ifc_lpg.files import export_file, import_file
 from ifc_lpg.graph import FORM_VERSION
-from ifc_lpg.ifcx import compose, export_ifcx, import_ifcx, read_layer, same
+from ifc_lpg.ifcx import compose, export_ifcx, export_ifcx_overlay, import_ifcx, read_layer, same
 from ifc_lpg.importer import delete_model
 from tests.conftest import FIXTURES_DIR
 from tests.test_ifcx import BASE, BODY, OVERLAY, SPACE, WALL, write
@@ -90,3 +90,19 @@ async def test_a_file_that_cannot_be_read_leaves_nothing_behind(graph: Any, tmp_
     rows = await graph.run("MATCH (m:Model {id: 'broken'}) RETURN m.state AS state")
     assert rows == [{"state": "failed"}]
     assert (await graph.run("MATCH (n:Object {model_id: 'broken'}) RETURN count(n) AS n")) == [{"n": 0}]
+
+
+async def test_a_change_in_the_graph_is_written_as_a_layer(graph: Any, tmp_path: Path) -> None:
+    sources = [write(tmp_path, "base.ifcx", BASE), write(tmp_path, "overlay.ifcx", OVERLAY)]
+    await import_ifcx(graph, sources, "v1")
+    await import_ifcx(graph, sources, "v2")
+    await graph.run("MATCH (n:Object {id: 'v2:' + $path}) SET n.`bsi::ifc::prop::IsExternal` = false", path=WALL)
+    await graph.run("MATCH (n:Object {id: 'v2:' + $path}) REMOVE n.`example::note`", path=SPACE)
+    layer_path = tmp_path / "change.ifcx"
+    assert await export_ifcx_overlay(graph, "v1", "v2", layer_path, layer_id="example/change.ifcx") == 2
+    layer = read_layer(layer_path.read_bytes())
+    assert [item["uri"] for item in layer["imports"]][:2] == ["example/base.ifcx", "example/overlay.ifcx"]
+    back = tmp_path / "v2.ifcx"
+    await export_ifcx(graph, "v2", back)
+    again = compose([("base.ifcx", BASE), ("overlay.ifcx", OVERLAY), ("change.ifcx", layer)])
+    assert same(again.objects, compose([("v2.ifcx", read_layer(back.read_bytes()))]).objects)

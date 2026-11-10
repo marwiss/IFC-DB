@@ -364,6 +364,49 @@ def document_of(model: dict[str, Any], nodes: Iterator[dict[str, Any]]) -> dict[
     return {"header": model["header"], "imports": model["imports"], "schemas": model["schemas"], "data": data}
 
 
+def _objects(document: dict[str, Any]) -> dict[str, dict[str, dict[str, Any]]]:
+    return {entry["path"]: {part: dict(entry.get(part) or {}) for part in PARTS} for entry in document["data"]}
+
+
+def overlay_of(base: dict[str, Any], current: dict[str, Any], layer_id: str, layers: list[str]) -> dict[str, Any]:
+    """A layer that, composed after the files ``layers`` of ``base``, gives ``current``: only the paths, children,
+    inherited definitions and attributes that differ, with ``null`` for what was taken away. A path cannot be taken away
+    in IFCX, so a path that is gone keeps an entry with all of its parts set to ``null``."""
+    before, after = _objects(base), _objects(current)
+    data = []
+    for path in sorted(before.keys() | after.keys()):
+        entry: dict[str, Any] = {"path": path}
+        for part in PARTS:
+            old, new = before.get(path, {}).get(part, {}), after.get(path, {}).get(part, {})
+            changes = {key: value for key, value in new.items() if key not in old or not same(old[key], value)}
+            changes |= {key: None for key in old if key not in new}
+            if changes:
+                entry[part] = changes
+        if len(entry) > 1:
+            data.append(entry)
+    schemas = {
+        key: value
+        for key, value in current["schemas"].items()
+        if key not in base["schemas"] or not same(base["schemas"][key], value)
+    }
+    imports = [{"uri": layer} for layer in layers]
+    imports += [item for item in current["imports"] if item not in imports]
+    return {"header": {**current["header"], "id": layer_id}, "imports": imports, "schemas": schemas, "data": data}
+
+
+def write_overlay(base_path: Path, records_path: Path, target: Path, layer_id: str) -> int:
+    """Write the layer between two exported models as an IFCX file. Returns its number of entries."""
+    documents = []
+    for path in (base_path, records_path):
+        with path.open(encoding="utf-8") as handle:
+            model = json.loads(next(handle))
+            documents.append((model, document_of(model, (json.loads(line) for line in handle))))
+    (base_model, base), (_model, current) = documents
+    layer = overlay_of(base, current, layer_id, base_model.get("layers") or [])
+    target.write_text(json.dumps(layer, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    return len(layer["data"])
+
+
 async def import_records(graph: Graph, model_id: str, records_path: Path) -> dict[str, int]:
     """Create the nodes and relationships of the records for the model ``model_id``. Returns counts."""
     nodes = relationships = 0
@@ -427,7 +470,7 @@ async def export_records(graph: Graph, model_id: str, out: Path) -> int:
     """Write the model and its nodes to ``out``, for the writer. Returns the number of nodes."""
     rows = await graph.run(
         "MATCH (m:Model {id: $id, format: 'ifcx'}) RETURN m.state AS state, m.header AS header, m.imports AS imports, "
-        "m.schemas AS schemas",
+        "m.schemas AS schemas, m.layers AS layers",
         id=model_id,
     )
     if not rows:
@@ -435,6 +478,7 @@ async def export_records(graph: Graph, model_id: str, out: Path) -> int:
     if rows[0]["state"] != "done":
         raise ValueError(f"the model is {rows[0]['state']}, not done")
     model = {key: json.loads(rows[0][key]) for key in ("header", "imports", "schemas")}
+    model["layers"] = list(rows[0]["layers"] or [])
     paths = sorted(
         row["path"] for row in await graph.run("MATCH (n:Object {model_id: $id}) RETURN n.path AS path", id=model_id)
     )
@@ -527,6 +571,27 @@ async def export_ifcx(graph: Graph, model_id: str, target: Path, *, limits: Limi
     return count
 
 
+async def export_ifcx_overlay(
+    graph: Graph,
+    base_model_id: str,
+    model_id: str,
+    target: Path,
+    *,
+    layer_id: str | None = None,
+    limits: Limits = DEFAULT_LIMITS,
+) -> int:
+    """Write what ``model_id`` changes against ``base_model_id`` as an IFCX layer at ``target``, which imports the files
+    the base was composed of. Returns the number of entries in the layer."""
+    with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
+        base_path, records_path = Path(tmp) / "base.jsonl", Path(tmp) / "records.jsonl"
+        await export_records(graph, base_model_id, base_path)
+        await export_records(graph, model_id, records_path)
+        command = [sys.executable, "-m", "ifc_lpg.ifcx", "overlay", str(base_path), str(records_path), str(target)]
+        command += ["--layer-id", layer_id or target.name, "--memory-mb", str(limits.memory_mb)]
+        answer = await run_worker(command, "writing the IFCX layer", limits.timeout_seconds)
+    return int(json.loads(answer.strip().splitlines()[-1])["entries"])
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ifc-lpg-ifcx")
     modes = parser.add_subparsers(dest="mode", required=True)
@@ -535,7 +600,10 @@ def main(argv: list[str] | None = None) -> int:
     read.add_argument("--max-entries", type=int, default=5_000_000)
     write = modes.add_parser("write", help="write exported records as an IFCX file")
     write.add_argument("paths", type=Path, nargs=2, help="the records, then the file")
-    for mode in (read, write):
+    overlay = modes.add_parser("overlay", help="write what one exported model changes against another as a layer")
+    overlay.add_argument("paths", type=Path, nargs=3, help="the base's records, the model's records, then the file")
+    overlay.add_argument("--layer-id", required=True)
+    for mode in (read, write, overlay):
         mode.add_argument("--memory-mb", type=int, default=0)
     args = parser.parse_args(argv)
     from ifc_lpg.worker import limit_memory
@@ -546,6 +614,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.mode == "write":
             write_records(sources[0], out)
+            return 0
+        if args.mode == "overlay":
+            entries = write_overlay(sources[0], sources[1], out, args.layer_id)
+            sys.stdout.write(json.dumps({"entries": entries}) + "\n")
             return 0
         if not sources:
             raise IfcxError("no file to read")

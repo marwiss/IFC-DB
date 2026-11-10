@@ -634,6 +634,13 @@ kept as paths of their own, not resolved. A file of more than 256 MB, one that
 nests deeper than 32, and one that is no JSON or has numbers JSON does not
 have, such as `NaN`, is refused.
 
+A change made in the graph can be written as a layer of its own, as IFC5 means
+layers to be used: `export_ifcx_overlay(graph, base_model_id, model_id, path)`
+writes what the model changes against the base, which imports the files the base
+was composed of and holds only the paths, children, inherited definitions and
+attributes that differ, with `null` for what was taken away. Composed after those
+files, the layer gives the changed model. IFCX has no way to take away a path, so
+a path that is gone keeps an entry with all its parts set to `null`.
 
 ## Measurements
 
@@ -712,6 +719,7 @@ POSIX and 5 million instances, unless others are given.
 | See what refers to an instance | `referrers(graph, model_id, step)` in `ifc_lpg.editing` |
 | Put the inverse relationships right after a change | `refresh_inverses(graph, model_id, steps)` in `ifc_lpg.editing` |
 | Put IFC5 files in, and write them back | `import_ifcx(graph, [paths], model_id)` and `export_ifcx(graph, model_id, path)` in `ifc_lpg.ifcx` |
+| Write a change as an IFC5 layer | `export_ifcx_overlay(graph, base_model_id, model_id, path)` in `ifc_lpg.ifcx` |
 | Compare two files | `compare_files(first, second)` in `ifc_lpg.equivalence` |
 | Check against IDS | `check_ids(path, [ids_paths])` in `ifc_lpg.files` |
 
@@ -722,7 +730,7 @@ The command lines, each in a process of its own:
 | `python -m ifc_lpg.worker IFC OUT [--lossless] [--include-geometry \| --geometry-in-blocks]` | converts a file to records |
 | `python -m ifc_lpg.writer RECORDS OUT` | writes records as a file |
 | `python -m ifc_lpg.spatial IFC OUT [--threads T]` | writes the geometry's file: meshes, matrices and boxes |
-| `python -m ifc_lpg.ifcx read FILE... OUT` and `write RECORDS OUT` | reads and writes IFC5 files |
+| `python -m ifc_lpg.ifcx read FILE... OUT`, `write RECORDS OUT` and `overlay BASE RECORDS OUT --layer-id ID` | reads and writes IFC5 files and layers |
 | `python -m ifc_lpg.equivalence A B [--geometry]` | compares two files |
 | `python -m ifc_lpg.validation FILE [--against SRC]` | checks a file against the IFC schema |
 | `python -m ifc_lpg.ids FILE IDS...` | checks a file against IDS |

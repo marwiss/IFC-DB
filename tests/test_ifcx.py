@@ -18,6 +18,7 @@ from ifc_lpg.ifcx import (
     document_of,
     encode_attributes,
     main,
+    overlay_of,
     read_layer,
     records,
     same,
@@ -256,3 +257,34 @@ def test_reading_and_writing_run_as_processes_would(tmp_path: Path, monkeypatch:
     assert "no list of data" in json.loads(err.getvalue().splitlines()[-1])["error"]
     assert main(["read", str(tmp_path / "missing.ifcx"), str(found)]) == 3
     assert main(["read", str(base), str(found), "--max-entries", "2"]) == 3
+
+
+def _document(composed: Any) -> dict[str, Any]:
+    data = [{"path": path, **parts} for path, parts in sorted(composed.objects.items())]
+    return {"header": composed.header, "imports": composed.imports, "schemas": composed.schemas, "data": data}
+
+
+def test_a_layer_holds_only_what_changed_and_composes_to_the_change() -> None:
+    composed = compose([("base.ifcx", BASE), ("overlay.ifcx", OVERLAY)])
+    base = _document(composed)
+    current = json.loads(json.dumps(base))
+    wall = next(entry for entry in current["data"] if entry["path"] == WALL)
+    wall["attributes"]["bsi::ifc::prop::IsExternal"] = False
+    del wall["attributes"]["example::gwp"]
+    next(entry for entry in current["data"] if entry["path"] == STOREY)["children"]["Door"] = "d-1"
+    current["data"].append(
+        {"path": "d-1", "children": {}, "inherits": {}, "attributes": {"bsi::ifc::class": {"code": "IfcDoor"}}}
+    )
+    layer = overlay_of(base, current, "example/change.ifcx", composed.layers)
+    assert layer["header"]["id"] == "example/change.ifcx"
+    assert [item["uri"] for item in layer["imports"]][:2] == ["example/base.ifcx", "example/overlay.ifcx"]
+    assert {entry["path"] for entry in layer["data"]} == {WALL, STOREY, "d-1"}, "only what changed"
+    assert layer["data"][-1]["attributes"] == {"bsi::ifc::prop::IsExternal": False, "example::gwp": None}
+    again = compose([("base.ifcx", BASE), ("overlay.ifcx", OVERLAY), ("change.ifcx", layer)])
+    assert same(again.objects, compose([("current.ifcx", current)]).objects)
+    gone = json.loads(json.dumps(base))
+    gone["data"] = [entry for entry in gone["data"] if entry["path"] != SPACE]
+    removed = overlay_of(base, gone, "example/gone.ifcx", composed.layers)
+    assert removed["data"] == [{"path": SPACE, "attributes": {"bsi::ifc::class": None, "example::note": None}}], (
+        "a path cannot be taken away in IFCX, so all of it is set to null"
+    )
