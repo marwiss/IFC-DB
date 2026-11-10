@@ -11,6 +11,7 @@ A path follows the graph. In the skeleton form it can reach an instance kept in 
 it, through the few inverse attributes a node can stand in for such an instance (``_FROM_BLOCK``), as from a mesh to
 its ``StyledByItem``; the referring node keeps the instance's STEP id in ``<attribute>__step``.
 
+:func:`unreachable` lists the nodes that no path reaches, which only their STEP id names.
 :func:`resolve` follows a path to a node of a model. :func:`canonical_path` gives a node the one path it is named by
 when several reach it: the shortest, forward steps before inverse ones, the attribute names in alphabetical order, the
 lowest position, and the lowest GlobalId. Any path that reaches a node resolves to it; the canonical one is for naming.
@@ -24,7 +25,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from ifc_lpg.graph import Graph
+from ifc_lpg.lossless import STEP_SUFFIX, decode_block
 from ifc_lpg.schema import relationship_type
+from ifc_lpg.step import statements_of
 
 MAX_STEPS = 32  # a path longer than this is refused; the longest canonical path measured was 11 steps
 _STEP = re.compile(r"^([A-Za-z][A-Za-z0-9_]*)((?:\[\d+\])*)$")
@@ -356,3 +359,71 @@ async def _referrers(graph: Graph, model_id: str, schema: str, frontier: list[st
                         positions = () if position is None else (position,)
                         found.append((row["id"], row["global_id"], False, name, positions, block_step))
     return found
+
+
+_REFERENCE = re.compile(rb"#(\d+)")
+
+
+def _steps_of(value: Any) -> list[int]:
+    return (
+        [v for v in value if isinstance(v, int)]
+        if isinstance(value, list)
+        else [value]
+        if isinstance(value, int)
+        else []
+    )
+
+
+async def unreachable(graph: Graph, model_id: str) -> list[dict[str, Any]]:
+    """The nodes of the model that no GlobalId reaches, forward or backward, as ``{"step", "ifc_class"}`` by STEP id.
+
+    They are what only a STEP id names, such as unused placements; a check can warn of them, and a change can remove
+    them. The search follows the relationships both ways, the inverse attributes a node stands in for an instance kept
+    in a block (``_FROM_BLOCK``), and counts a node that a block refers to as reached, since the database does not know
+    that reference and the node is not to be removed. Instances kept in blocks are not listed: only their STEP id names
+    them, and they cannot be changed through the graph."""
+    nodes = await graph.run(
+        "MATCH (n:Entity {model_id: $model_id}) RETURN n.id AS id, n.step_id AS step, n.ifc_class AS ifc_class, "
+        "n.GlobalId IS NOT NULL AS rooted",
+        model_id=model_id,
+    )
+    edges = await graph.run(
+        "MATCH (a:Entity {model_id: $model_id})-[]->(b:Entity) RETURN a.id AS a, b.id AS b", model_id=model_id
+    )
+    out: dict[str, set[str]] = {}
+    for edge in edges:
+        out.setdefault(edge["a"], set()).add(edge["b"])
+    # What a node refers to in a block, by attribute; and the nodes that stand in an inverse of an instance in a block.
+    refers = await graph.run(
+        "MATCH (n:Entity {model_id: $model_id}) WHERE any(k IN keys(n) WHERE k ENDS WITH '__step') "
+        "RETURN n.id AS id, labels(n) AS labels, properties(n) AS props",
+        model_id=model_id,
+    )
+    into_blocks: dict[str, set[int]] = {}
+    standing: dict[int, set[str]] = {}
+    for row in refers:
+        for key, value in row["props"].items():
+            if key.endswith(STEP_SUFFIX):
+                into_blocks.setdefault(row["id"], set()).update(_steps_of(value))
+        for label, attribute in set(_FROM_BLOCK.values()):
+            if label in row["labels"]:
+                for block_step in _steps_of(row["props"].get(attribute + STEP_SUFFIX)):
+                    standing.setdefault(block_step, set()).add(row["id"])
+    from_blocks: set[int] = set()
+    for block in await graph.run(
+        "MATCH (:Model {id: $model_id})-[:HAS_STEP_BLOCK]->(b:StepBlock) RETURN b.text AS text", model_id=model_id
+    ):
+        for _step, statement in statements_of(decode_block(block["text"])):
+            from_blocks.update(int(number) for number in _REFERENCE.findall(statement.split(b"=", 1)[1]))
+    reached = {node["id"] for node in nodes if node["rooted"] or node["step"] in from_blocks}
+    frontier = list(reached)
+    while frontier:
+        found: set[str] = set()
+        for node_id in frontier:
+            found |= out.get(node_id, set())
+            for block_step in into_blocks.get(node_id, ()):
+                found |= standing.get(block_step, set())
+        frontier = list(found - reached)
+        reached |= found
+    left = [{"step": node["step"], "ifc_class": node["ifc_class"]} for node in nodes if node["id"] not in reached]
+    return sorted(left, key=lambda node: node["step"])

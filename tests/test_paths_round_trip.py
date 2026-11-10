@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from ifc_lpg.files import import_file
-from ifc_lpg.paths import PathError, canonical_path, resolve
+from ifc_lpg.paths import PathError, canonical_path, resolve, unreachable
 from tests.conftest import FIXTURES_DIR
 
 pytestmark = pytest.mark.integration
@@ -105,3 +105,15 @@ async def test_what_leads_to_no_node_is_an_error(graph: Any) -> None:
         await resolve(graph, "m", WALL, "HasOpenings[1]")
     with pytest.raises(PathError, match="has no node #999"):
         await canonical_path(graph, "m", 999)
+
+
+async def test_what_no_global_id_reaches_is_listed(graph: Any) -> None:
+    await import_file(graph, FIXTURES_DIR / "styled_mesh.ifc", "skeleton")
+    assert await unreachable(graph, "skeleton") == [
+        {"step": 41, "ifc_class": "IfcAxis2Placement3D"},
+        {"step": 42, "ifc_class": "IfcLocalPlacement"},
+    ], "an unused placement; the styles and the layer of the mesh in its block are reached, and the point is in a block"
+    await import_file(graph, FIXTURES_DIR / "styled_mesh.ifc", "nodes", include_geometry=True)
+    assert [node["step"] for node in await unreachable(graph, "nodes")] == [40, 41, 42]
+    await import_file(graph, FIXTURES_DIR / "spatial.ifc", "spatial")
+    assert await unreachable(graph, "spatial") == [], "everything in the spatial fixture is used"

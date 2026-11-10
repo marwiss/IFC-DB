@@ -438,7 +438,11 @@ too.
 The approach was tried on 28 sample files of up to 224,496 instances. Paths
 forward from a GlobalId reached 87 to 99.5 per cent of the instances, and with
 steps backwards 98 to 100 per cent. The 0 to 1.9 per cent that no path reaches
-are unused points and placements, which only their STEP id names.
+are unused points and placements, which only their STEP id names. `unreachable(graph,
+model_id)` lists the nodes no path reaches, so that a check can warn of them and
+a change can remove them; a model with them is imported all the same. A node that
+a block refers to counts as reached, since the database does not know that
+reference, and instances kept in blocks are not listed.
 
 ## Neo4j and Memgraph
 
@@ -543,7 +547,7 @@ original and `1.E-05` in the copy, the same number.
 
 The package without extras needs nothing, and holds the graph side: the STEP
 reader and writer, the lossless form, importing and exporting records, deleting a
-model, the boxes' import, the paths and IFC5's graph side. A server can run that
+model, the boxes' import, the paths, what no path reaches and IFC5's graph side. A server can run that
 in its own process and leave IfcOpenShell to the workers, which need the extra
 `ifcopenshell`. Everything that reads, converts, writes or checks a file runs in a
 process of its own, within `ifc_lpg.files.Limits`: 900 s, 4,096 MB of memory on
@@ -558,6 +562,7 @@ POSIX and 5 million instances, unless others are given.
 | Convert or write in steps of your own | `convert_file` and `write_file` in `ifc_lpg.files`, `import_records` in `ifc_lpg.importer`, `export_records` in `ifc_lpg.exporter` |
 | Add the boxes | `add_spatial(graph, path, model_id, dialect=…)` in `ifc_lpg.spatial`; `spatial_file` writes the geometry's file alone, and `import_spatial` reads one in |
 | Follow or give a path | `resolve` and `canonical_path` in `ifc_lpg.paths` |
+| List what no path reaches | `unreachable(graph, model_id)` in `ifc_lpg.paths` |
 | Put IFC5 files in, and write them back | `import_ifcx(graph, [paths], model_id)` and `export_ifcx(graph, model_id, path)` in `ifc_lpg.ifcx` |
 | Compare two files | `compare_files(first, second)` in `ifc_lpg.equivalence` |
 | Check against IDS | `check_ids(path, [ids_paths])` in `ifc_lpg.files` |
