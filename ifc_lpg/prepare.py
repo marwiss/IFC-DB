@@ -53,7 +53,13 @@ def prepare_file(source: Path, target: Path, *, schema: str | None, length_unit:
         model = migrated
     if length_unit:
         before = ifcopenshell.util.unit.get_project_unit(model, "LENGTHUNIT")
+        # A value with a unit of its own, such as the factor of a conversion-based unit, is not in the project's unit,
+        # but convert_file_length_units turns it if it is typed as a length; it is put back as it was.
+        own = {measure.id(): measure.ValueComponent for measure in model.by_type("IfcMeasureWithUnit")}
+        own = {step: (value.is_a(), value.wrappedValue) for step, value in own.items() if value is not None}
         model = ifcopenshell.util.unit.convert_file_length_units(model, length_unit)
+        for step, (kind, value) in own.items():
+            model.by_id(step).ValueComponent = model.create_entity(kind, value)
         answer["length_unit"] = [ifcopenshell.util.unit.get_full_unit_name(before) if before else None, length_unit]
     model.write(str(target))
     answer["changed_count"] = len(answer["changed"])
