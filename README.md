@@ -280,8 +280,13 @@ The second was tried on 28 sample files of up to 224,496 instances:
 - In the graph, 1,576 sampled paths in four models were followed step by step
   with parameterised Cypher, and every one ended at the right `step_id`.
 
-How a path is written, and what a change to an instance that several others share
-should mean, is still to be decided.
+Dataregium, which takes such changes, writes them this way:
+
+- **A path** starts at a GlobalId and is written with IFC's attribute names
+  and list positions, such as `IsDefinedBy[0].RelatingPropertyDefinition`. The
+  STEP id is the shorter way to the same instance.
+- **A change to a shared instance** applies to every instance that shares it.
+  Only an explicit copy changes one alone.
 
 ## Neo4j and Memgraph
 
