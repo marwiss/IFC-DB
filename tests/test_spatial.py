@@ -141,3 +141,61 @@ def test_the_centres_have_a_point_index_on_both_databases() -> None:
         schema_statements("neo4j")
     )
     assert "CREATE POINT INDEX ON :Entity(bbox_centre)" in schema_statements("memgraph")
+
+
+class TransientError(Exception):
+    pass
+
+
+class _Busy:
+    """A driver whose schema statements are refused while other queries run, as Memgraph refuses them."""
+
+    def __init__(self, refusals: int) -> None:
+        self.refusals, self.statements = refusals, []
+
+    def session(self, database: str | None = None) -> Any:
+        driver = self
+
+        class Session:
+            async def __aenter__(self) -> Any:
+                return self
+
+            async def __aexit__(self, *_: Any) -> None:
+                return None
+
+            async def run(self, statement: str) -> Any:
+                if driver.refusals:
+                    driver.refusals -= 1
+                    raise TransientError("Cannot get unique access to the storage.")
+                driver.statements.append(statement)
+
+                class Result:
+                    async def consume(self) -> None:
+                        return None
+
+                return Result()
+
+        return Session()
+
+
+async def test_making_the_point_index_anew_waits_for_sole_access(monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    from ifc_lpg.graph import DDL_ATTEMPTS, Neo4jGraph, rebuild_point_indexes
+
+    waits: list[float] = []
+
+    async def sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    monkeypatch.setattr(asyncio, "sleep", sleep)
+    driver = _Busy(refusals=5)
+    await rebuild_point_indexes(Neo4jGraph(driver), "memgraph")
+    assert driver.statements == [
+        "DROP POINT INDEX ON :Entity(bbox_centre)",
+        "CREATE POINT INDEX ON :Entity(bbox_centre)",
+    ]
+    assert waits == [0.25, 0.5, 1.0, 2.0, 4.0], "twice as long each time"
+    with pytest.raises(TransientError):
+        await rebuild_point_indexes(Neo4jGraph(_Busy(refusals=DDL_ATTEMPTS)), "memgraph")
+    assert sum(waits[5:]) > 30, "about half a minute before it gives up"

@@ -30,6 +30,9 @@ class Graph(Protocol):
     async def run(self, query: str, /, **params: Any) -> list[dict[str, Any]]: ...
 
 
+DDL_ATTEMPTS = 8
+
+
 class Neo4jGraph:
     """A :class:`Graph` over the official async driver (``neo4j.AsyncGraphDatabase.driver``), for Neo4j and Memgraph."""
 
@@ -42,9 +45,10 @@ class Neo4jGraph:
         return [record.data() for record in records]
 
     async def ddl(self, statement: str) -> None:
-        """A schema statement outside any transaction, which Memgraph asks for. One that exists already is no error,
-        and a transient error, as when two processes change the schema at once, is tried again."""
-        for attempt in range(5):
+        """A schema statement outside any transaction, which Memgraph asks for. One that exists already is no error.
+        A transient error is tried again for about half a minute, waiting twice as long each time: Memgraph changes its
+        schema only with sole access to the storage, and refuses while other queries run."""
+        for attempt in range(DDL_ATTEMPTS):
             try:
                 async with self.driver.session(database=self.database) as session:
                     await (await session.run(statement)).consume()
@@ -53,9 +57,9 @@ class Neo4jGraph:
                 message = str(exc).lower()
                 if any(marker in message for marker in _ALREADY):
                     return
-                if "transient" not in type(exc).__name__.lower() or attempt == 4:
+                if "transient" not in type(exc).__name__.lower() or attempt == DDL_ATTEMPTS - 1:
                     raise
-                await asyncio.sleep(0.2 * (attempt + 1))
+                await asyncio.sleep(0.25 * 2**attempt)
 
 
 def schema_statements(dialect: Dialect) -> list[str]:
