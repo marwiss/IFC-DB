@@ -11,9 +11,9 @@ graph shows up in the written file, and the written file is validated against
 the IFC standard.
 
 > **Status.** The code came here in November 2026 from
-> [Kontroll](https://github.com/marwiss/Kontroll), the OpenCDE server where it
-> was developed and tested, and Kontroll still runs a copy of its own. The
-> package is not on PyPI yet.
+> [Dataregium](https://github.com/marwiss/Dataregium), then named Kontroll, the
+> OpenCDE server where it was developed and tested, and Dataregium still runs a
+> copy of its own. The package is not on PyPI yet.
 
 ## Contents
 
@@ -50,7 +50,7 @@ does not say where in a list its target stood, and it turns all geometry into
 nodes, which the article names as a cost in size. Neither lets the file be
 written back.
 
-In 2026 the conversion was written anew in Kontroll, an OpenCDE server, where it
+In 2026 the conversion was written anew in Dataregium, an OpenCDE server, where it
 joins the components of BCF viewpoints to the building elements they point at.
 There it gained what a round trip needs: list positions, typed values, the
 header, geometry kept as text, a STEP reader and writer of its own, validation,
@@ -364,12 +364,12 @@ writing each run in a process of their own, within the limits of
 `ifc_lpg.files.Limits`: 900 s, 4,096 MB of memory on POSIX and 5 million
 instances, unless others are given.
 
-A program with its own record of a model, as Kontroll ties one to a project and
+A program with its own record of a model, as Dataregium ties one to a project and
 a document version, uses the parts instead: `convert_file` and `write_file` in
 `ifc_lpg.files`, `import_records` in `ifc_lpg.importer` and `export_records` in
 `ifc_lpg.exporter`. `check_ids` in `ifc_lpg.files` checks a file against IDS
-files in a process of its own. Kontroll's
-[IFC-LPG page](https://github.com/marwiss/Kontroll/blob/main/docs/ifc-lpg.md)
+files in a process of its own. Dataregium's
+[IFC-LPG page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-lpg.md)
 describes how a server uses them.
 
 Three tools work on files alone, without a database. Each answers in JSON and
@@ -405,7 +405,7 @@ on buildingSMART's rules, and
 ## Licence
 
 IFC–LPG is free software under the GNU Affero General Public License, version 3
-or later, in [LICENSE](LICENSE). It is the licence of Kontroll, where the code
+or later, in [LICENSE](LICENSE). It is the licence of Dataregium, where the code
 was written.
 
 ## References

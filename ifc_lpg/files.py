@@ -3,8 +3,8 @@
 
 :func:`import_file` converts a file in a process of its own, with a time limit and a memory limit (POSIX), loads the
 records into the graph and marks the model ``done``. :func:`export_file` writes a model back from what the graph holds,
-in a process of its own too. Programs with their own idea of a model, such as Kontroll, which ties a model to a project
-and a document version, use the parts directly: :func:`convert_file`, :func:`~ifc_lpg.importer.import_records`,
+in a process of its own too. Programs with their own idea of a model, such as Dataregium, which ties a model to a
+project and a document version, use the parts directly: :func:`convert_file`, :func:`~ifc_lpg.importer.import_records`,
 :func:`~ifc_lpg.exporter.export_records` and :func:`write_file`. :func:`check_ids` checks a file against IDS files, in a
 process of its own as well.
 """

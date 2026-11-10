@@ -9,3 +9,5 @@ dist/
 .ruff_cache/
 .ty_cache/
 .env
+CLAUDE.md
+.claude/

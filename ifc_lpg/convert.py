@@ -17,7 +17,7 @@ the ``IfcProject``.
 
 The mapping follows Zhu, Wu and Lei, "IFC-graph for facilitating building
 information access and query", Automation in Construction 148 (2023), 104778,
-https://doi.org/10.1016/j.autcon.2023.104778; ``docs/ifc-lpg.md`` says where
+https://doi.org/10.1016/j.autcon.2023.104778; the README says where
 this code differs from the article.
 """
 
