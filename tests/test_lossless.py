@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import tempfile
 from collections import defaultdict
+from datetime import UTC, datetime
 from io import StringIO
 from pathlib import Path
 from typing import Any
@@ -670,3 +671,40 @@ def test_the_file_is_written_in_the_order_it_is_given(tmp_path: Path) -> None:
     written = there_and_back(data, tmp_path)
     assert written.index(b"#3=") < written.index(b"#9="), "by id, as the records come from the graph"
     assert StepFile(written).ids() == [3, 9]
+
+
+def _with_on_the_first_named_node(tmp_path: Path, name: str, value: Any) -> tuple[Path, int]:
+    """The sample model as the export reads it, with one property of a node set to ``value``."""
+    records = records_of(MODEL.read_bytes(), tmp_path, include_geometry=False)
+    node = next(record for record in records if record["t"] == "n" and "Name" in record["props"])
+    node["props"][name] = value
+    return as_the_graph_holds_them(records, tmp_path / "instances.jsonl"), node["step"]
+
+
+@pytest.mark.parametrize(
+    "value",
+    [datetime(2026, 11, 10, 12, 0, tzinfo=UTC), b"\x89PNG", [(1.0, 2.0, 3.0), (4.0, 5.0, 6.0)]],
+    ids=["a date", "bytes", "points"],
+)
+def test_a_value_json_has_no_form_for_on_a_node_stays_out_of_the_file(tmp_path: Path, value: Any) -> None:
+    """A program may put a date or bytes on a node; the export goes on, and the file is the same."""
+    instances, _step = _with_on_the_first_named_node(tmp_path, "checked_at", value)
+    written = tmp_path / "written.ifc"
+    write_records(instances, written)
+    assert compare(MODEL.read_bytes(), written.read_bytes()).identical
+
+
+@pytest.mark.parametrize(
+    ("value", "says"),
+    [
+        (datetime(2026, 11, 10, 12, 0, tzinfo=UTC), "Name holds a datetime, which is no value of IFC"),
+        ([1, 2], "Name holds a value its type cannot take"),
+    ],
+    ids=["a date", "a list where a string goes"],
+)
+def test_an_attribute_that_holds_what_ifc_has_not_stops_the_writing_and_says_where(
+    tmp_path: Path, value: Any, says: str
+) -> None:
+    instances, step = _with_on_the_first_named_node(tmp_path, "Name", value)
+    with pytest.raises(ValueError, match=rf"^#{step} IFC\w+: {says}$"):
+        write_records(instances, tmp_path / "written.ifc")

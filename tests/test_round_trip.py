@@ -55,6 +55,14 @@ async def test_a_change_in_the_graph_shows_up_in_the_file(graph: Any, tmp_path: 
     assert not compare_files(MODEL, target).same_model, "the written file holds the changed model"
 
 
+async def test_a_date_a_program_puts_on_a_node_stays_out_of_the_file(graph: Any, tmp_path: Path) -> None:
+    await import_file(graph, MODEL, "walls")
+    await graph.run("MATCH (w:IfcWall {model_id: 'walls', GlobalId: $id}) SET w.checked_at = datetime()", id=WALL)
+    target = tmp_path / "back.ifc"
+    await export_file(graph, "walls", target)
+    assert compare_files(MODEL, target).identical
+
+
 async def test_a_model_is_imported_once_and_a_failure_leaves_nothing_behind(graph: Any, tmp_path: Path) -> None:
     await import_file(graph, MODEL, "walls")
     with pytest.raises(ValueError, match="exists already"):

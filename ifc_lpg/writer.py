@@ -30,7 +30,10 @@ def _instance_lines(lines: Iterator[str], schema: Schema) -> Iterator[bytes]:
             continue
         properties: dict[str, Any] = record["props"]
         keyword = str(properties["ifc_class"]).upper().encode("ascii")
-        parameters = decode_instance(keyword, properties, record["references"], schema)
+        try:
+            parameters = decode_instance(keyword, properties, record["references"], schema)
+        except ValueError as exc:
+            raise ValueError(f"#{record['step']} {keyword.decode('ascii')}: {exc}") from exc
         yield b"#%d=%s;\n" % (record["step"], statement_text(keyword, parameters))
 
 

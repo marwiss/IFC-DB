@@ -171,7 +171,9 @@ the header from the `IfcModel`. A property or a relationship changed in the
 graph therefore shows up in the file.
 
 The writer reads only what the schema says is an attribute, so inverse
-relationships and whatever else has been added to the graph stay behind. A file
+relationships and whatever else has been added to the graph stay behind, a date
+or bytes on a node as well. An attribute that holds what IFC has no value for
+stops the writing, with an error that names the instance and the attribute. A file
 is written a line at a time from the graph's pages, in order of id, so its size
 does not decide the memory it takes. An export stops if the blocks do not hold
 the number of instances the conversion put in them, since a file without them

@@ -41,6 +41,7 @@ STEP_SUFFIX = "__step"
 TAGGED = "$json"
 ALL_ARGUMENTS = "ifc_args"
 ARGUMENT_RELATIONSHIP = "ARGUMENT"
+NATIVE = "$native"  # marks a value JSON has no form for, such as a date or bytes, on its way out of the graph
 _NEO4J_INTEGER = 2**63
 
 
@@ -325,27 +326,42 @@ def decode_instance(
     if ALL_ARGUMENTS in properties:
         found = dict(by_type.get(ARGUMENT_RELATIONSHIP, ()))
         return [_from_tagged(value, found) for value in json.loads(properties[ALL_ARGUMENTS])]
-    parameters: list[Any] = []
     attributes = schema.attributes(keyword)
     if attributes is None:
         raise ValueError(f"{keyword!r} is no class of the schema, and the node does not hold its arguments")
+    parameters: list[Any] = []
     for attribute in attributes:
-        outside = properties.get(attribute.name + STEP_SUFFIX)
-        if outside is not None:
-            parameters.append(outside)
-            continue
-        prop = properties.get(attribute.name)
-        type_name = properties.get(attribute.name + TYPE_SUFFIX)
-        found_here = by_type.get(attribute.relationship, ())
-        if type_name == TAGGED:
-            parameters.append(_from_tagged(json.loads(str(prop)), dict(found_here)))
-        elif prop is None and not found_here:
-            parameters.append(_absent(attribute))
-        elif type_name is not None:
-            shape = schema.defined_type(type_name.encode("ascii"))
-            if shape is None:
-                raise ValueError(f"{type_name!r} is no type of the schema")
-            parameters.append((type_name.encode("ascii"), [_from_natural(prop, found_here, *shape)]))
-        else:
-            parameters.append(_from_natural(prop, found_here, attribute.kinds, attribute.leaf))
+        try:
+            parameters.append(_decode_attribute(attribute, properties, by_type, schema))
+        except (_NotNatural, TypeError, AttributeError) as exc:
+            raise ValueError(f"{attribute.name} holds a value its type cannot take") from exc
     return parameters
+
+
+def _decode_attribute(
+    attribute: Attribute, properties: Mapping[str, Any], by_type: Mapping[str, list[tuple[Any, int]]], schema: Schema
+) -> Any:
+    for key in (attribute.name, attribute.name + TYPE_SUFFIX, attribute.name + STEP_SUFFIX):
+        value = properties.get(key)
+        if isinstance(value, dict) and NATIVE in value:
+            raise ValueError(f"{key} holds a {value[NATIVE]}, which is no value of IFC")
+    outside = properties.get(attribute.name + STEP_SUFFIX)
+    if outside is not None:
+        if not isinstance(outside, int) and not (
+            isinstance(outside, list) and all(isinstance(i, int) for i in outside)
+        ):
+            raise ValueError(f"{attribute.name + STEP_SUFFIX} holds no STEP id")
+        return outside
+    prop = properties.get(attribute.name)
+    type_name = properties.get(attribute.name + TYPE_SUFFIX)
+    found_here = by_type.get(attribute.relationship, ())
+    if type_name == TAGGED:
+        return _from_tagged(json.loads(str(prop)), dict(found_here))
+    if prop is None and not found_here:
+        return _absent(attribute)
+    if type_name is not None:
+        shape = schema.defined_type(type_name.encode("ascii"))
+        if shape is None:
+            raise ValueError(f"{type_name!r} is no type of the schema")
+        return (type_name.encode("ascii"), [_from_natural(prop, found_here, *shape)])
+    return _from_natural(prop, found_here, attribute.kinds, attribute.leaf)

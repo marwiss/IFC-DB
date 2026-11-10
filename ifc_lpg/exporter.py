@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, TextIO
 
 from ifc_lpg.graph import Graph
-from ifc_lpg.lossless import decode_block
+from ifc_lpg.lossless import NATIVE, decode_block
 from ifc_lpg.step import statements_of
 
 PAGE = 1_000
@@ -23,9 +23,16 @@ class NotExportable(ValueError):
 
 
 def node_line(step: int, properties: dict[str, Any], references: list[Any]) -> str:
-    """One node as a line that sorts by its id, with the id in front to be cut off in the end."""
-    record = json.dumps({"step": step, "props": properties, "references": references})
+    """One node as a line that sorts by its id, with the id in front to be cut off in the end.
+
+    A node can hold what JSON has no form for, such as a date or bytes that a program put there. Such a value goes through
+    marked: the writer passes over it, unless it stands where an attribute does. A point is a tuple, and goes as a list."""
+    record = json.dumps({"step": step, "props": properties, "references": references}, default=_marked)
     return f"{step:0{_ID_WIDTH}d} {record}\n"
+
+
+def _marked(value: Any) -> dict[str, str]:
+    return {NATIVE: type(value).__name__}
 
 
 def block_lines(text: str) -> Iterator[str]:
