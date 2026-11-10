@@ -2,9 +2,9 @@
 """What a change in the graph needs, on the graph side and without extras.
 
 :func:`referrers` lists what refers to a node, through relationships and from instances kept in blocks, which the
-database does not know of: a node with referrers should not be deleted without them. :func:`refresh_inverses` makes the
-inverse relationships of changed nodes anew from their forward ones, since a forward relationship that is changed in the
-graph leaves the inverse one as it was. The writer reads neither; both are for the questions asked of the graph.
+database does not know of: a node with referrers should not be deleted without them, and :func:`delete_nodes` deletes
+nodes only when nothing else refers to them. :func:`refresh_inverses` makes the inverse relationships of changed nodes
+anew from their forward ones, since a forward relationship that is changed in the graph leaves the inverse one as it was.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ import re
 from typing import Any
 
 from ifc_lpg.graph import Graph
+from ifc_lpg.importer import BATCH
 from ifc_lpg.inverses import inverses
 from ifc_lpg.lossless import decode_block
 from ifc_lpg.paths import attribute_name
@@ -22,30 +23,68 @@ from ifc_lpg.step import statements_of
 _REFERENCE = re.compile(rb"#(\d+)")
 
 
-async def referrers(graph: Graph, model_id: str, step: int) -> list[dict[str, Any]]:
-    """What refers to the instance ``step`` of the model, by STEP id: a node as ``{"step", "ifc_class", "attribute",
-    "position"}``, and an instance kept in a block as ``{"step", "in_block": True}``."""
-    rows = await graph.run(
-        "MATCH (a:Entity)-[r]->(n:Entity {id: $id}) WHERE r.position IS NOT NULL "
-        "RETURN a.step_id AS step, a.ifc_class AS ifc_class, type(r) AS type, r.position AS position",
-        id=f"{model_id}:{step}",
-    )
-    found: list[dict[str, Any]] = [
-        {
-            "step": row["step"],
-            "ifc_class": row["ifc_class"],
-            "attribute": attribute_name(row["type"]),
-            "position": row["position"],
-        }
-        for row in rows
-    ]
+class StillReferred(ValueError):
+    """Something outside the nodes to delete refers to them, so nothing was deleted. ``referrers`` says what."""
+
+    def __init__(self, referrers: list[dict[str, Any]]) -> None:
+        listed = ", ".join(f"#{r['step']} to #{r['target']}" for r in referrers[:10])
+        super().__init__(f"{len(referrers)} references to what was to be deleted: {listed}")
+        self.referrers = referrers
+
+
+async def _referrers(graph: Graph, model_id: str, steps: list[int]) -> list[dict[str, Any]]:
+    """What refers to the instances ``steps``, with the one each refers to as ``target``."""
+    wanted = set(steps)
+    found: list[dict[str, Any]] = []
+    for start in range(0, len(steps), BATCH):
+        for row in await graph.run(
+            "UNWIND $ids AS id MATCH (a:Entity)-[r]->(n:Entity {id: id}) WHERE r.position IS NOT NULL "
+            "RETURN a.step_id AS step, a.ifc_class AS ifc_class, type(r) AS type, r.position AS position, "
+            "n.step_id AS target",
+            ids=[f"{model_id}:{step}" for step in steps[start : start + BATCH]],
+        ):
+            rel_type = row.pop("type")
+            found.append({**row, "attribute": attribute_name(rel_type)})
     for block in await graph.run(
         "MATCH (:Model {id: $model_id})-[:HAS_STEP_BLOCK]->(b:StepBlock) RETURN b.text AS text", model_id=model_id
     ):
         for block_step, statement in statements_of(decode_block(block["text"])):
-            if step in (int(number) for number in _REFERENCE.findall(statement.split(b"=", 1)[1])):
-                found.append({"step": block_step, "in_block": True})
-    return sorted(found, key=lambda referrer: (referrer["step"], str(referrer.get("attribute"))))
+            refers = {int(number) for number in _REFERENCE.findall(statement.split(b"=", 1)[1])}
+            found.extend({"step": block_step, "in_block": True, "target": t} for t in sorted(refers & wanted))
+    return sorted(found, key=lambda r: (r["target"], r["step"], str(r.get("attribute")), str(r.get("position"))))
+
+
+async def referrers(graph: Graph, model_id: str, step: int) -> list[dict[str, Any]]:
+    """What refers to the instance ``step`` of the model, by STEP id: a node as ``{"step", "ifc_class", "attribute",
+    "position"}``, and an instance kept in a block as ``{"step", "in_block": True}``."""
+    found = await _referrers(graph, model_id, [step])
+    return [{key: value for key, value in r.items() if key != "target"} for r in found]
+
+
+async def delete_nodes(graph: Graph, model_id: str, steps: list[int]) -> int:
+    """Delete the nodes ``steps`` of the model, with their relationships, when nothing else refers to them: no other
+    node, and no instance kept in a block, whose reference the database does not know and would point to nothing in the
+    written file. Otherwise nothing is deleted, and :class:`StillReferred` lists what refers. An instance kept in a
+    block cannot be deleted here. Returns how many nodes went."""
+    wanted = sorted(set(steps))
+    found = set()
+    for start in range(0, len(wanted), BATCH):
+        rows = await graph.run(
+            "UNWIND $ids AS id MATCH (n:Entity {id: id}) RETURN n.step_id AS step",
+            ids=[f"{model_id}:{step}" for step in wanted[start : start + BATCH]],
+        )
+        found.update(row["step"] for row in rows)
+    if missing := [step for step in wanted if step not in found]:
+        raise ValueError(f"the model has no node {', '.join(f'#{s}' for s in missing[:10])}; one in a block cannot go")
+    outside = [r for r in await _referrers(graph, model_id, wanted) if r["step"] not in found or r.get("in_block")]
+    if outside:
+        raise StillReferred(outside)
+    for start in range(0, len(wanted), BATCH):
+        await graph.run(
+            "UNWIND $ids AS id MATCH (n:Entity {id: id}) DETACH DELETE n",
+            ids=[f"{model_id}:{step}" for step in wanted[start : start + BATCH]],
+        )
+    return len(wanted)
 
 
 async def refresh_inverses(graph: Graph, model_id: str, steps: list[int]) -> dict[str, int]:

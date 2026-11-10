@@ -571,8 +571,9 @@ reference, and instances kept in blocks are not listed.
 
 **In short:** a model can be changed in the database before it is written back.
 IFC–LPG helps a program that does so to keep the graph right: it says what
-refers to a part before the part is deleted, it puts the links that run backwards
-right after a change, and it lists what nothing reaches.
+refers to a part, it deletes a part only when nothing else refers to it, it puts
+the links that run backwards right after a change, and it lists what nothing
+reaches.
 
 **In detail:**
 
@@ -586,8 +587,10 @@ inverse attributes of IFC2X3, IFC4 and IFC4X3 that needs no IfcOpenShell.
 `referrers(graph, model_id, step)` lists what refers to an instance: the nodes,
 with the attribute and position, and the instances kept in blocks, whose
 references the database does not know. A node with referrers should not be
-deleted on its own, since the written file would then refer to nothing.
-`unreachable(graph, model_id)` in `ifc_lpg.paths` lists the nodes that no
+deleted on its own, since the written file would then refer to nothing, so
+`delete_nodes(graph, model_id, steps)` deletes nodes only when nothing outside them
+refers to them, and otherwise raises `StillReferred` with what does and deletes
+nothing. `unreachable(graph, model_id)` in `ifc_lpg.paths` lists the nodes that no
 GlobalId reaches, which a change can remove. Dataregium uses these in its change
 sets, which are checked and approved before they become a new version.
 
@@ -781,6 +784,7 @@ POSIX and 5 million instances, unless others are given.
 | Follow or give a path | `resolve` and `canonical_path` in `ifc_lpg.paths` |
 | List what no path reaches | `unreachable(graph, model_id)` in `ifc_lpg.paths` |
 | See what refers to an instance | `referrers(graph, model_id, step)` in `ifc_lpg.editing` |
+| Delete nodes that nothing else refers to | `delete_nodes(graph, model_id, steps)` in `ifc_lpg.editing` |
 | Put the inverse relationships right after a change | `refresh_inverses(graph, model_id, steps)` in `ifc_lpg.editing` |
 | Bring a building into another project | `merge_report(graph, base_id, other_id, building)` and `merge_building(graph, base_id, other_id, building, model_id, choices=…)` in `ifc_lpg.merge` |
 | Put IFC5 files in, and write them back | `import_ifcx(graph, [paths], model_id)` and `export_ifcx(graph, model_id, path)` in `ifc_lpg.ifcx` |

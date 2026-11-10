@@ -3,13 +3,15 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import pytest
 
-from ifc_lpg.editing import referrers, refresh_inverses
-from ifc_lpg.files import import_file
-from ifc_lpg.paths import resolve
+from ifc_lpg.editing import StillReferred, delete_nodes, referrers, refresh_inverses
+from ifc_lpg.files import export_file, import_file
+from ifc_lpg.paths import resolve, unreachable
+from ifc_lpg.validation import compare_issues, issues_of
 from tests.conftest import FIXTURES_DIR
 
 pytestmark = pytest.mark.integration
@@ -57,3 +59,25 @@ async def test_what_refers_to_a_node_from_the_graph_and_from_a_block(graph: Any)
     await import_file(graph, FIXTURES_DIR / "styled_mesh.ifc", "mesh")
     assert await referrers(graph, "mesh", 43) == [{"step": 45, "in_block": True}], "a circle in a block"
     assert await referrers(graph, "mesh", 42) == [], "an unused placement"
+
+
+async def test_a_node_is_deleted_only_when_nothing_else_refers_to_it(graph: Any, tmp_path: Path) -> None:
+    await import_file(graph, FIXTURES_DIR / "styled_mesh.ifc", "mesh")
+    with pytest.raises(StillReferred) as raised:
+        await delete_nodes(graph, "mesh", [41])
+    assert raised.value.referrers == [
+        {"step": 42, "ifc_class": "IfcLocalPlacement", "position": 0, "target": 41, "attribute": "RelativePlacement"}
+    ]
+    with pytest.raises(StillReferred) as raised:
+        await delete_nodes(graph, "mesh", [43])
+    assert raised.value.referrers == [{"step": 45, "in_block": True, "target": 43}], "a circle in a block"
+    with pytest.raises(ValueError, match="no node #40"):
+        await delete_nodes(graph, "mesh", [40])
+    assert [r["step"] for r in await unreachable(graph, "mesh")] == [41, 42], "nothing went"
+
+    assert await delete_nodes(graph, "mesh", [41, 42]) == 2, "together, as nothing else refers to them"
+    assert await unreachable(graph, "mesh") == []
+    written = tmp_path / "written.ifc"
+    await export_file(graph, "mesh", written)
+    found = compare_issues(issues_of(written), issues_of(FIXTURES_DIR / "styled_mesh.ifc"))
+    assert found["new_count"] == 0, found["new"]
