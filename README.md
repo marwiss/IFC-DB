@@ -13,11 +13,13 @@ rules and IDS.
 > this repository. [Dataregium](https://github.com/marwiss/Dataregium), the
 > OpenCDE server where the code began under the name Kontroll, uses it at a fixed
 > commit, and [Dataspatium](https://github.com/marwiss/Dataspatium), the app in
-> the browser, reads the graphs it makes.
+> the browser, shows and queries the graphs it makes through Dataregium. How they
+> use it is told [below](#how-dataregium-and-dataspatium-use-it).
 
 ## Contents
 
 - [In plain words](#in-plain-words), for everyone
+- [How Dataregium and Dataspatium use it](#how-dataregium-and-dataspatium-use-it)
 - [Quick start](#quick-start), for developers
 - How it works:
   [import](#how-a-model-is-imported),
@@ -85,7 +87,61 @@ browser, and never install it themselves.
 | Cypher | The question language of both databases |
 | IFC5 | The next version of IFC, still a draft, written as JSON |
 
+## How Dataregium and Dataspatium use it
+
+**In short:** IFC–LPG is the part that turns building models into a graph and
+back again in two other projects by the same author. People use those two; they
+seldom see IFC–LPG itself.
+
+- **[Dataregium](https://github.com/marwiss/Dataregium)** is a server where a
+  project keeps its building models, documents and issues. It follows OpenCDE,
+  buildingSMART's open rules for such servers, so that other programs can use it
+  too. When someone uploads an IFC model, Dataregium uses IFC–LPG to check the
+  file and to put it into its graph database. From there it links the issues to
+  the walls and doors they are about, answers questions about the model, keeps
+  every version of it, writes any version back as a file, and makes the 3D view.
+- **[Dataspatium](https://github.com/marwiss/Dataspatium)** is an app in the web
+  browser. It connects to Dataregium, shows the models in 3D, asks questions of
+  the graph, such as which parts lie near a given part, compares two versions,
+  and proposes changes that Dataregium tries and a project manager approves.
+  Dataspatium does not run IFC–LPG itself; it reads the graphs that IFC–LPG made
+  on the server.
+
+**In detail:**
+
+- **Dataregium** installs IFC–LPG from this repository at a fixed commit and moves
+  it when a new one is needed. The server's own process uses the graph side,
+  which needs no IfcOpenShell; worker processes with the extra `ifcopenshell` read,
+  convert, write and check files. Its
+  [IFC-LPG page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-lpg.md)
+  describes how. On upload it checks the file against the IFC schema,
+  buildingSMART's rules and IDS (`validation`, `gherkin`, `check_ids`), converts it
+  in a worker and imports the records (`convert_file`, `import_records`), with one
+  `Model` per document version. It joins the components of BCF viewpoints to
+  `Entity` nodes by GlobalId, gives its members named Cypher queries over the
+  forward relationships, and writes a version back with `export_records` and
+  `write_file`. A proposed change, a BIM snippet in a BCF issue, names what it
+  changes by GlobalId and path; Dataregium resolves it with `resolve` against the
+  version it was made on, keys it with `canonical_path`, and compares two changes
+  by the nodes they resolve to. After a conversion it runs the geometry worker
+  (`python -m ifc_lpg.spatial`), puts the boxes into its graph (`import_spatial`)
+  and builds its glTF from the worker's file. In its local mode it keeps a
+  working copy in Memgraph beside the Neo4j archive, in the same form.
+- **Dataspatium** uses IFC–LPG only through Dataregium. It reads the graph's form
+  directly with the server's graph queries: the labels, `position`, `__type`,
+  `__step`, `StepBlock`, and `form_version` in its list of models. Its query of
+  the parts near a part uses `bbox_centre`, and a change it proposes names its
+  instances by GlobalId and path.
+- **Versions.** Dataregium and Dataspatium 2 have the IFC graph and its links to
+  issues; version 3 adds the graph that is written back, the versions and change
+  sets, the comparison of two versions, the glTF from the server and the boxes.
+  The two projects are released together, and each version of one works with the
+  same version of the other.
+
 ## Quick start
+
+**In short:** this part is for developers who want IFC–LPG in a program of their
+own. Whoever uses Dataregium or Dataspatium needs none of it.
 
 You need Python 3.11 or later and a Neo4j 5.26 or Memgraph 3.14. For a first try,
 either runs in Docker:
@@ -169,6 +225,11 @@ The [reference](#reference) lists every function and command line.
 
 ## How a model is imported
 
+**In short:** IFC–LPG reads the file itself, checks that it is whole, and copies every
+record into the database. A damaged file is refused, not loaded in part.
+
+**In detail:**
+
 1. **The file is read by IFC–LPG's own STEP reader.** IfcOpenShell supplies the
    schema's tables and nothing else. Its own parser changes some values on
    reading, such as `.NULLENUM.` to `$` and `($,$)` to `()`, which files from
@@ -195,6 +256,12 @@ model id that is taken is refused. Several models share one database, told apart
 by `model_id`.
 
 ## The graph
+
+**In short:** every record of the file becomes a node, named after its kind, such as a wall
+or a door, and every link between records becomes a relationship. IFC–LPG's own
+bookkeeping has names that do not begin with `Ifc`, so the two are not mixed up.
+
+**In detail:**
 
 Every instance that is a node is an `Entity` with its class and all its
 supertypes as labels:
@@ -256,6 +323,11 @@ with underscores, so they cannot be mistaken for IFC's attributes.
 
 ## How STEP ids are kept
 
+**In short:** every record keeps its number from the file, so the file can be written
+back with the same numbers, and programs that rely on them keep working.
+
+**In detail:**
+
 Every node keeps the number its instance has in the file, in `step_id`, and its
 `id` is `<model id>:<STEP id>`. A reference to an instance that is no node,
 because it is in a block, keeps that instance's number in `<attribute>__step`.
@@ -266,6 +338,13 @@ and with the same values. Native IFC tools that merge by id, such as
 [ifcmerge](https://github.com/brunopostle/ifcmerge), depend on that.
 
 ## How geometry is stored
+
+**In short:** the shapes are most of a file. By default IFC–LPG makes nodes of what is
+useful to ask about and to change, such as the kind of shape, its depth, its
+colour and its layer, and packs the many small parts, such as points, triangles
+and curves, as text.
+
+**In detail:**
 
 Geometry is most of a model, and most of it is what shapes are built of. Three
 forms are on offer, and the `Model` says which one a model has in `geometry`.
@@ -308,6 +387,12 @@ blocks is what it costs to store and import, not what it costs to ask.
 
 ## Where the products are
 
+**In short:** a file only says where things are relative to each other. IFC–LPG works out
+a box in metres around every part of the building, so that you can ask what lies
+near what, and it prepares the shapes for a 3D view.
+
+**In detail:**
+
 The coordinates in a file are local: an element is placed relative to its
 storey, the storey to the building, and so on, and a shape is often placed again
 through a mapped item. In the renovation model of the
@@ -339,6 +424,11 @@ builds its 3D view from that file.
 
 ## How a model is exported
 
+**In short:** the file is written from the database, so a change made there is in the
+file, and what IFC–LPG added for its own use stays out.
+
+**In detail:**
+
 The file is written from what the graph holds, not copied: the nodes in order of
 STEP id with their properties and relationships, the instances in the blocks, and
 the header from the `Model`. A property or a relationship changed in the graph
@@ -354,6 +444,11 @@ the number of instances the conversion put in them, since a file without them
 could not be told from a right one.
 
 ## When two files hold the same model
+
+**In short:** IFC–LPG can tell whether two files describe exactly the same model, even
+when their records are numbered or ordered differently.
+
+**In detail:**
 
 A comparison says whether two files hold the same model: there is a one-to-one
 pairing of their instances in which paired instances have the same class and the
@@ -377,6 +472,12 @@ model with many instances that look alike the search costs more. It is bounded,
 and reaching the bound gives no answer, which counts as not the same.
 
 ## Validation
+
+**In short:** a written file can be checked against three sets of rules: the IFC standard,
+buildingSMART's rules for good models, and requirements a project has written
+down in IDS.
+
+**In detail:**
 
 A graph database has no schema that could refuse a wrong value, and the rules of
 IFC are written in EXPRESS, which no graph database holds. So the file is
@@ -408,6 +509,11 @@ validated, not the graph:
   specification's verdict.
 
 ## Pointing at an instance
+
+**In short:** to change one part of a model you have to say which part. IFC–LPG names it
+from the nearest part with a lasting id, its GlobalId, and the way from there.
+
+**In detail:**
 
 A proposed change to a model, such as a BIM snippet in a BCF issue, has to say
 which instance it changes, in a way that still holds after other changes.
@@ -446,6 +552,11 @@ reference, and instances kept in blocks are not listed.
 
 ## Neo4j and Memgraph
 
+**In short:** the two databases differ in small ways. IFC–LPG uses only what both do
+alike, so either can be chosen, and the same questions work on both.
+
+**In detail:**
+
 The Cypher is parameterised and portable: no APOC, and no `elementId()` or
 `id()` as keys. The same graph and the same Cypher work on both, and a model
 comes back identical from either. The tests run on Neo4j 5.26 and Memgraph 3.14,
@@ -464,6 +575,11 @@ differ, IFC–LPG keeps to what both do alike:
   place; Neo4j needs nothing.
 
 ## IFC5 (experimental)
+
+**In short:** IFC5, the next version of IFC, is still a draft. IFC–LPG can already read
+and write its files, on trial.
+
+**In detail:**
 
 IFC5 is a draft. Its files, IFCX, are JSON in the format `ifcx_alpha`, which
 can still change, and so can this part of IFC–LPG. A file is a list of entries,
@@ -494,6 +610,8 @@ nests deeper than 32, and one that is no JSON or has numbers JSON does not
 have, such as `NaN`, is refused.
 
 ## Measurements
+
+**In short:** what was tried, on which real models, and how large and fast it was.
 
 Without a database, all 26 whole files among the samples came back identical, up
 to 224,496 instances and 19 MB, from Revit, Archicad, Tekla, SketchUp, SierraSoft
@@ -545,6 +663,8 @@ original and `1.E-05` in the copy, the same number.
 
 ## Reference
 
+**In short:** the list of functions and commands, for developers.
+
 The package without extras needs nothing, and holds the graph side: the STEP
 reader and writer, the lossless form, importing and exporting records, deleting a
 model, the boxes' import, the paths, what no path reaches and IFC5's graph side. A server can run that
@@ -585,6 +705,8 @@ Every command but the installer also takes `--memory-mb N`. Dataregium's
 describes how a server uses the parts.
 
 ## Background
+
+**In short:** where the method comes from, and why it was written anew.
 
 In 2023 this repository held an implementation of the IFC-graph method of Zhu,
 Wu and Lei, rewritten for the official Neo4j driver for Python after py2neo was
