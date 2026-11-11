@@ -419,7 +419,7 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
             label_clause = ":".join(["Object", *labels])
             points = "".join(f", n.`{key}` = [p IN row.points[{i}] | {_POINT}]" for i, key in enumerate(keys))
             await graph.run(
-                f"UNWIND $rows AS row CREATE (n:{label_clause}) SET n = row.props, n.id = row.id, n.path = row.path, "
+                f"UNWIND $rows AS row CREATE (n:{label_clause}) SET n += row.props, n.id = row.id, n.path = row.path, "
                 f"n.model_id = $model_id{points}",
                 rows=rows,
                 model_id=model_id,

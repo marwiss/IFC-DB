@@ -63,8 +63,10 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
             points = "".join(
                 f", n.{_safe(key)} = [p IN row.points.{_safe(key)} | " + _POINT + "]" for key in point_keys
             )
+            # The node is new, so adding the properties gives what replacing them would, and no database then has
+            # to take the rest of the clause in a given order: one that replaced last left the node without its id.
             await graph.run(
-                f"UNWIND $rows AS row CREATE (n:{label_clause}) SET n = row.props, n.id = row.id, "
+                f"UNWIND $rows AS row CREATE (n:{label_clause}) SET n += row.props, n.id = row.id, "
                 f"n.step_id = row.step, n.model_id = $model_id{points}",
                 rows=rows,
                 model_id=model_id,
