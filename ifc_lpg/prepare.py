@@ -12,6 +12,7 @@ are not converted. IfcOpenShell reads and writes the file here, which changes a 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import sys
 from pathlib import Path
@@ -39,9 +40,10 @@ def prepare_file(source: Path, target: Path, *, schema: str | None, length_unit:
         wanted: Any = schema  # a name such as IFC4, which the stubs know as a literal
         migrated = ifcopenshell.file(schema=wanted)
         migrator = ifcopenshell.util.schema.Migrator(fallback_element_to_proxy=True)
-        migrator.preprocess(model, migrated)
-        for element in model:
-            migrator.migrate(element, migrated)
+        with contextlib.redirect_stdout(sys.stderr):  # the migrator prints what it cannot carry over
+            migrator.preprocess(model, migrated)
+            for element in model:
+                migrator.migrate(element, migrated)
         for old, new in sorted(migrator.migrated_ids.items()):
             before, after = model.by_id(old), migrated.by_id(new)
             if before.is_a() != after.is_a():

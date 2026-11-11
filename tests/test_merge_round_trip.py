@@ -312,3 +312,20 @@ async def test_new_for_one_wall_keeps_what_it_has(graph: Any, tmp_path: Path) ->
     before = sorted(r["ifc_class"] for r in await unreachable(graph, "a"))
     assert sorted(r["ifc_class"] for r in await unreachable(graph, "c")) == before
     await comes_back(graph, "c", tmp_path)
+
+
+async def test_units_that_a_has_none_of_come_along(graph: Any, tmp_path: Path) -> None:
+    await import_file(graph, SPATIAL, "a")
+    await import_file(graph, THREE_WALLS, "old")
+    await prepare_other(graph, "old", "old-ready", base_id="a")
+    report = await merge_report(graph, "a", "old-ready", NORWEGIAN_BUILDING)
+    assert "AREAUNIT SQUARE_METRE" in report["units_added"]
+    assert not [unit for unit in report["units_added"] if unit.startswith("LENGTHUNIT")], "A's length stays"
+    await merge_building(graph, "a", "old-ready", NORWEGIAN_BUILDING, "c")
+    kinds = await names(
+        graph,
+        "MATCH (:IfcProject {model_id: 'c'})-[:UNITS_IN_CONTEXT]->()-[:UNITS]->(u) "
+        "RETURN coalesce(u.UnitType, 'money') AS v ORDER BY v",
+    )
+    assert len(kinds) == 1 + len(report["units_added"]) == len(set(kinds)), "one unit of each kind"
+    await comes_back(graph, "c", tmp_path)

@@ -494,6 +494,7 @@ def _select(
     contexts: dict[Any, int],
     mapped: dict[int, int],
     placements: dict[int, int] | None = None,
+    extra: tuple[int, ...] | list[int] = (),
 ) -> _Selection:
     """What of B comes into C with the building, when the instances ``mapped`` are A's in C, and the ``placements`` of
     those that are products A's placements of them."""
@@ -567,7 +568,7 @@ def _select(
             selection.drop[step] = dropped
         take(step)
 
-    for step in objects:
+    for step in [*objects, *extra]:
         take(step)
     while queue:
         while queue:
@@ -633,31 +634,46 @@ class _Plan:
     contexts: dict[Any, int]
     collisions: list[tuple[int, int, str | None]]  # B's instance, A's, and the choice
     report: dict[str, Any]
+    units: list[int] = field(default_factory=list)  # B's units of a kind that A has none of
 
 
-async def _units(graph: Graph, a: _Model, b: _Model) -> None:
-    """B's units must be A's: the units of B's project each the same as one of A's."""
+def _assignment(model: _Model) -> int | None:
+    found = model.instances[model.single("IfcProject")].attribute("UnitsInContext")
+    return found[0] if found else None
 
-    def units(model: _Model) -> list[int]:
-        assignment = model.instances[model.single("IfcProject")].attribute("UnitsInContext")
-        return model.instances[assignment[0]].attribute("Units") if assignment else []
 
+def _unit_kind(props: dict[str, Any]) -> tuple[Any, ...]:
+    """What a unit is a unit of: its type, the user's name of it where it is user defined, or money."""
+    if props.get("ifc_class") == "IfcMonetaryUnit":
+        return ("money",)
+    return (props.get("UnitType"), props.get("UserDefinedType") if props.get("UnitType") == "USERDEFINED" else None)
+
+
+def _unit_name(props: dict[str, Any]) -> str:
+    kind = props.get("UnitType") or "money"
+    return f"{kind} {props.get('Prefix') or ''}{props.get('Name') or props.get('Currency') or ''}".strip()
+
+
+async def _units(graph: Graph, a: _Model, b: _Model) -> list[int]:
+    """B's units against A's (F29 a): each the same as one of A's, or of a kind that A has no unit of, which C takes from
+    B. A unit of a kind A has, but another, is refused. Returns B's units that C takes."""
     found = {}
     for model in (a, b):
-        found[model.id] = units(model)
+        assignment = _assignment(model)
+        found[model.id] = model.instances[assignment].attribute("Units") if assignment is not None else []
         await _fetch(graph, model, _closure(model, found[model.id]))
     memo_a: dict[int, str] = {}
     memo_b: dict[int, str] = {}
     known = {_content(a, unit, memo_a, {}) for unit in found[a.id]}
-    missing = [unit for unit in found[b.id] if _content(b, unit, memo_b, {}) not in known]
-    if missing:
-        names = [
-            f"{b.props[unit].get('UnitType')} {b.props[unit].get('Prefix') or ''}{b.props[unit].get('Name') or ''}"
-            for unit in missing
-        ]
-        raise MergeError(
-            f"the units differ: A does not have {'; '.join(names)} of B; prepare_other converts B's lengths"
-        )
+    kinds = {_unit_kind(a.props[unit]) for unit in found[a.id]}
+    other = [unit for unit in found[b.id] if _content(b, unit, memo_b, {}) not in known]
+    differing = [unit for unit in other if _unit_kind(b.props[unit]) in kinds]
+    if differing:
+        names = "; ".join(_unit_name(b.props[unit]) for unit in differing)
+        raise MergeError(f"the units differ: A does not have {names} of B; prepare_other converts B's lengths")
+    if other and _assignment(a) is None:
+        raise MergeError("A has no unit assignment to take B's units into")
+    return other
 
 
 def _check_choice(choice: str | None) -> None:
@@ -693,7 +709,7 @@ async def _plan(
     site_placement = _placement_of(a.instances[sites[0]])
     if site_placement is None:
         raise MergeError("A's site has no placement")
-    await _units(graph, a, b)
+    units = await _units(graph, a, b)
     contexts: dict[Any, int] = {}  # what B's contexts and applications become, when A has the same
     for step in sorted(a.instances):
         key = _context_key(a, step)
@@ -701,7 +717,7 @@ async def _plan(
             contexts.setdefault(key, step)
         for unique in _application_keys(a, step):
             contexts.setdefault(unique, step)
-    first = _select(b, found[0], site_placement, contexts, {})
+    first = _select(b, found[0], site_placement, contexts, {}, extra=units)
     by_id = {i.global_id: s for s, i in a.instances.items() if i.global_id is not None}
     pairs = [(x, by_id[g]) for x in sorted(first.chosen) if (g := b.instances[x].global_id) is not None and g in by_id]
     await _fetch(graph, a, _closure(a, [y for _x, y in pairs] + list(first.subst.values())))
@@ -730,8 +746,9 @@ async def _plan(
         ],
         "contexts": {"shared": sum(1 for s in first.subst if _context_key(b, s)), "added": len(first.new_contexts)},
         "placements": first.placements,
+        "units_added": [_unit_name(b.props[unit]) for unit in units],
     }
-    return _Plan(a, b, found[0], sites[0], site_placement, contexts, collisions, report)
+    return _Plan(a, b, found[0], sites[0], site_placement, contexts, collisions, report, units)
 
 
 _IMPERIAL = ("thou", "inch", "foot", "yard", "mile")
@@ -765,7 +782,8 @@ async def prepare_other(
 ) -> dict[str, Any]:
     """Make the model ``other_id`` ready to be merged into ``base_id``, as the new model ``model_id``: migrated to the
     base's schema, and with its lengths in the base's length unit, by IfcOpenShell in a worker, which needs the extra
-    ``ifcopenshell``. Any other unit that differs is refused with what it is, for it is not converted. Returns what was
+    ``ifcopenshell``. Any other unit that A has another of is refused with what it is, for it is not converted; one
+    that A has none of comes along in the merge. Returns what was
     done, with the instances whose class changed, and the new model's properties. The other model does not change."""
     rows = await graph.run(
         "UNWIND $ids AS id MATCH (m:Model {id: id}) RETURN m.id AS id, m.schema AS schema, m.geometry AS geometry",
@@ -778,10 +796,10 @@ async def prepare_other(
     differing = [
         f"{kind} {props.get('Prefix') or ''}{props.get('Name')}"
         for kind, props in sorted(other.items())
-        if kind != "LENGTHUNIT" and (kind not in base or _unit_key(base[kind]) != _unit_key(props))
+        if kind != "LENGTHUNIT" and kind in base and _unit_key(base[kind]) != _unit_key(props)
     ]
     if differing:
-        raise MergeError(f"B has units that A does not have, which are not converted: {'; '.join(differing)}")
+        raise MergeError(f"B has units other than A's, which are not converted: {'; '.join(differing)}")
     command = [sys.executable, "-m", "ifc_lpg.prepare"]
     options: list[str] = []
     if fields[base_id]["schema"] != fields[other_id]["schema"]:
@@ -796,7 +814,7 @@ async def prepare_other(
         source, target = Path(tmp) / "other.ifc", Path(tmp) / "prepared.ifc"
         await export_file(graph, other_id, source, limits=limits)
         command += [str(source), str(target), *options, "--memory-mb", str(limits.memory_mb)]
-        answer = json.loads((await run_worker(command, "preparing the model", limits.timeout_seconds)).strip())
+        answer = json.loads((await run_worker(command, "preparing the model", limits.timeout_seconds)).splitlines()[-1])
         model = await import_file(
             graph,
             target,
@@ -947,7 +965,7 @@ async def merge_building(
         for x, y in mapped.items()
         if (pb := _placement_of(b.instances[x])) is not None and (pa := _placement_of(a.instances[y])) is not None
     }
-    selection = _select(b, plan.building, plan.site_placement, plan.contexts, mapped, placements)
+    selection = _select(b, plan.building, plan.site_placement, plan.contexts, mapped, placements, extra=plan.units)
     rows = await graph.run(
         "MERGE (m:Model {id: $id}) ON CREATE SET m.format = 'step', m.form_version = $form, m.state = 'running', "
         "m.running_at = $now, m.schema = $schema, m.merge_of = [$base, $other], m.merge_building = $building "
@@ -1068,6 +1086,7 @@ async def _build(
     )
     created += changed
     created += await _join(graph, plan, model_id, numbers)
+    created += await _add_units(graph, plan, model_id, numbers)
     created += await _add_contexts(graph, a, model_id, [to(s) for s in selection.new_contexts])
     await _create_edges(graph, model_id, edges)
     await refresh_inverses(graph, model_id, sorted(set(created)))
@@ -1330,6 +1349,17 @@ async def _put_in_place(
     )
     await _create_edges(graph, model_id, rewritten)
     return sorted(changed - held - removed), gone_from_blocks
+
+
+async def _add_units(graph: Graph, plan: _Plan, model_id: str, numbers: dict[int, int]) -> list[int]:
+    """B's units of a kind that A has none of, in A's ``IfcUnitAssignment``."""
+    assignment = _assignment(plan.a)
+    if not plan.units or assignment is None:
+        return []
+    there = len(plan.a.instances[assignment].attribute("Units"))
+    edges = [(assignment, "UNITS", there + i, numbers[unit]) for i, unit in enumerate(plan.units)]
+    await _create_edges(graph, model_id, edges)
+    return [assignment]
 
 
 async def _add_contexts(graph: Graph, a: _Model, model_id: str, contexts: list[int]) -> list[int]:
