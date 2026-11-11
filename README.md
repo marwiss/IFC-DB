@@ -31,6 +31,7 @@ rules and IDS.
   [comparing two files](#when-two-files-hold-the-same-model),
   [validation](#validation),
   [pointing at an instance](#pointing-at-an-instance),
+  [asking a model](#asking-a-model),
   [changing the graph](#changing-the-graph),
   [a building into another project](#a-building-into-another-project),
   [Neo4j and Memgraph](#neo4j-and-memgraph),
@@ -576,6 +577,51 @@ a change can remove them; a model with them is imported all the same. A node tha
 a block refers to counts as reached, since the database does not know that
 reference, and instances kept in blocks are not listed.
 
+## Asking a model
+
+**In short:** the usual questions to a model have names. A program asks by name
+and gets rows back, without writing Cypher and without knowing the graph's form.
+
+**In detail:**
+
+`ifc_lpg.queries` holds eight named queries on a model:
+
+| Name | Answers | Parameters |
+|---|---|---|
+| `entity` | One rooted entity by its GlobalId: its class, its literal attributes, and what it refers to and is referred to by | `global_id` |
+| `element-classes` | How many elements the model has of each class | |
+| `elements` | The elements of a class, with the spatial structure that contains each | `class` |
+| `storeys` | The storeys, with their elevation and how many elements and spaces each holds | |
+| `spaces` | The spaces, with their storey and their net and gross floor areas | |
+| `areas` | The net floor area of each storey's spaces, added up | |
+| `materials` | The materials of each element: its own, or those of its layers, list or constituents | `class`, optional |
+| `property` | The value of one property of a property set on every object that has it, with the value's IFC type | `pset`, `property`, and `class`, optional |
+
+- **Asking.** `run_query(graph, model_id, name, parameters)` gives `{"name",
+  "columns", "rows", "truncated"}`. The rows are lists in the order of the
+  columns, of JSON values. There are at most `max_rows` of them, 10,000 unless
+  another number is given, and `truncated` says that there were more. A query
+  has `timeout_seconds`, 10, to run.
+- **A class takes its subclasses with it:** `IfcWall` finds an
+  `IfcWallStandardCase` too.
+- **The parameters are checked before the graph is asked.** A class must be the
+  name of an IFC class, a GlobalId 22 characters of IFC's base 64, and any other
+  parameter 1 to 255 characters without control characters. `InvalidParameters`
+  says which one does not fit, and `UnknownQuery` that there is no query by that
+  name.
+- **The list.** `catalogue()` gives the queries as plain data, each with its
+  name, description, parameters and columns, for a server to show.
+- **One property for many parts.** `property_values(graph, model_id, pset=…,
+  property=…, global_ids=[…])` looks a property up for up to 1,000 GlobalIds. It
+  gives a row for each one the model has, with the value and its IFC type, or
+  nothing in them where the part lacks the property.
+
+Every query names its model by id, takes values only as parameters and only
+reads. A model that is not there, or whose import is not done, has no rows. The
+time limit is the caller's own clock. A graph that can tell the server to stop a
+statement offers `read(statement, params, timeout_seconds=…)`, and the queries
+use it when it is there.
+
 ## Changing the graph
 
 **In short:** a model can be changed in the database before it is written back.
@@ -834,8 +880,8 @@ original and `1.E-05` in the copy, the same number.
 
 The package without extras needs nothing, and holds the graph side: the STEP
 reader and writer, the lossless form, importing and exporting records, deleting a
-model, the boxes' import, the paths, the support for changes, the merge and
-IFC5's graph side. A server can run that in its own process and leave
+model, the boxes' import, the paths, the named queries, the support for changes,
+the merge and IFC5's graph side. A server can run that in its own process and leave
 IfcOpenShell to the workers, which need the extra `ifcopenshell`. Everything that reads, converts, writes or checks a file runs in a
 process of its own, within `ifc_lpg.files.Limits`: 900 s, 4,096 MB of memory on
 POSIX and 5 million instances, unless others are given.
@@ -852,6 +898,8 @@ POSIX and 5 million instances, unless others are given.
 | Find the parts that may collide | `overlapping_boxes(graph, model_id, other_model_id=None, clearance=0.0, exclude=())` in `ifc_lpg.spatial` |
 | Follow or give a path | `resolve` and `canonical_path` in `ifc_lpg.paths` |
 | List what no path reaches | `unreachable(graph, model_id)` in `ifc_lpg.paths` |
+| Ask a model a named query | `run_query(graph, model_id, name, parameters)` and `catalogue()` in `ifc_lpg.queries` |
+| Look a property up for a list of GlobalIds | `property_values(graph, model_id, pset=…, property=…, global_ids=[…])` in `ifc_lpg.queries` |
 | See what refers to an instance | `referrers(graph, model_id, step)` in `ifc_lpg.editing` |
 | Delete nodes that nothing else refers to | `delete_nodes(graph, model_id, steps)` in `ifc_lpg.editing` |
 | Put the inverse relationships right after a change | `refresh_inverses(graph, model_id, steps)` in `ifc_lpg.editing` |

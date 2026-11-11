@@ -30,6 +30,13 @@ class Graph(Protocol):
     async def run(self, query: str, /, **params: Any) -> list[dict[str, Any]]: ...
 
 
+class SchemaGraph(Protocol):
+    """A graph database to :func:`ensure_schema`: one schema statement at a time, outside any transaction, where one
+    that exists already is no error."""
+
+    async def ddl(self, statement: str) -> None: ...
+
+
 DDL_ATTEMPTS = 8
 
 
@@ -86,7 +93,7 @@ def _point_index(dialect: Dialect, label: str, prop: str) -> str:
     return f"CREATE POINT INDEX ON :{label}({prop})"
 
 
-async def rebuild_point_indexes(graph: Neo4jGraph, dialect: Dialect) -> None:
+async def rebuild_point_indexes(graph: SchemaGraph, dialect: Dialect) -> None:
     """Make the point indexes anew, after points have been set. Memgraph 3.14 does not keep a point index up to date:
     a point set after the index was made is not found through it, so the index is dropped and made again there. Neo4j
     keeps its indexes up to date, so nothing is done."""
@@ -115,7 +122,7 @@ def _check(*names: str) -> None:
             raise ValueError(f"not an identifier: {name!r}")
 
 
-async def ensure_schema(graph: Neo4jGraph, dialect: Dialect) -> None:
+async def ensure_schema(graph: SchemaGraph, dialect: Dialect) -> None:
     """Make the constraints and indexes that the importer's and the exporter's queries rely on."""
     for statement in schema_statements(dialect):
         await graph.ddl(statement)
