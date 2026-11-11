@@ -296,11 +296,11 @@ def json_value(value: Any) -> Any:
 
 async def _rows(graph: Graph, statement: str, params: dict[str, Any], timeout_seconds: float) -> list[dict[str, Any]]:
     """The rows of a reading statement, within the time. A graph that can do better than the caller's own clock, such
-    as telling the server to stop the statement, offers ``read(statement, params, timeout_seconds=...)``; it is used
-    when it is there."""
-    read = getattr(graph, "read", None)
-    if read is not None:
-        return await read(statement, params, timeout_seconds=timeout_seconds)
+    as telling the server to stop the statement, offers ``read_rows(statement, params, timeout_seconds=...)``; it is
+    used when it is there."""
+    read_rows = getattr(graph, "read_rows", None)
+    if read_rows is not None:
+        return await read_rows(statement, params, timeout_seconds=timeout_seconds)
     return await asyncio.wait_for(graph.run(statement, **params), timeout_seconds)
 
 

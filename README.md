@@ -628,8 +628,8 @@ and gets rows back, without writing Cypher and without knowing the graph's form.
 Every query names its model by id, takes values only as parameters and only
 reads. A model that is not there, or whose import is not done, has no rows. The
 time limit is the caller's own clock. A graph that can tell the server to stop a
-statement offers `read(statement, params, timeout_seconds=…)`, and the queries
-use it when it is there.
+statement offers `read_rows(statement, params, timeout_seconds=…)`, and the
+queries use it when it is there.
 
 ## Changing the graph
 

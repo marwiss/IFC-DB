@@ -142,9 +142,14 @@ async def test_a_query_that_takes_too_long_is_given_up() -> None:
 
 async def test_a_graph_that_can_stop_a_statement_itself_is_asked_to() -> None:
     class Stopping(Asked):
-        async def read(self, query: str, params: dict[str, Any], *, timeout_seconds: float) -> list[dict[str, Any]]:
+        async def read_rows(
+            self, query: str, params: dict[str, Any], *, timeout_seconds: float
+        ) -> list[dict[str, Any]]:
             self.asked.append((query, {**params, "timeout_seconds": timeout_seconds}))
             return self.rows
+
+        async def read(self, work: Any) -> None:  # a method of the graph's own by another name's meaning
+            raise AssertionError("a graph's own read is not the hook")
 
     graph = Stopping([{"storey": "Plan 1", "elevation": 0.0, "spaces": 2, "net_floor_area": 32.5}])
     answer = await run_query(graph, "m", "areas", timeout_seconds=3.0)
