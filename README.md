@@ -639,6 +639,13 @@ IfcOpenShell; the check at the end does.
   A's relationships that concern it alone go; `"new"` makes two objects, B's with
   a new GlobalId. `choices` maps a GlobalId to its choice, and `default` holds for
   the rest. Without them, `MergeConflict` carries the report.
+- **What stays the same:** an object that is A's in C is placed by A's placement
+  of it, and what A placed relative to a replaced object is placed relative to
+  B's. An object of B's own, new or in place of A's, joins the relationships of A
+  that B has as well, such as a shared property set, type or material, in their
+  lists, for IFC2X3 lets a property set or a type have only one such relationship.
+  What A's replaced objects, and the relationships that go with them, held alone
+  goes too. An application, which IFC keeps unique by its identifier, is A's.
 - **The numbers:** C keeps A's STEP ids, and the instances from B are numbered
   after them.
 - **The check:** C is `running` until it has been written out and validated
