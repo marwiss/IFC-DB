@@ -236,3 +236,79 @@ async def test_every_object_of_b_in_place_of_a_s(graph: Any, tmp_path: Path) -> 
     ) == [True], "B's building in A's place below the site"
     assert await unreachable(graph, "c") == [], "what A's objects held alone went with them"
     await comes_back(graph, "c", tmp_path)
+
+
+async def test_what_a_s_replaced_objects_held_alone_goes_with_them(graph: Any) -> None:
+    await import_file(graph, FIXTURES_DIR / "three_walls_gtin.ifc", "old")
+    [building] = await names(graph, "MATCH (b:IfcBuilding {model_id: 'old'}) RETURN b.GlobalId AS v")
+    report = await merge_report(graph, "old", "old", building)
+    await merge_building(
+        graph, "old", "old", building, "c", choices={c["global_id"]: "b" for c in report["collisions"]}
+    )
+    before = sorted(r["ifc_class"] for r in await unreachable(graph, "old"))
+    assert sorted(r["ifc_class"] for r in await unreachable(graph, "c")) == before, (
+        "nothing is left that only A's replaced objects and their relationships held, such as a material"
+    )
+
+
+THREE_WALLS = FIXTURES_DIR / "three_walls_gtin.ifc"
+NORWEGIAN_BUILDING = "3AMeTOOFsdVLZuNV0$27s5"
+
+
+async def test_b_for_one_wall_places_what_a_placed_relative_to_it(graph: Any, tmp_path: Path) -> None:
+    renamed = tmp_path / "renamed.ifc"
+    renamed.write_bytes(
+        THREE_WALLS.read_bytes().replace(
+            b"'1Xezbq735AdBO_4DerG66G',#32,'YVT-A'", b"'1Xezbq735AdBO_4DerG66G',#32,'YVT-Z'"
+        )
+    )
+    await import_file(graph, THREE_WALLS, "a")
+    await import_file(graph, renamed, "b")
+    await merge_building(graph, "a", "b", NORWEGIAN_BUILDING, "c", choices={"1Xezbq735AdBO_4DerG66G": "b"})
+    walls = await names(graph, "MATCH (w:IfcWall {model_id: 'c'}) RETURN w.Name AS v ORDER BY v")
+    assert "YVT-Z" in walls and "YVT-A" not in walls
+    before = sorted(r["ifc_class"] for r in await unreachable(graph, "a"))
+    assert sorted(r["ifc_class"] for r in await unreachable(graph, "c")) == before, (
+        "no placement is left that places nothing: B's wall is placed in A's storey, and A's old placement went"
+    )
+    await comes_back(graph, "c", tmp_path)
+
+
+async def test_a_unit_with_a_factor_of_its_own_is_not_turned(graph: Any, tmp_path: Path) -> None:
+    metres = tmp_path / "metres.ifc"
+    metres.write_bytes(
+        THREE_WALLS.read_bytes().replace(
+            b"IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.)", b"IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.)"
+        )
+    )
+    await import_file(graph, THREE_WALLS, "a")
+    await import_file(graph, metres, "b")
+    await prepare_other(graph, "b", "b-ready", base_id="a")
+    report = await merge_report(graph, "a", "b-ready", NORWEGIAN_BUILDING)
+    assert report["collisions"], "the lengths now differ, and the units are the same"
+
+
+async def test_new_for_one_wall_keeps_what_it_has(graph: Any, tmp_path: Path) -> None:
+    renamed = tmp_path / "renamed.ifc"
+    renamed.write_bytes(
+        THREE_WALLS.read_bytes().replace(
+            b"'1Xezbq735AdBO_4DerG66G',#32,'YVT-A'", b"'1Xezbq735AdBO_4DerG66G',#32,'YVT-Z'"
+        )
+    )
+    await import_file(graph, THREE_WALLS, "a")
+    await import_file(graph, renamed, "b")
+    merged = await merge_building(graph, "a", "b", NORWEGIAN_BUILDING, "c", choices={"1Xezbq735AdBO_4DerG66G": "new"})
+    assert {c["choice"] for c in merged["collisions"] if c["same"]} == {"a"}
+    [wall] = await graph.run(
+        "MATCH (w:IfcWall {model_id: 'c', Name: 'YVT-Z'}) "
+        "OPTIONAL MATCH (w)-[:CONTAINED_IN_STRUCTURE]->()-[:RELATING_STRUCTURE]->(s) "
+        "OPTIONAL MATCH (w)-[:HAS_ASSOCIATIONS]->(m:IfcRelAssociatesMaterial)-[:RELATED_OBJECTS]->(o) "
+        "RETURN w.GlobalId <> '1Xezbq735AdBO_4DerG66G' AS renamed, s.Name AS storey, collect(DISTINCT o.Name) AS shared"
+    )
+    assert wall["renamed"] and wall["storey"] is not None
+    assert sorted(wall["shared"]) == ["YVT-A", "YVT-Z"], (
+        "the new wall joins A's material, which it shares with A's wall"
+    )
+    before = sorted(r["ifc_class"] for r in await unreachable(graph, "a"))
+    assert sorted(r["ifc_class"] for r in await unreachable(graph, "c")) == before
+    await comes_back(graph, "c", tmp_path)

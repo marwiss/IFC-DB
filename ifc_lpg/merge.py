@@ -78,6 +78,45 @@ _ATTACHED_KEYWORDS = {
     b"IFCINDEXEDTRIANGLETEXTUREMAP": 1,
     b"IFCINDEXEDPOLYGONALTEXTUREMAP": 1,
 }
+# The attributes of relationships that are lists, by the class that declares them, with the schemas they are in (2 for
+# IFC2X3, 4 for IFC4, 3 for IFC4X3). A test checks the table against IfcOpenShell.
+_LISTS = """
+IfcRelAdheresToElement RelatedSurfaceFeatures 3
+IfcRelAggregates RelatedObjects 43
+IfcRelAssigns RelatedObjects 243
+IfcRelAssociates RelatedObjects 243
+IfcRelConnectsPathElements RelatedPriorities 243
+IfcRelConnectsPathElements RelatingPriorities 243
+IfcRelConnectsWithRealizingElements RealizingElements 243
+IfcRelContainedInSpatialStructure RelatedElements 243
+IfcRelCoversBldgElements RelatedCoverings 243
+IfcRelCoversSpaces RelatedCoverings 243
+IfcRelDeclares RelatedDefinitions 43
+IfcRelDecomposes RelatedObjects 2
+IfcRelDefines RelatedObjects 2
+IfcRelDefinesByObject RelatedObjects 43
+IfcRelDefinesByProperties RelatedObjects 43
+IfcRelDefinesByTemplate RelatedPropertySets 43
+IfcRelDefinesByType RelatedObjects 43
+IfcRelFlowControlElements RelatedControlElements 243
+IfcRelNests RelatedObjects 43
+IfcRelOverridesProperties OverridingProperties 2
+IfcRelPositions RelatedProducts 3
+IfcRelReferencedInSpatialStructure RelatedElements 243
+IfcRelServicesBuildings RelatedBuildings 243
+"""
+
+
+def list_attributes(schema: str) -> list[tuple[str, str]]:
+    """``(declaring class, attribute)`` for every attribute of a relationship that is a list in ``schema``."""
+    family = "2" if schema.upper().startswith("IFC2X3") else "3" if schema.upper().startswith("IFC4X3") else "4"
+    return [
+        (declaring, attribute)
+        for declaring, attribute, schemas in (line.split(" ") for line in _LISTS.strip().splitlines())
+        if family in schemas
+    ]
+
+
 _CONTEXT_KEYWORDS = {b"IFCGEOMETRICREPRESENTATIONCONTEXT": False, b"IFCGEOMETRICREPRESENTATIONSUBCONTEXT": True}
 _OWNER = relationship_type("OwnerHistory")
 _PLACEMENT = relationship_type("ObjectPlacement")
@@ -449,9 +488,15 @@ class _Selection:
 
 
 def _select(
-    b: _Model, building: int, site_placement: int, contexts: dict[Any, int], mapped: dict[int, int]
+    b: _Model,
+    building: int,
+    site_placement: int,
+    contexts: dict[Any, int],
+    mapped: dict[int, int],
+    placements: dict[int, int] | None = None,
 ) -> _Selection:
-    """What of B comes into C with the building, when the instances ``mapped`` are A's in C."""
+    """What of B comes into C with the building, when the instances ``mapped`` are A's in C, and the ``placements`` of
+    those that are products A's placements of them."""
     instances = b.instances
     objects, frontier = {building}, [building]
     while frontier:
@@ -469,7 +514,7 @@ def _select(
         for step, instance in instances.items()
         if instance.is_a("IfcProduct") and step not in objects
     } - {None}
-    selection = _Selection(objects, subst=dict(mapped))
+    selection = _Selection(objects, subst={**(placements or {}), **mapped})
     queue: list[int] = []
     decided: set[int] = set()
     attached: set[int] = set()
@@ -897,7 +942,12 @@ async def merge_building(
     mapped = {x: y for x, y, choice in plan.collisions if choice == "a"}
     replaced = {x: y for x, y, choice in plan.collisions if choice == "b"}
     renamed = {x for x, _y, choice in plan.collisions if choice == "new"}
-    selection = _select(b, plan.building, plan.site_placement, plan.contexts, mapped)
+    placements = {  # a product that is A's in C is placed where A places it, so that B's placement of it is A's
+        pb: pa
+        for x, y in mapped.items()
+        if (pb := _placement_of(b.instances[x])) is not None and (pa := _placement_of(a.instances[y])) is not None
+    }
+    selection = _select(b, plan.building, plan.site_placement, plan.contexts, mapped, placements)
     rows = await graph.run(
         "MERGE (m:Model {id: $id}) ON CREATE SET m.format = 'step', m.form_version = $form, m.state = 'running', "
         "m.running_at = $now, m.schema = $schema, m.merge_of = [$base, $other], m.merge_building = $building "
@@ -1004,10 +1054,20 @@ async def _build(
         created.append(await _below_site(graph, plan, selection, model_id, spare, to))
         spare += 1
     building = {y for x, y in replaced.items() if x == plan.building}  # B's takes A's place below the site
+    moved = {  # A's placement of a replaced product, to B's placement of it in C
+        pa: numbers[pb]
+        for x, y in replaced.items()
+        if (pa := _placement_of(a.instances[y])) is not None
+        and (pb := _placement_of(b.instances[x])) is not None
+        and pb in numbers
+        and pa not in selection.subst.values()
+    }
+    shared = {y for _x, y, choice in plan.collisions if choice == "a" and a.instances[y].is_a("IfcRelationship")}
     changed, gone_from_blocks = await _put_in_place(
-        graph, a, model_id, replaced, numbers, set(selection.subst.values()), building
+        graph, a, model_id, replaced, numbers, set(selection.subst.values()), building, moved, shared
     )
     created += changed
+    created += await _join(graph, plan, model_id, numbers)
     created += await _add_contexts(graph, a, model_id, [to(s) for s in selection.new_contexts])
     await _create_edges(graph, model_id, edges)
     await refresh_inverses(graph, model_id, sorted(set(created)))
@@ -1015,6 +1075,40 @@ async def _build(
         "MATCH (m:Model {id: $id}), (p:Entity:IfcProject {model_id: $id}) MERGE (m)-[:HAS_PROJECT]->(p)", id=model_id
     )
     return {"numbers": numbers, "in_blocks": len(lines) - gone_from_blocks}
+
+
+async def _join(graph: Graph, plan: _Plan, model_id: str, numbers: dict[int, int]) -> list[int]:
+    """What of B is in C as its own joins the relationships of A that B has as well: a new wall the property sets, the
+    type and the material it shares with A's, as B's relationship relates it there. It is appended to the lists of A's
+    relationship, since IFC2X3 lets a property set or a type have only one. Returns the relationships that changed."""
+    lists = list_attributes(str(plan.a.fields["schema"]))
+    rows: list[tuple[int, str, Any, int]] = []
+    changed = []
+    for x, y, choice in plan.collisions:
+        relation = plan.b.instances[x]
+        if choice != "a" or not relation.is_a("IfcRelationship"):
+            continue
+        for declaring, attribute in lists:
+            if not relation.is_a(declaring):
+                continue
+            rel_type = relationship_type(attribute)
+            members = [
+                target for kind, _p, target in sorted(relation.edges, key=lambda e: str(e[1])) if kind == rel_type
+            ]
+            joining = [numbers[target] for target in members if target in numbers]
+            if not joining:
+                continue
+            found = await graph.run(
+                f"MATCH (:Entity {{id: $id}})-[e:{safe_identifier(rel_type)}]->(t:Entity) WHERE e.position IS NOT NULL "
+                "RETURN t.step_id AS step",
+                id=f"{model_id}:{y}",
+            )
+            there = {row["step"] for row in found}
+            new = [step for step in joining if step not in there]
+            rows += [(y, rel_type, len(there) + index, step) for index, step in enumerate(new)]
+            changed += [y] if new else []
+    await _create_edges(graph, model_id, rows)
+    return changed
 
 
 async def _create_blocks(graph: Graph, model_id: str, lines: list[bytes]) -> None:
@@ -1096,9 +1190,11 @@ def _held_by(a: _Model, gone: set[int], keep: set[int]) -> tuple[set[int], dict[
     return dropped, splits
 
 
-async def _rewrite_blocks(graph: Graph, model_id: str, dropped: set[int], splits: dict[int, set[int]]) -> int:
-    """C's blocks without the instances ``dropped``, and with ``splits`` taken out of their lists. Returns how many
-    instances went."""
+async def _rewrite_blocks(
+    graph: Graph, model_id: str, dropped: set[int], splits: dict[int, set[int]], instead: dict[int, int]
+) -> int:
+    """C's blocks without the instances ``dropped``, with ``splits`` taken out of their lists, and with every reference
+    in ``instead`` to what takes its place. Returns how many instances went."""
     gone = 0
     for row in await graph.run(
         "MATCH (:Model {id: $id})-[:HAS_STEP_BLOCK]->(b:StepBlock) RETURN b.id AS id, b.text AS text", id=model_id
@@ -1108,9 +1204,11 @@ async def _rewrite_blocks(graph: Graph, model_id: str, dropped: set[int], splits
             if step in dropped:
                 changed, gone = True, gone + 1
                 continue
-            if step in splits:
-                keyword, parameters = _parse(statement)
-                parameters = _map_parameters(parameters, lambda target: target, splits[step])
+            keyword, parameters = _parse(statement)
+            if step in splits or set(_ids(parameters)) & set(instead):
+                parameters = _map_parameters(
+                    parameters, lambda target: instead.get(target, target), splits.get(step, set())
+                )
                 statement, changed = b"#%d=%s;" % (step, statement_text(keyword, parameters)), True
             lines.append(statement + b"\n")
         if changed and lines:
@@ -1133,38 +1231,26 @@ async def _put_in_place(
     numbers: dict[int, int],
     keep: set[int],
     placed: set[int],
+    moved: dict[int, int],
+    shared: set[int],
 ) -> tuple[list[int], int]:
     """B's version in place of A's: what of A refers to it refers to B's, a relationship that concerns only replaced
     objects goes, and one that also concerns others keeps those; what A's held alone goes with it. A replaced object
     leaves A's structure for B's, except the building, which B's has no structure above: B's takes its place in A's.
-    Returns the nodes whose relationships changed, and how many instances went from the blocks."""
+    What A placed relative to a replaced product is placed relative to B's, as ``moved`` says, and A's placement goes.
+    A relationship that B has as well, ``shared``, stays as it is and relates B's version. Returns the nodes whose relationships changed, and how many instances went from the blocks."""
     if not replaced:
         return [], 0
-    instead = {y: numbers[x] for x, y in replaced.items()}
-    gone = set(instead)
-    changed: set[int] = set()
-    for y in instead:
-        for referrer in a.referrers.get(y, ()):
-            if a.instances[referrer].in_block:
-                raise MergeError(f"#{y} of A is referred to from a block, so B's version cannot take its place")
-            changed.add(referrer)
+    gone = set(replaced.values())
+    instead = {y: numbers[x] for x, y in replaced.items()} | moved
+    referring = {r for target in instead for r in a.referrers.get(target, ())} - gone
     removed: set[int] = set()
-    rewritten: list[tuple[int, str, Any, int]] = []
-
-    async def rewrite(step: int, kept: list[tuple[str, Any, int]], touched: set[str]) -> None:
-        for rel_type in touched:
-            await graph.run(
-                f"MATCH (n:Entity {{id: $id}})-[r:{safe_identifier(rel_type)}]->() WHERE r.position IS NOT NULL DELETE r",
-                id=f"{model_id}:{step}",
-            )
-        rewritten.extend(
-            (step, rel_type, position, instead.get(target, target))
-            for rel_type, position, target in kept
-            if rel_type in touched
-        )
-
-    for step in sorted(changed - gone):
+    rel_drops: dict[int, set[int]] = {}
+    leaving = gone - placed  # what leaves A's structure
+    for step in sorted(referring):
         instance = a.instances[step]
+        if not instance.is_a("IfcRelationship") or step in shared:
+            continue
         others = [
             t
             for t in instance.targets()
@@ -1177,39 +1263,57 @@ async def _put_in_place(
         for rel_type, _position, target in instance.edges:
             groups.setdefault(rel_type, []).append(target)
         related = _related_of(instance)
-        leaving = gone - placed  # what leaves A's structure
-        if instance.is_a("IfcRelationship") and (not others or (related in groups and set(groups[related]) <= leaving)):
+        if not others or (related in groups and set(groups[related]) <= leaving):
             removed.add(step)
             continue
-        dropped = {
+        rel_drops[step] = {
             t
             for rel_type, members in groups.items()
             for t in members
             if t in gone and ((rel_type == related and t in leaving) or any(m not in gone for m in members))
         }
-        dropped = dropped if instance.is_a("IfcRelationship") else set()
-        kept, _moved = _edges_after(instance, dropped)
-        await rewrite(step, kept, {rel_type for rel_type, members in groups.items() if set(members) & gone})
-    held, splits = _held_by(a, gone, keep)
-    patches = []
-    for step, parts in splits.items():
+    held, splits = _held_by(a, gone | removed | set(moved), keep)  # and what the relationships that go held alone
+    rewritten: list[tuple[int, str, Any, int]] = []
+    patches: list[dict[str, Any]] = []
+    changed: set[int] = set()
+
+    async def rewrite(step: int, parts: set[int]) -> None:
         instance = a.instances[step]
-        if instance.in_block:
-            continue
-        if any(set(_tagged_ids(json.loads(text))) & parts for text in instance.tagged.values()):
-            raise MergeError(f"#{step} of A holds what goes in a form that cannot lose a part")
         kept, _moved = _edges_after(instance, parts)
-        await rewrite(step, kept, {rel_type for rel_type, _p, target in instance.edges if target in parts})
+        touched = {rel_type for rel_type, _p, target in instance.edges if target in instead or target in parts}
+        for rel_type in touched:
+            await graph.run(
+                f"MATCH (n:Entity {{id: $id}})-[r:{safe_identifier(rel_type)}]->() WHERE r.position IS NOT NULL DELETE r",
+                id=f"{model_id}:{step}",
+            )
+        rewritten.extend(
+            (step, rel_type, position, instead.get(target, target))
+            for rel_type, position, target in kept
+            if rel_type in touched
+        )
+        if any(set(_tagged_ids(json.loads(text))) & (parts | set(instead)) for text in instance.tagged.values()):
+            raise MergeError(f"#{step} of A refers to what changes in a form that cannot be changed here")
         props = {
-            key: [v for v in value if v not in parts]
+            key: [instead.get(v, v) for v in value if v not in parts]
+            if isinstance(value, list)
+            else instead.get(value, value)
             for key, value in instance.steps.items()
-            if isinstance(value, list) and set(value) & parts
+            if set(value if isinstance(value, list) else [value]) & (parts | set(instead))
         }
         if props:
             patches.append({"id": f"{model_id}:{step}", "props": props})
         changed.add(step)
-    if patches:
-        await graph.run("UNWIND $rows AS row MATCH (c:Entity {id: row.id}) SET c += row.props", rows=patches)
+
+    for step in sorted(referring - held - removed):
+        if not a.instances[step].in_block:
+            await rewrite(step, rel_drops.get(step, set()))
+    for step, parts in sorted(splits.items()):
+        if not a.instances[step].in_block and step not in changed:
+            await rewrite(step, parts)
+    for start in range(0, len(patches), BATCH):
+        await graph.run(
+            "UNWIND $rows AS row MATCH (c:Entity {id: row.id}) SET c += row.props", rows=patches[start : start + BATCH]
+        )
     in_blocks = {s for s in held if a.instances[s].in_block}
     nodes = sorted((held - in_blocks) | removed)
     for start in range(0, len(nodes), BATCH):
@@ -1218,8 +1322,11 @@ async def _put_in_place(
             ids=[f"{model_id}:{s}" for s in nodes[start : start + BATCH]],
         )
     block_splits = {s: parts for s, parts in splits.items() if a.instances[s].in_block}
+    from_blocks = any(a.instances[s].in_block for s in referring - held)
     gone_from_blocks = (
-        await _rewrite_blocks(graph, model_id, in_blocks, block_splits) if in_blocks or block_splits else 0
+        await _rewrite_blocks(graph, model_id, in_blocks, block_splits, instead)
+        if in_blocks or block_splits or from_blocks
+        else 0
     )
     await _create_edges(graph, model_id, rewritten)
     return sorted(changed - held - removed), gone_from_blocks

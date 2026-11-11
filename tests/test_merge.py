@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from ifc_lpg.merge import _edges_after, _Instance, _map_parameters, _map_tagged, new_global_id
+from ifc_lpg.merge import _edges_after, _Instance, _map_parameters, _map_tagged, list_attributes, new_global_id
 
 
 def test_a_new_global_id_is_ifcs_form_of_128_bits() -> None:
@@ -46,3 +46,25 @@ def test_a_list_of_relationships_closes_up_where_a_member_is_dropped() -> None:
     instance.edges = [("ROWS", [0, 0], 10), ("ROWS", [0, 1], 11)]
     with pytest.raises(ValueError, match="list of lists"):
         _edges_after(instance, {11})
+
+
+@pytest.mark.parametrize("schema_name", ["IFC2X3", "IFC4", "IFC4X3_ADD2"])
+def test_the_table_of_lists_in_relationships_is_the_schemas(schema_name: str) -> None:
+    wrapper = pytest.importorskip("ifcopenshell.ifcopenshell_wrapper", reason="IfcOpenShell is not installed")
+    schema = wrapper.schema_by_name(schema_name)
+
+    def relationship(entity: object) -> bool:
+        while entity is not None:
+            if entity.name() == "IfcRelationship":  # type: ignore[attr-defined]
+                return True
+            entity = entity.supertype()  # type: ignore[attr-defined]
+        return False
+
+    expected = sorted(
+        (entity.name(), attribute.name())
+        for entity in schema.entities()
+        if relationship(entity)
+        for attribute in entity.attributes()
+        if attribute.type_of_attribute().as_aggregation_type()
+    )
+    assert sorted(list_attributes(schema_name)) == expected
