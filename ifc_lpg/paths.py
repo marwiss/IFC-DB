@@ -416,6 +416,7 @@ async def unreachable(graph: Graph, model_id: str) -> list[dict[str, Any]]:
         for _step, statement in statements_of(decode_block(block["text"])):
             from_blocks.update(int(number) for number in _REFERENCE.findall(statement.split(b"=", 1)[1]))
     reached = {node["id"] for node in nodes if node["rooted"] or node["step"] in from_blocks}
+    ids = {node["id"] for node in nodes}
     frontier = list(reached)
     while frontier:
         found: set[str] = set()
@@ -423,6 +424,8 @@ async def unreachable(graph: Graph, model_id: str) -> list[dict[str, Any]]:
             found |= out.get(node_id, set())
             for block_step in into_blocks.get(node_id, ()):
                 found |= standing.get(block_step, set())
+                if f"{model_id}:{block_step}" in ids:  # a node held by its STEP id, as an owner history is
+                    found.add(f"{model_id}:{block_step}")
         frontier = list(found - reached)
         reached |= found
     left = [{"step": node["step"], "ifc_class": node["ifc_class"]} for node in nodes if node["id"] not in reached]
