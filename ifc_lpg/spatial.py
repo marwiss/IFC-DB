@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any
 
 from ifc_lpg.files import DEFAULT_LIMITS, Limits, _now, run_worker
-from ifc_lpg.graph import Dialect, Graph, Neo4jGraph, rebuild_point_indexes
+from ifc_lpg.graph import Dialect, Graph, Neo4jGraph, is_whole, rebuild_point_indexes
 from ifc_lpg.importer import BATCH
 
 FORMAT = "ifc-lpg-geometry"
@@ -411,11 +411,14 @@ async def import_spatial(
     afterwards where the database does not keep it up to date (Memgraph 3.14); that needs a :class:`Neo4jGraph`, for
     its ``ddl``."""
     header, products, _failures, end, mesh_map = _read(records_path, with_meshes=meshes)
-    rows = await graph.run("MATCH (m:Model {id: $id}) RETURN m.state AS state, m.format AS format", id=model_id)
+    rows = await graph.run(
+        "MATCH (m:Model {id: $id}) RETURN m.state AS state, m.imported_at AS imported_at, m.format AS format",
+        id=model_id,
+    )
     if not rows:
         raise SpatialError("there is no such model")
-    if (rows[0]["format"] or "step") != "step" or rows[0]["state"] != "done":
-        raise SpatialError(f"the model is {rows[0]['format']} and {rows[0]['state']}, not a STEP model that is done")
+    if (rows[0]["format"] or "step") != "step" or not is_whole(rows[0]):
+        raise SpatialError("the model is not a STEP model whose import is done")
     for product in products:
         product["id"] = f"{model_id}:{product['step']}"
     found = 0

@@ -17,13 +17,12 @@ import json
 import sys
 import tempfile
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from ifc_lpg.exporter import export_records
 from ifc_lpg.graph import FORM_VERSION, Graph
-from ifc_lpg.importer import delete_model, import_records
+from ifc_lpg.importer import _now, delete_model, import_records
 
 
 @dataclass(frozen=True)
@@ -41,10 +40,6 @@ DEFAULT_LIMITS = Limits()
 class ConversionFailed(RuntimeError):
     """The file could not be converted, written or checked. The message says why, and never quotes the file at
     length."""
-
-
-def _now() -> str:
-    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 async def run_worker(command: list[str], what: str, seconds: float, *, answers: tuple[int, ...] = (0,)) -> str:

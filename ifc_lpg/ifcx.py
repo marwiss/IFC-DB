@@ -38,7 +38,7 @@ from typing import Any
 
 from ifc_lpg.exporter import PAGE
 from ifc_lpg.files import DEFAULT_LIMITS, Limits, _now, run_worker
-from ifc_lpg.graph import FORM_VERSION, Graph
+from ifc_lpg.graph import FORM_VERSION, Graph, is_whole
 from ifc_lpg.importer import BATCH, MAX_BATCH_BYTES
 from ifc_lpg.lossless import NATIVE
 
@@ -469,14 +469,14 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
 async def export_records(graph: Graph, model_id: str, out: Path) -> int:
     """Write the model and its nodes to ``out``, for the writer. Returns the number of nodes."""
     rows = await graph.run(
-        "MATCH (m:Model {id: $id, format: 'ifcx'}) RETURN m.state AS state, m.header AS header, m.imports AS imports, "
-        "m.schemas AS schemas, m.layers AS layers",
+        "MATCH (m:Model {id: $id, format: 'ifcx'}) RETURN m.state AS state, m.imported_at AS imported_at, "
+        "m.header AS header, m.imports AS imports, m.schemas AS schemas, m.layers AS layers",
         id=model_id,
     )
     if not rows:
         raise ValueError("there is no such IFCX model")
-    if rows[0]["state"] != "done":
-        raise ValueError(f"the model is {rows[0]['state']}, not done")
+    if not is_whole(rows[0]):
+        raise ValueError("the model's import is not done")
     model = {key: json.loads(rows[0][key]) for key in ("header", "imports", "schemas")}
     model["layers"] = list(rows[0]["layers"] or [])
     paths = sorted(
@@ -557,6 +557,7 @@ async def import_ifcx(
     fields: dict[str, Any] = {key: json.dumps(header[key]) for key in ("header", "imports", "schemas")}
     fields |= {key: json.dumps(header[key]) for key in ("warnings", "conflicts")}
     fields |= {"layers": header["layers"], **counts, "done_at": _now()}
+    fields["imported_at"] = fields["done_at"]
     await graph.run("MATCH (m:Model {id: $id}) SET m.state = 'done', m += $fields", id=model_id, fields=fields)
     return {"id": model_id, "state": "done", **fields}
 

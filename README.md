@@ -261,6 +261,15 @@ its counts, or `failed`, with the error and nothing else of the model left. A
 model id that is taken is refused. Several models share one database, told apart
 by `model_id`.
 
+The import keeps the model's record itself. `import_records` makes the `Model` if
+it is not there, sets what the records say of it, and sets `imported_at` when the
+last record is in. A model that is taken out loses it again. So a model with
+`imported_at` is all in the graph, and that is what the export, the boxes, the
+merge and the named queries ask for. A program that runs the steps itself needs
+no state of its own on the node. `model_facts(graph, model_id)` reads the record:
+the facts of the import, what the boxes, a preparation and a merge have added,
+and `whole`. A model from before `imported_at` is whole when its state is `done`.
+
 ## The graph
 
 **In short:** every record of the file becomes a node, named after its kind, such as a wall
@@ -282,7 +291,7 @@ do:
 | Label | What it is |
 |---|---|
 | `Entity` | an instance of the file |
-| `Model` | one per model: `format` (`step` or `ifcx`), `schema` (IFC's version, as `IFC4` or `IFC5`), `form_version` (the version of the graph's shape, now 2), `geometry` (the form), the state, the counts, the file name and the file's header |
+| `Model` | one per model: `format` (`step` or `ifcx`), `schema` (IFC's version, as `IFC4` or `IFC5`), `form_version` (the version of the graph's shape, now 2), `geometry` (the form), the state, `imported_at` (when the import was done), the counts, the file name and the file's header |
 | `StepBlock` | STEP text kept in a block, linked from its `Model` by `HAS_STEP_BLOCK` |
 | `Object` | an object of an IFC5 file |
 
@@ -892,6 +901,7 @@ POSIX and 5 million instances, unless others are given.
 | Put a file in | `import_file(graph, path, model_id)` in `ifc_lpg.files`; `geometry_in_blocks=True` or `include_geometry=True` for the other forms, `lossless=False` for the ordinary form |
 | Write it back | `export_file(graph, model_id, path)` in `ifc_lpg.files` |
 | Take a model out | `delete_model(graph, model_id)` in `ifc_lpg.importer` |
+| Read a model's record | `model_facts(graph, model_id)` in `ifc_lpg.importer` |
 | Convert or write in steps of your own | `convert_file` and `write_file` in `ifc_lpg.files`, `import_records` in `ifc_lpg.importer`, `export_records` in `ifc_lpg.exporter` |
 | Add the boxes | `add_spatial(graph, path, model_id, dialect=…, meshes=False)` in `ifc_lpg.spatial`; `spatial_file` writes the geometry's file alone, and `import_spatial` reads one in |
 | Report the shapes that cannot be built | `geometry_issues(records)` in `ifc_lpg.spatial` |

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +11,8 @@ import pytest
 
 from ifc_lpg.equivalence import compare_files
 from ifc_lpg.exporter import NotExportable
-from ifc_lpg.files import export_file, import_file
+from ifc_lpg.files import convert_file, export_file, import_file
+from ifc_lpg.importer import MODEL_FACTS, delete_model, import_records, model_facts
 from ifc_lpg.step import StepFile
 from tests.conftest import FIXTURES_DIR
 
@@ -110,3 +112,42 @@ async def test_a_model_is_imported_once_and_a_failure_leaves_nothing_behind(grap
     assert left[0]["n"] == 0
     with pytest.raises(NotExportable, match="failed"):
         await export_file(graph, "broken", tmp_path / "never.ifc")
+
+
+async def test_the_import_keeps_the_models_record_itself(graph: Any, tmp_path: Path) -> None:
+    """Records loaded by a program of its own, with no ``Model`` made first and no state set on it."""
+    records, back = tmp_path / "records.jsonl", tmp_path / "back.ifc"
+    header = await convert_file(MODEL, records)
+    facts = await import_records(graph, "own", records)
+    assert facts["schema"] == header["schema"] == "IFC2X3" and facts["lossless"] is True and facts["imported_at"]
+    found = await model_facts(graph, "own")
+    assert found is not None and found["whole"] and found["id"] == "own"
+    assert {key: found[key] for key in MODEL_FACTS} == {key: facts[key] for key in MODEL_FACTS}
+    await graph.run("MATCH (m:Model {id: 'own'}) SET m.project_id = 'p', m.state = 'queued'")
+    found = await model_facts(graph, "own")
+    assert found is not None and found["whole"] and "project_id" not in found and "state" not in found
+    await export_file(graph, "own", back)
+    assert compare_files(MODEL, back).identical, "whole by its own mark, whatever state another has put there"
+
+    await delete_model(graph, "own", keep_model=True)
+    emptied = await model_facts(graph, "own")
+    assert emptied is not None and not emptied["whole"], "a model that is taken out is not all there"
+    broken = tmp_path / "broken.jsonl"
+    broken.write_text(records.read_text(encoding="utf-8")[:4000] + "\n{no json\n", encoding="utf-8")
+    with pytest.raises(json.JSONDecodeError):
+        await import_records(graph, "own", broken)
+    found = await model_facts(graph, "own")
+    assert found is not None and not found["whole"] and "imported_at" not in found, "an import that began anew"
+    with pytest.raises(NotExportable, match="queued"):
+        await export_file(graph, "own", back)
+    assert await model_facts(graph, "no-such-model") is None
+
+
+async def test_a_model_from_before_the_mark_is_whole_when_it_is_done(graph: Any, tmp_path: Path) -> None:
+    await import_file(graph, MODEL, "old")
+    await graph.run("MATCH (m:Model {id: 'old'}) REMOVE m.imported_at")
+    await export_file(graph, "old", tmp_path / "old.ifc")
+    assert compare_files(MODEL, tmp_path / "old.ifc").identical
+    await graph.run("MATCH (m:Model {id: 'old'}) SET m.state = 'running'")
+    with pytest.raises(NotExportable, match="running"):
+        await export_file(graph, "old", tmp_path / "never.ifc")

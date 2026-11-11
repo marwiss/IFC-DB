@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+from collections.abc import Mapping
 from typing import Any, Literal, Protocol
 
 Dialect = Literal["neo4j", "memgraph"]
@@ -20,8 +21,16 @@ UNIQUE = (("Model", "id"), ("Entity", "id"), ("StepBlock", "id"), ("Object", "id
 INDEXED = (("Entity", "GlobalId"), ("Entity", "model_id"), ("Object", "model_id"))
 POINT_INDEXED = (("Entity", "bbox_centre"),)  # the spatial layer, ifc_lpg.spatial
 FORM_VERSION = 2  # the version of the graph's shape on every Model, raised when the shape changes
+WHOLE = "(m.imported_at IS NOT NULL OR m.state = 'done')"  # is_whole, in Cypher, for a Model bound to m
 _NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 _ALREADY = ("already exists", "alreadyexists", "equivalentschemarulealreadyexists", "constraintalreadyexists")
+
+
+def is_whole(model: Mapping[str, Any]) -> bool:
+    """Whether a model is all in the graph. The import sets ``imported_at`` on the ``Model`` when the last record is in,
+    and takes it away when an import starts anew. A model from before that mark is whole when its ``state`` is
+    ``done``; that rule goes with the next major version."""
+    return model.get("imported_at") is not None or model.get("state") == "done"
 
 
 class Graph(Protocol):

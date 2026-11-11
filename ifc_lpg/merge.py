@@ -38,7 +38,7 @@ from ifc_lpg.convert import BLOCK_BYTES
 from ifc_lpg.editing import refresh_inverses
 from ifc_lpg.exporter import export_records
 from ifc_lpg.files import DEFAULT_LIMITS, Limits, _now, export_file, import_file, run_worker, write_file
-from ifc_lpg.graph import FORM_VERSION, Graph
+from ifc_lpg.graph import FORM_VERSION, Graph, is_whole
 from ifc_lpg.importer import BATCH, BLOCK_BATCH, delete_model
 from ifc_lpg.lossless import ALL_ARGUMENTS, STEP_SUFFIX, TAGGED, TYPE_SUFFIX, decode_block, encode_block
 from ifc_lpg.prepare import RESOLUTIONS as RESOLUTIONS
@@ -294,7 +294,8 @@ class _Model:
 
 async def _load(graph: Graph, model_id: str) -> _Model:
     rows = await graph.run(
-        "MATCH (m:Model {id: $id}) RETURN m.format AS format, m.state AS state, m.lossless AS lossless, "
+        "MATCH (m:Model {id: $id}) RETURN m.format AS format, m.state AS state, m.imported_at AS imported_at, "
+        "m.lossless AS lossless, "
         "m.schema AS schema, m.geometry AS geometry, m.skipped AS skipped, m.ifc_header AS ifc_header, "
         "m.ifc_project_guid AS ifc_project_guid",
         id=model_id,
@@ -302,7 +303,7 @@ async def _load(graph: Graph, model_id: str) -> _Model:
     if not rows:
         raise MergeError(f"there is no model {model_id!r}")
     fields = rows[0]
-    if (fields["format"] or "step") != "step" or fields["state"] != "done" or not fields["lossless"]:
+    if (fields["format"] or "step") != "step" or not is_whole(fields) or not fields["lossless"]:
         raise MergeError(f"the model {model_id!r} is not a STEP model that is done, in the lossless form")
     instances: dict[int, _Instance] = {}
     for row in await graph.run(
@@ -1083,9 +1084,11 @@ async def merge_building(
             error=f"{type(exc).__name__}: {exc}"[:500],
         )
         raise
-    fields["done_at"] = _now()
+    fields["done_at"] = fields["imported_at"] = _now()
     await graph.run(
-        "MATCH (m:Model {id: $id}) SET m.state = 'done', m.done_at = $now", id=model_id, now=fields["done_at"]
+        "MATCH (m:Model {id: $id}) SET m.state = 'done', m.done_at = $now, m.imported_at = $now",
+        id=model_id,
+        now=fields["done_at"],
     )
     return {**plan.report, "model": {"id": model_id, "state": "done", **fields}}
 
@@ -1495,11 +1498,11 @@ async def _check(graph: Graph, plan: _Plan, model_id: str, numbers: dict[int, in
             spare += 1
     with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
         folder = Path(tmp)
-        await graph.run("MATCH (m:Model {id: $id}) SET m.state = 'done'", id=model_id)  # for the export alone
+        await graph.run("MATCH (m:Model {id: $id}) SET m.imported_at = $now", id=model_id, now=_now())  # for the export
         try:
             await export_file(graph, model_id, folder / "c.ifc", limits=limits)
         finally:
-            await graph.run("MATCH (m:Model {id: $id}) SET m.state = 'running'", id=model_id)
+            await graph.run("MATCH (m:Model {id: $id}) REMOVE m.imported_at", id=model_id)
         await export_file(graph, plan.a.id, folder / "a.ifc", limits=limits)
         await export_records(graph, plan.b.id, folder / "b.jsonl")
         _renumbered(folder / "b.jsonl", folder / "b2.jsonl", lambda step: full.setdefault(step, step + spare))

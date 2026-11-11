@@ -10,7 +10,7 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Any, TextIO
 
-from ifc_lpg.graph import Graph
+from ifc_lpg.graph import Graph, is_whole
 from ifc_lpg.lossless import NATIVE, decode_block
 from ifc_lpg.step import statements_of
 
@@ -59,8 +59,8 @@ async def export_records(graph: Graph, model_id: str, out: Path) -> int:
     rows = await graph.run(
         """
         MATCH (m:Model {id: $id})
-        RETURN m.state AS state, m.lossless AS lossless, m.schema AS schema, m.ifc_header AS ifc_header,
-               m.skipped AS in_blocks, m.format AS format
+        RETURN m.state AS state, m.imported_at AS imported_at, m.lossless AS lossless, m.schema AS schema,
+               m.ifc_header AS ifc_header, m.skipped AS in_blocks, m.format AS format
         """,
         id=model_id,
     )
@@ -69,8 +69,9 @@ async def export_records(graph: Graph, model_id: str, out: Path) -> int:
     model = rows[0]
     if (model["format"] or "step") != "step":
         raise NotExportable(f"the model is {model['format']}, not STEP")
-    if model["state"] != "done":
-        raise NotExportable(f"the model is {model['state']}, not done")
+    if not is_whole(model):
+        state = f": it is {model['state']}" if model["state"] else ""
+        raise NotExportable(f"the model's import is not done{state}")
     if not model["lossless"]:
         raise NotExportable("the model was converted without the lossless form, so the graph does not hold it all")
     blocks = await graph.run(

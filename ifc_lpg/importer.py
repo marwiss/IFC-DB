@@ -4,10 +4,11 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.graph import Graph
+from ifc_lpg.graph import FORM_VERSION, Graph, is_whole
 from ifc_lpg.lossless import POINTS
 from ifc_lpg.schema import relationship_type
 from ifc_lpg.schema import safe_identifier as _safe
@@ -17,10 +18,39 @@ MAX_BATCH_BYTES = 16 * 1024 * 1024  # a coordinate list can be megabytes, and a 
 BLOCK_BATCH = 100
 # A row of a list of points, built in Cypher, since the records are JSON and the package needs no driver of its own.
 _POINT = "CASE size(p) WHEN 2 THEN point({x: p[0], y: p[1]}) ELSE point({x: p[0], y: p[1], z: p[2]}) END"
+# What an import says of its model, on the Model node. The spatial pass, a preparation and a merge add their own.
+MODEL_FACTS = (
+    "format",
+    "form_version",
+    "schema",
+    "ifc_project_guid",
+    "entities",
+    "relationships",
+    "skipped",
+    "lossless",
+    "geometry",
+    "ifc_header",
+    "imported_at",
+)
+_OWN = ("spatial_", "prepared_", "merge_")
 
 
-async def import_records(graph: Graph, model_id: str, records_path: Path) -> dict[str, int]:
-    """Create the ``Entity`` nodes and their relationships for one model. Returns counts."""
+def _now() -> str:
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+async def import_records(graph: Graph, model_id: str, records_path: Path) -> dict[str, Any]:
+    """Create the ``Entity`` nodes and their relationships for one model, and its ``Model`` if it is not there.
+
+    The ``Model`` gets what the records say of it (:data:`MODEL_FACTS`), and ``imported_at`` when the last record is
+    in. Until then it has none, also when an import starts anew, so that a model with ``imported_at`` is all in the
+    graph. Returns those facts, and the counts as ``nodes`` and ``relationships`` too."""
+    await graph.run(
+        "MERGE (m:Model {id: $model_id}) SET m.format = 'step', m.form_version = $form REMOVE m.imported_at",
+        model_id=model_id,
+        form=FORM_VERSION,
+    )
+    header: dict[str, Any] = {}
     nodes = relationships = 0
     block_rows: list[dict[str, Any]] = []
     node_groups: dict[tuple[tuple[str, ...], tuple[str, ...]], list[dict[str, Any]]] = {}
@@ -93,6 +123,8 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
                     row["position"] = position
                 edge_groups.setdefault((relationship_type(record["type"]), position is not None), []).append(row)
             else:
+                if kind == "h":
+                    header = record
                 await flush_nodes()  # the header separates nodes from edges
                 continue
             pending += 1
@@ -110,7 +142,34 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
         """,
         model_id=model_id,
     )
-    return {"nodes": nodes, "relationships": relationships}
+    facts = {
+        "format": "step",
+        "form_version": FORM_VERSION,
+        "schema": header.get("schema"),
+        "ifc_project_guid": header.get("ifc_project_guid"),
+        "entities": nodes,
+        "relationships": relationships,
+        "skipped": header.get("skipped", 0),
+        "lossless": header.get("lossless", False),
+        "geometry": header.get("geometry"),
+        "ifc_header": header.get("ifc_header"),
+        "imported_at": _now(),
+    }
+    await graph.run("MATCH (m:Model {id: $model_id}) SET m += $facts", model_id=model_id, facts=facts)
+    return {"nodes": nodes, "relationships": relationships, **facts}
+
+
+async def model_facts(graph: Graph, model_id: str) -> dict[str, Any] | None:
+    """What this package keeps on a model's ``Model`` node, or None when there is no such model: its ``id``, the facts
+    of its import (:data:`MODEL_FACTS`), what the spatial pass, a preparation and a merge have set (``spatial_…``,
+    ``prepared_…``, ``merge_…``), and ``whole``, which says that the model is all in the graph. What others keep on
+    the node is left out."""
+    rows = await graph.run("MATCH (m:Model {id: $id}) RETURN properties(m) AS properties", id=model_id)
+    if not rows:
+        return None
+    properties = rows[0]["properties"]
+    own = {key: value for key, value in sorted(properties.items()) if key in MODEL_FACTS or key.startswith(_OWN)}
+    return {"id": model_id, "whole": is_whole(properties), **own}
 
 
 async def delete_blocks(graph: Graph, model_id: str) -> None:
@@ -129,7 +188,8 @@ async def delete_blocks(graph: Graph, model_id: str) -> None:
 
 
 async def delete_model(graph: Graph, model_id: str, *, keep_model: bool = False) -> int:
-    """Remove a model's entities and blocks in batches, and the ``Model`` itself unless ``keep_model``."""
+    """Remove a model's entities and blocks in batches, and the ``Model`` itself unless ``keep_model``. A ``Model``
+    that is kept loses its ``imported_at``, since the model is no longer in the graph."""
     deleted = 0
     await delete_blocks(graph, model_id)
     while True:
@@ -142,7 +202,9 @@ async def delete_model(graph: Graph, model_id: str, *, keep_model: bool = False)
         deleted += count
         if count < BATCH:
             break
-    if not keep_model:
+    if keep_model:
+        await graph.run("MATCH (m:Model {id: $model_id}) REMOVE m.imported_at", model_id=model_id)
+    else:
         await graph.run(
             "MATCH (m:Model {id: $model_id}) WHERE coalesce(m.format, 'step') = 'step' DETACH DELETE m",
             model_id=model_id,
