@@ -35,7 +35,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.step import StepError, StepFile
+from ifc_lpg.step import StepFile
 from ifc_lpg.worker import keep_stdout_for_the_answer, limit_memory
 
 RESOLUTIONS = ("type", "proxy", "leave_out", "polyline", "owner", "virtual", "dated", "assignment")
@@ -491,7 +491,7 @@ def main(argv: list[str] | None = None) -> int:
             choices=choices,
             check=not args.no_check,
         )
-    except (StepError, ValueError, RuntimeError, OSError) as exc:
+    except Exception as exc:  # whatever IfcOpenShell raises is a failure; exit code 1 is an answer, not a crash
         sys.stderr.write(json.dumps({"error": f"{type(exc).__name__}: {str(exc)[:500]}"}) + "\n")
         return 3
     sys.stdout.write(json.dumps(answer) + "\n")

@@ -85,3 +85,18 @@ def test_an_issue_the_file_did_not_have_stops_the_conversion(tmp_path: Path) -> 
         "instance",
         "attribute",
     }, "in the form of a validation report"
+
+
+def test_whatever_goes_wrong_in_the_worker_is_a_failure_and_no_answer(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from ifc_lpg import prepare
+
+    def broken(*_args: object, **_kwargs: object) -> dict[str, object]:
+        raise KeyError("unexpected")
+
+    monkeypatch.setattr(prepare, "prepare_file", broken)
+    assert prepare.main([str(WINDOW_STYLE), str(tmp_path / "out.ifc")]) == 3, "not 1, which says choices are needed"
+    captured = capsys.readouterr()
+    assert captured.out == "" and "KeyError" in captured.err
+    assert prepare.main([str(WINDOW_STYLE), str(tmp_path / "out.ifc"), "--resolve", "IfcWindowStyle=melt"]) == 3

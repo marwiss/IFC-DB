@@ -875,6 +875,8 @@ async def prepare_other(
         command += [str(source), str(target), *options, "--memory-mb", str(limits.memory_mb)]
         command += [f"--resolve={key}={choice}" for key, choice in sorted((resolutions or {}).items())]
         done = await run_worker(command, "preparing the model", limits.timeout_seconds, answers=(0, 1, 2))
+        if not done.strip():
+            raise MergeError("preparing the model gave no answer")
         answer = json.loads(done.splitlines()[-1])
         if "problems" in answer:
             raise PrepareConflict(answer)
