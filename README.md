@@ -657,17 +657,42 @@ The schema and the form of the geometry must be the same in A and B, and so must
 every unit of a kind that both have. A unit of a kind that A has none of, such as
 an area unit in a model that gives only a length, comes along into A's units in C,
 so that B's values keep their meaning, and the report lists it under
-`units_added`. Where B's schema or its length unit differ, `prepare_other(graph, other_id,
-prepared_id, base_id=…)` makes B ready first, as a new model: a worker migrates it
-to A's schema with IfcOpenShell's `Migrator` and turns its lengths into A's unit,
-such as millimetres into metres. The migrator does its best: into IFC2X3 an element
-of a class the schema lacks becomes a proxy, and each is listed, while any other
-class without an equivalent is refused with what it is, such as IfcIndexedPolyCurve
-into IFC2X3 or IfcWindowStyle into IFC4X3. Units are compared by what they mean,
-their kind, SI unit and scale, so Revit's `DEGREE` and Bonsai's `degree` are one. Any other unit that A has another of is refused
-with what it is, for it is not converted. IfcOpenShell reads and writes the file there, so
-the prepared model is a conversion, not the same file. The boxes are not copied, so
-the geometry pass is run again for C.
+`units_added`.
+
+Models of two schemas are not merged as they are: one is converted to the other's
+schema first, the conversion is checked, and only then are they merged. Where B's
+schema or its length unit differ, `prepare_other(graph, other_id, prepared_id,
+base_id=…)` makes B ready as a new model: a worker migrates it to A's schema with
+IfcOpenShell's `Migrator`, through IFC4 between IFC2X3 and IFC4X3, and turns its
+lengths into A's unit, such as millimetres into metres. Units are compared by what
+they mean, their kind, SI unit and scale, so Revit's `DEGREE` and Bonsai's
+`degree` are one; any other unit that A has another of is refused with what it is.
+
+- **What cannot be converted** is not dropped or changed without a choice:
+  `PrepareConflict` carries a report of each problem, a class the other schema has
+  no equivalent of or what it needs that B lacks, with how many there are, some of
+  them, the products they belong to, and the options there are. `resolutions`
+  chooses one per problem, from `RESOLUTIONS`: `type` makes an IfcWindowStyle or
+  IfcDoorStyle an IfcWindowType or IfcDoorType, `proxy` makes an element a proxy,
+  `leave_out` takes the objects out with their relationships, `polyline` makes an
+  IfcIndexedPolyCurve of straight segments an IfcPolyline, `virtual` gives a space
+  boundary without a building element an IfcVirtualElement, `dated` gives an owner
+  history its date of change, `assignment` puts the styles of a styled item in the
+  style assignment IFC2X3 needs, and `owner` gives what IFC2X3 needs an owner
+  history on one made by IFC–LPG. A problem without options, such as the meshes of IFC4 in
+  IFC2X3, cannot be solved here. The report lists the problems of every step at
+  once.
+- **The check:** B and the converted model are both validated, B's issues are
+  carried over to the new numbering by instance and attribute, and an issue that B
+  did not have stops it: `PrepareError` lists the new issues in the form of a
+  validation report, and no model is made. A model that is made says so in
+  `prepared_check`, with `prepared_from` and `prepared_resolutions`.
+
+IfcOpenShell reads and writes the file there, so the prepared model is a conversion,
+not the same file. On real models, Revit's Duplex (IFC2X3) became IFC4X3 with its
+window and door styles as types and its virtual space boundaries given virtual
+elements, and the check passed. The boxes are not copied, so the geometry pass is
+run again for C.
 
 ## Neo4j and Memgraph
 
@@ -829,7 +854,7 @@ POSIX and 5 million instances, unless others are given.
 | See what refers to an instance | `referrers(graph, model_id, step)` in `ifc_lpg.editing` |
 | Delete nodes that nothing else refers to | `delete_nodes(graph, model_id, steps)` in `ifc_lpg.editing` |
 | Put the inverse relationships right after a change | `refresh_inverses(graph, model_id, steps)` in `ifc_lpg.editing` |
-| Make a model ready to be merged | `prepare_other(graph, other_id, prepared_id, base_id=…)` in `ifc_lpg.merge` |
+| Make a model ready to be merged | `prepare_other(graph, other_id, prepared_id, base_id=…, resolutions=…)` in `ifc_lpg.merge` |
 | Bring a building into another project | `merge_report(graph, base_id, other_id, building)` and `merge_building(graph, base_id, other_id, building, model_id, choices=…)` in `ifc_lpg.merge` |
 | Put IFC5 files in, and write them back | `import_ifcx(graph, [paths], model_id)` and `export_ifcx(graph, model_id, path)` in `ifc_lpg.ifcx` |
 | Check IFC5 files against their schemas | `check_ifcx([paths], schemas=dir)` in `ifc_lpg.ifcx_check` |
@@ -848,7 +873,7 @@ The command lines, each in a process of its own:
 | `python -m ifc_lpg.equivalence A B [--geometry]` | compares two files |
 | `python -m ifc_lpg.validation FILE [--against SRC...]` | checks a file against the IFC schema |
 | `python -m ifc_lpg.ifcx_check FILE... [--schemas DIR]` and `--fetch DIR` | checks IFC5 files against their schemas, and fetches the pinned ones |
-| `python -m ifc_lpg.prepare IFC OUT [--schema S] [--length-unit U]` | migrates a file and turns its lengths into another unit |
+| `python -m ifc_lpg.prepare IFC OUT [--schema S] [--length-unit U] [--resolve KEY=OPTION...]` | migrates a file, turns its lengths into another unit, and checks the result |
 | `python -m ifc_lpg.ids FILE IDS...` | checks a file against IDS |
 | `python -m ifc_lpg.gherkin_install DIR` and `python -m ifc_lpg.gherkin FILE --env DIR` | buildingSMART's rules |
 

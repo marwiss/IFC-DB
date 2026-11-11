@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +11,14 @@ import pytest
 
 from ifc_lpg.equivalence import compare_files
 from ifc_lpg.files import export_file, import_file
-from ifc_lpg.merge import MergeConflict, MergeError, merge_building, merge_report, prepare_other
+from ifc_lpg.merge import (
+    MergeConflict,
+    MergeError,
+    PrepareConflict,
+    merge_building,
+    merge_report,
+    prepare_other,
+)
 from ifc_lpg.paths import unreachable
 from ifc_lpg.prepare import prepare_file
 from tests.conftest import FIXTURES_DIR
@@ -179,7 +187,7 @@ async def test_a_building_in_millimetres_is_prepared_first(graph: Any, tmp_path:
     with pytest.raises(MergeError, match="prepare_other converts"):
         await merge_report(graph, "a", "mm", ANNEX_BUILDING)
     done = await prepare_other(graph, "mm", "mm-ready", base_id="a")
-    assert done["length_unit"][1] == "METER" and done["changed_count"] == 0
+    assert done["length_unit"][1] == "METER" and done["check"] == "passed"
     assert done["model"]["state"] == "done"
     await merge_building(graph, "a", "mm-ready", ANNEX_BUILDING, "c", choices={WALL: "new"})
     assert await graph.run(DEPTH, model="c") == [{"depth": pytest.approx(2.5)}]
@@ -192,8 +200,18 @@ async def test_a_building_of_another_schema_is_migrated_first(graph: Any, tmp_pa
     await import_file(graph, ANNEX, "b")
     with pytest.raises(MergeError, match="prepare_other migrates"):
         await merge_report(graph, "old", "b", ANNEX_BUILDING)
-    done = await prepare_other(graph, "b", "b-ready", base_id="old")
+    with pytest.raises(PrepareConflict) as raised:
+        await prepare_other(graph, "b", "b-ready", base_id="old")
+    found = {problem["key"]: problem["options"] for problem in raised.value.report["problems"]}
+    assert found == {
+        "owner_history": ["owner"],
+        "styled_item_styles": ["assignment", "leave_out"],
+    }, "IFC4 lets an object have no owner history and a styled item hold its styles; IFC2X3 does not"
+    assert await graph.run("MATCH (m:Model {id: 'b-ready'}) RETURN m.id AS id") == [], "nothing before the choice"
+    choices = {"owner_history": "owner", "styled_item_styles": "assignment"}
+    done = await prepare_other(graph, "b", "b-ready", base_id="old", resolutions=choices)
     assert done["schema"] == ["IFC4", "IFC2X3"] and done["length_unit"][1] == "MILLIMETER"
+    assert (done["model"]["prepared_check"], done["model"]["prepared_from"]) == ("passed", "b")
     merged = await merge_building(graph, "old", "b-ready", ANNEX_BUILDING, "c")
     assert merged["model"]["schema"] == "IFC2X3"
     assert await graph.run(DEPTH, model="c") == [{"depth": pytest.approx(2500.0)}]
@@ -352,3 +370,24 @@ async def test_a_unit_is_the_same_by_what_it_means(graph: Any, tmp_path: Path) -
     await import_file(graph, with_degrees(ANNEX, tmp_path / "grad.ifc", b"GRAD", b"0.015707963267949"), "grad")
     with pytest.raises(MergeError, match="units differ"):
         await merge_report(graph, "a", "grad", ANNEX_BUILDING)
+
+
+async def test_what_ifc4x3_has_not_is_converted_as_the_user_chooses(graph: Any, tmp_path: Path) -> None:
+    base = tmp_path / "spatial-4x3.ifc"
+    base.write_bytes(SPATIAL.read_bytes().replace(b"FILE_SCHEMA(('IFC4'));", b"FILE_SCHEMA(('IFC4X3_ADD2'));"))
+    await import_file(graph, base, "a")
+    await import_file(graph, FIXTURES_DIR / "window_style.ifc", "w")
+    with pytest.raises(PrepareConflict) as raised:
+        await prepare_other(graph, "w", "w-ready", base_id="a")
+    found = {problem["key"]: problem["options"] for problem in raised.value.report["problems"]}
+    assert found == {
+        "IfcWindowStyle": ["type", "proxy", "leave_out"],
+        "space_boundary_without_element": ["virtual", "leave_out"],
+        "owner_history_dates": ["dated"],
+    }
+    choices = {"IfcWindowStyle": "type", "space_boundary_without_element": "virtual", "owner_history_dates": "dated"}
+    done = await prepare_other(graph, "w", "w-ready", base_id="a", resolutions=choices)
+    assert json.loads(done["model"]["prepared_resolutions"]) == choices
+    await merge_building(graph, "a", "w-ready", "0Window000000000000003", "c")
+    assert await names(graph, "MATCH (t:IfcWindowType {model_id: 'c'}) RETURN t.Name AS v") == ["Casement"]
+    await comes_back(graph, "c", tmp_path)

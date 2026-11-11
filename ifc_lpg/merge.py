@@ -41,6 +41,7 @@ from ifc_lpg.files import DEFAULT_LIMITS, Limits, _now, export_file, import_file
 from ifc_lpg.graph import FORM_VERSION, Graph
 from ifc_lpg.importer import BATCH, BLOCK_BATCH, delete_model
 from ifc_lpg.lossless import ALL_ARGUMENTS, STEP_SUFFIX, TAGGED, TYPE_SUFFIX, decode_block, encode_block
+from ifc_lpg.prepare import RESOLUTIONS as RESOLUTIONS
 from ifc_lpg.schema import relationship_type, safe_identifier
 from ifc_lpg.step import parse_statement, statement_text, statements_of, string_of_atom
 
@@ -124,6 +125,25 @@ _PLACEMENT = relationship_type("ObjectPlacement")
 
 class MergeError(ValueError):
     """The building cannot be brought into the project. The message says why."""
+
+
+class PrepareConflict(MergeError):
+    """The model cannot be converted without a choice, for some of what it holds the other schema has no equivalent of.
+    ``report`` holds its ``problems``, each with the ``options`` that ``resolutions`` can choose between (F32)."""
+
+    def __init__(self, report: dict[str, Any]) -> None:
+        keys = [problem["key"] for problem in report["problems"]]
+        super().__init__(f"{len(keys)} things cannot be converted without a choice: {', '.join(keys[:10])}")
+        self.report = report
+
+
+class PrepareError(MergeError):
+    """The converted model has issues that the model did not have, so it was not made (F33 a). ``report`` lists them, as
+    issues of a validation report."""
+
+    def __init__(self, report: dict[str, Any]) -> None:
+        super().__init__(f"the converted model has {report['new_count']} issues that the model did not have")
+        self.report = report
 
 
 class MergeConflict(MergeError):
@@ -808,13 +828,27 @@ def _length_unit_name(props: dict[str, Any]) -> str:
 
 
 async def prepare_other(
-    graph: Graph, other_id: str, model_id: str, *, base_id: str, limits: Limits = DEFAULT_LIMITS
+    graph: Graph,
+    other_id: str,
+    model_id: str,
+    *,
+    base_id: str,
+    resolutions: dict[str, str] | None = None,
+    limits: Limits = DEFAULT_LIMITS,
 ) -> dict[str, Any]:
     """Make the model ``other_id`` ready to be merged into ``base_id``, as the new model ``model_id``: migrated to the
     base's schema, and with its lengths in the base's length unit, by IfcOpenShell in a worker, which needs the extra
     ``ifcopenshell``. Any other unit that A has another of is refused with what it is, for it is not converted; one
     that A has none of comes along in the merge. Returns what was
-    done, with the instances whose class changed, and the new model's properties. The other model does not change."""
+    done, with the new model's properties. The other model does not change.
+
+    What the base's schema has no equivalent of raises :class:`PrepareConflict`, with the problems and their options,
+    until ``resolutions`` chooses for each (``RESOLUTIONS``). The converted model is then checked against the model
+    (F33 a): one with issues that the model did not have raises :class:`PrepareError` and is not made. A model that is
+    made has ``prepared_from``, ``prepared_check`` ``passed`` and ``prepared_resolutions``."""
+    for choice in (resolutions or {}).values():
+        if choice not in RESOLUTIONS:
+            raise ValueError(f"a resolution is one of {', '.join(RESOLUTIONS)}, not {choice!r}")
     a, b = await _load(graph, base_id), await _load(graph, other_id)
     base = {meaning[:2]: (unit, meaning) for unit, meaning in await _unit_meanings(graph, a)}
     other = {meaning[:2]: (unit, meaning) for unit, meaning in await _unit_meanings(graph, b)}
@@ -839,7 +873,13 @@ async def prepare_other(
         source, target = Path(tmp) / "other.ifc", Path(tmp) / "prepared.ifc"
         await export_file(graph, other_id, source, limits=limits)
         command += [str(source), str(target), *options, "--memory-mb", str(limits.memory_mb)]
-        answer = json.loads((await run_worker(command, "preparing the model", limits.timeout_seconds)).splitlines()[-1])
+        command += [f"--resolve={key}={choice}" for key, choice in sorted((resolutions or {}).items())]
+        done = await run_worker(command, "preparing the model", limits.timeout_seconds, answers=(0, 1, 2))
+        answer = json.loads(done.splitlines()[-1])
+        if "problems" in answer:
+            raise PrepareConflict(answer)
+        if answer.get("check") == "failed":
+            raise PrepareError(answer)
         model = await import_file(
             graph,
             target,
@@ -848,7 +888,13 @@ async def prepare_other(
             geometry_in_blocks=geometry == "blocks",
             limits=limits,
         )
-    return {**answer, "model": model}
+    fields = {
+        "prepared_from": other_id,
+        "prepared_check": answer.get("check"),
+        "prepared_resolutions": json.dumps(resolutions or {}, sort_keys=True),
+    }
+    await graph.run("MATCH (m:Model {id: $id}) SET m += $fields", id=model_id, fields=fields)
+    return {**answer, "model": {**model, **fields}}
 
 
 async def merge_report(
