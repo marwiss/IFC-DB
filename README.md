@@ -593,7 +593,7 @@ and gets rows back, without writing Cypher and without knowing the graph's form.
 
 **In detail:**
 
-`ifc_lpg.queries` holds eight named queries on a model:
+`ifc_lpg.queries` holds nine named queries on a model:
 
 | Name | Answers | Parameters |
 |---|---|---|
@@ -605,6 +605,7 @@ and gets rows back, without writing Cypher and without knowing the graph's form.
 | `areas` | The net floor area of each storey's spaces, added up | |
 | `materials` | The materials of each element: its own, or those of its layers, list or constituents | `class`, optional |
 | `property` | The value of one property of a property set on every object that has it, with the value's IFC type | `pset`, `property`, and `class`, optional |
+| `site` | Where the model stands: each site's latitude, longitude and elevation as IFC has them, the latitude and longitude in decimal degrees, and the map projection with its eastings, northings, height, rotation and scale | |
 
 - **Asking.** `run_query(graph, model_id, name, parameters)` gives `{"name",
   "columns", "rows", "truncated"}`. The rows are lists in the order of the

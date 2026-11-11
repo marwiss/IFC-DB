@@ -83,3 +83,26 @@ async def test_a_property_for_a_list_of_global_ids(graph: Any) -> None:
         ("3k3LbXmTfDWODxdSuyCGYE", "1", "IFCLABEL"),
     ], "one row for each the model has, and none for the one it does not"
     assert await property_values(graph, "spaces", pset="Reuse", property="GTIN", global_ids=asked) == []
+
+
+async def test_where_a_model_stands(graph: Any) -> None:
+    await import_file(graph, FIXTURES_DIR / "site.ifc", "site")
+    (site,) = await ask(graph, "site", "site")
+    assert (site["global_id"], site["name"]) == ("0Site00000000000000002", "Plot")
+    assert site["ref_latitude"] == [59, 19, 46, 500000] and site["ref_longitude"] == [18, 4, 7, 0]
+    assert site["ref_elevation"] == 25.5
+    assert site["latitude"] == pytest.approx(59 + 19 / 60 + 46 / 3600 + 500000 / 3.6e9, abs=1e-9)
+    assert site["longitude"] == pytest.approx(18 + 4 / 60 + 7 / 3600, abs=1e-9)
+    assert (site["crs"], site["vertical_datum"]) == ("EPSG:3006", "RH2000")
+    assert (site["eastings"], site["northings"], site["orthogonal_height"]) == (674032.25, 6580821.5, 25.5)
+    assert (site["x_axis_abscissa"], site["x_axis_ordinate"], site["scale"]) == (1.0, 0.0, 1.0)
+
+    await import_file(graph, FIXTURES_DIR / "three_walls_gtin.ifc", "walls")
+    (older,) = await ask(graph, "walls", "site")
+    assert older["latitude"] == pytest.approx(59 + 55 / 60 + 52 / 3600 + 428000 / 3.6e9, abs=1e-9)
+    assert older["longitude"] == pytest.approx(10 + 42 / 60 + 27 / 3600 + 972000 / 3.6e9, abs=1e-9)
+    assert older["crs"] is None and older["eastings"] is None, "a model with no map projection has none"
+
+    await import_file(graph, FIXTURES_DIR / "two_spaces.ifc", "spaces")
+    (bare,) = await ask(graph, "spaces", "site")
+    assert bare["ref_latitude"] is None and bare["latitude"] is None and bare["longitude"] is None

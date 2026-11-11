@@ -237,6 +237,45 @@ QUERIES: dict[str, NamedQuery] = {
                 _OF_CLASS,
             ),
         ),
+        NamedQuery(
+            "site",
+            "Where the model stands: each site with its latitude, longitude and elevation as IFC has them, the latitude "
+            "and longitude in decimal degrees too, and the map projection the model is placed in, where it has one.",
+            (
+                "global_id",
+                "name",
+                "ref_latitude",
+                "ref_longitude",
+                "ref_elevation",
+                "latitude",
+                "longitude",
+                "crs",
+                "vertical_datum",
+                "eastings",
+                "northings",
+                "orthogonal_height",
+                "x_axis_abscissa",
+                "x_axis_ordinate",
+                "scale",
+            ),
+            """
+            MATCH (s:IfcSite {model_id: m.id})
+            OPTIONAL MATCH (c:IfcMapConversion {model_id: m.id})-[:TARGET_CRS]->(crs)
+            WITH s, c, crs,
+                 CASE WHEN s.RefLatitude__type IS NULL THEN s.RefLatitude END AS lat,
+                 CASE WHEN s.RefLongitude__type IS NULL THEN s.RefLongitude END AS lon
+            RETURN s.GlobalId AS global_id, s.Name AS name, s.RefLatitude AS ref_latitude,
+                   s.RefLongitude AS ref_longitude, s.RefElevation AS ref_elevation,
+                   CASE WHEN lat IS NULL THEN NULL ELSE lat[0] + lat[1] / 60.0 + lat[2] / 3600.0
+                        + CASE WHEN size(lat) > 3 THEN lat[3] / 3600000000.0 ELSE 0.0 END END AS latitude,
+                   CASE WHEN lon IS NULL THEN NULL ELSE lon[0] + lon[1] / 60.0 + lon[2] / 3600.0
+                        + CASE WHEN size(lon) > 3 THEN lon[3] / 3600000000.0 ELSE 0.0 END END AS longitude,
+                   crs.Name AS crs, crs.VerticalDatum AS vertical_datum, c.Eastings AS eastings,
+                   c.Northings AS northings, c.OrthogonalHeight AS orthogonal_height,
+                   c.XAxisAbscissa AS x_axis_abscissa, c.XAxisOrdinate AS x_axis_ordinate, c.Scale AS scale
+            ORDER BY name, global_id
+            """,
+        ),
     )
 }
 
