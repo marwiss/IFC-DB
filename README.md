@@ -659,9 +659,12 @@ an area unit in a model that gives only a length, comes along into A's units in 
 so that B's values keep their meaning, and the report lists it under
 `units_added`. Where B's schema or its length unit differ, `prepare_other(graph, other_id,
 prepared_id, base_id=…)` makes B ready first, as a new model: a worker migrates it
-to A's schema with IfcOpenShell's `Migrator`, which does its best and makes a proxy
-of a class the schema lacks, listing each, and turns its lengths into A's unit,
-such as millimetres into metres. Any other unit that A has another of is refused
+to A's schema with IfcOpenShell's `Migrator` and turns its lengths into A's unit,
+such as millimetres into metres. The migrator does its best: into IFC2X3 an element
+of a class the schema lacks becomes a proxy, and each is listed, while any other
+class without an equivalent is refused with what it is, such as IfcIndexedPolyCurve
+into IFC2X3 or IfcWindowStyle into IFC4X3. Units are compared by what they mean,
+their kind, SI unit and scale, so Revit's `DEGREE` and Bonsai's `degree` are one. Any other unit that A has another of is refused
 with what it is, for it is not converted. IfcOpenShell reads and writes the file there, so
 the prepared model is a conversion, not the same file. The boxes are not copied, so
 the geometry pass is run again for C.
