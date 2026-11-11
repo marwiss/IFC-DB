@@ -329,3 +329,26 @@ async def test_units_that_a_has_none_of_come_along(graph: Any, tmp_path: Path) -
     )
     assert len(kinds) == 1 + len(report["units_added"]) == len(set(kinds)), "one unit of each kind"
     await comes_back(graph, "c", tmp_path)
+
+
+def with_degrees(source: Path, target: Path, name: bytes, factor: bytes) -> Path:
+    """A copy whose units have a degree as well, under ``name`` and with ``factor``."""
+    data = source.read_bytes().replace(b"=IFCUNITASSIGNMENT((#2));", b"=IFCUNITASSIGNMENT((#2,#200));")
+    units = (
+        b"#200=IFCCONVERSIONBASEDUNIT(#201,.PLANEANGLEUNIT.,'" + name + b"',#202);\n"
+        b"#201=IFCDIMENSIONALEXPONENTS(0,0,0,0,0,0,0);\n"
+        b"#202=IFCMEASUREWITHUNIT(IFCPLANEANGLEMEASURE(" + factor + b"),#203);\n"
+        b"#203=IFCSIUNIT(*,.PLANEANGLEUNIT.,$,.RADIAN.);\nENDSEC;\nEND-ISO-10303-21;"
+    )
+    target.write_bytes(data.replace(b"ENDSEC;\nEND-ISO-10303-21;", units))
+    return target
+
+
+async def test_a_unit_is_the_same_by_what_it_means(graph: Any, tmp_path: Path) -> None:
+    await import_file(graph, with_degrees(SPATIAL, tmp_path / "a.ifc", b"DEGREE", b"0.0174532925199433"), "a")
+    await import_file(graph, with_degrees(ANNEX, tmp_path / "b.ifc", b"degree", b"0.017453292519943295"), "b")
+    report = await merge_report(graph, "a", "b", ANNEX_BUILDING)
+    assert report["units_added"] == [], "'DEGREE' and 'degree' of the same factor are one unit"
+    await import_file(graph, with_degrees(ANNEX, tmp_path / "grad.ifc", b"GRAD", b"0.015707963267949"), "grad")
+    with pytest.raises(MergeError, match="units differ"):
+        await merge_report(graph, "a", "grad", ANNEX_BUILDING)

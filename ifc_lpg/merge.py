@@ -654,26 +654,69 @@ def _unit_name(props: dict[str, Any]) -> str:
     return f"{kind} {props.get('Prefix') or ''}{props.get('Name') or props.get('Currency') or ''}".strip()
 
 
+_PREFIX = {
+    "EXA": 1e18, "PETA": 1e15, "TERA": 1e12, "GIGA": 1e9, "MEGA": 1e6, "KILO": 1e3, "HECTO": 1e2, "DECA": 1e1,
+    "DECI": 1e-1, "CENTI": 1e-2, "MILLI": 1e-3, "MICRO": 1e-6, "NANO": 1e-9, "PICO": 1e-12, "FEMTO": 1e-15, "ATTO": 1e-18,
+}  # fmt: skip
+
+
+def _scale(model: _Model, step: int, depth: int = 0) -> tuple[Any, float] | None:
+    """A unit's SI unit and how many of that it is, through the factors of conversion-based units."""
+    props = model.props.get(step, {})
+    if depth > 8:
+        return None
+    if props.get("ifc_class") == "IfcSIUnit":
+        return props.get("Name"), _PREFIX.get(str(props.get("Prefix")), 1.0)
+    measure = model.instances[step].attribute("ConversionFactor") if step in model.instances else []
+    if not measure:
+        return None
+    value = model.props.get(measure[0], {}).get("ValueComponent")
+    inner = model.instances[measure[0]].attribute("UnitComponent")
+    found = _scale(model, inner[0], depth + 1) if inner else None
+    if not isinstance(value, int | float) or isinstance(value, bool) or found is None:
+        return None
+    return found[0], value * found[1]
+
+
+def _meaning(model: _Model, step: int) -> tuple[Any, ...]:
+    """What a unit means, whatever it is called: its kind, its SI unit and its scale to nine digits, so that 'DEGREE'
+    and 'degree' of the same factor are one unit; money by its currency, and a derived unit by its parts."""
+    props = model.props.get(step, {})
+    kind = _unit_kind(props)
+    if props.get("ifc_class") == "IfcMonetaryUnit":
+        return (*kind, props.get("Currency"))
+    if props.get("ifc_class") == "IfcDerivedUnit":
+        parts = []
+        for element in model.instances[step].attribute("Elements"):
+            unit = model.instances[element].attribute("Unit")
+            parts.append((_meaning(model, unit[0]) if unit else None, model.props.get(element, {}).get("Exponent")))
+        return (*kind, tuple(sorted(parts, key=repr)))
+    found = _scale(model, step)
+    if found is None:
+        return (*kind, props.get("ifc_class"), str(props.get("Name")).upper())
+    return (*kind, found[0], float(f"{found[1]:.9g}"))
+
+
+async def _unit_meanings(graph: Graph, model: _Model) -> list[tuple[int, tuple[Any, ...]]]:
+    assignment = _assignment(model)
+    units = model.instances[assignment].attribute("Units") if assignment is not None else []
+    await _fetch(graph, model, _closure(model, units))
+    return [(unit, _meaning(model, unit)) for unit in units]
+
+
 async def _units(graph: Graph, a: _Model, b: _Model) -> list[int]:
-    """B's units against A's (F29 a): each the same as one of A's, or of a kind that A has no unit of, which C takes from
-    B. A unit of a kind A has, but another, is refused. Returns B's units that C takes."""
-    found = {}
-    for model in (a, b):
-        assignment = _assignment(model)
-        found[model.id] = model.instances[assignment].attribute("Units") if assignment is not None else []
-        await _fetch(graph, model, _closure(model, found[model.id]))
-    memo_a: dict[int, str] = {}
-    memo_b: dict[int, str] = {}
-    known = {_content(a, unit, memo_a, {}) for unit in found[a.id]}
-    kinds = {_unit_kind(a.props[unit]) for unit in found[a.id]}
-    other = [unit for unit in found[b.id] if _content(b, unit, memo_b, {}) not in known]
-    differing = [unit for unit in other if _unit_kind(b.props[unit]) in kinds]
+    """B's units against A's (F29 a): each the same as one of A's, by what it means, or of a kind that A has no unit of,
+    which C takes from B. A unit of a kind A has, but another, is refused. Returns B's units that C takes."""
+    known = {meaning for _unit, meaning in await _unit_meanings(graph, a)}
+    kinds = {meaning[:2] for meaning in known}
+    other = [(unit, meaning) for unit, meaning in await _unit_meanings(graph, b) if meaning not in known]
+    differing = [unit for unit, meaning in other if meaning[:2] in kinds]
     if differing:
         names = "; ".join(_unit_name(b.props[unit]) for unit in differing)
         raise MergeError(f"the units differ: A does not have {names} of B; prepare_other converts B's lengths")
     if other and _assignment(a) is None:
         raise MergeError("A has no unit assignment to take B's units into")
-    return other
+    return [unit for unit, _meaning in other]
 
 
 def _check_choice(choice: str | None) -> None:
@@ -754,19 +797,6 @@ async def _plan(
 _IMPERIAL = ("thou", "inch", "foot", "yard", "mile")
 
 
-async def _project_units(graph: Graph, model_id: str) -> dict[str, dict[str, Any]]:
-    rows = await graph.run(
-        "MATCH (:IfcProject {model_id: $id})-[:UNITS_IN_CONTEXT]->(:Entity)-[:UNITS]->(u:Entity) "
-        "RETURN properties(u) AS props",
-        id=model_id,
-    )
-    return {row["props"]["UnitType"]: row["props"] for row in rows if row["props"].get("UnitType")}
-
-
-def _unit_key(props: dict[str, Any]) -> tuple[Any, ...]:
-    return (props.get("ifc_class"), props.get("Prefix"), props.get("Name"))
-
-
 def _length_unit_name(props: dict[str, Any]) -> str:
     """A length unit as ``convert_file_length_units`` names it, such as ``MILLIMETER`` or ``foot``."""
     if props.get("ifc_class") == "IfcSIUnit" and props.get("Name") == "METRE":
@@ -785,31 +815,26 @@ async def prepare_other(
     ``ifcopenshell``. Any other unit that A has another of is refused with what it is, for it is not converted; one
     that A has none of comes along in the merge. Returns what was
     done, with the instances whose class changed, and the new model's properties. The other model does not change."""
-    rows = await graph.run(
-        "UNWIND $ids AS id MATCH (m:Model {id: id}) RETURN m.id AS id, m.schema AS schema, m.geometry AS geometry",
-        ids=[base_id, other_id],
-    )
-    fields = {row["id"]: row for row in rows}
-    if set(fields) != {base_id, other_id}:
-        raise MergeError("there is no such model")
-    base, other = await _project_units(graph, base_id), await _project_units(graph, other_id)
+    a, b = await _load(graph, base_id), await _load(graph, other_id)
+    base = {meaning[:2]: (unit, meaning) for unit, meaning in await _unit_meanings(graph, a)}
+    other = {meaning[:2]: (unit, meaning) for unit, meaning in await _unit_meanings(graph, b)}
+    length = ("LENGTHUNIT", None)
     differing = [
-        f"{kind} {props.get('Prefix') or ''}{props.get('Name')}"
-        for kind, props in sorted(other.items())
-        if kind != "LENGTHUNIT" and kind in base and _unit_key(base[kind]) != _unit_key(props)
+        _unit_name(b.props[unit])
+        for kind, (unit, meaning) in sorted(other.items(), key=repr)
+        if kind != length and kind in base and base[kind][1] != meaning
     ]
     if differing:
         raise MergeError(f"B has units other than A's, which are not converted: {'; '.join(differing)}")
     command = [sys.executable, "-m", "ifc_lpg.prepare"]
     options: list[str] = []
-    if fields[base_id]["schema"] != fields[other_id]["schema"]:
-        options += ["--schema", str(fields[base_id]["schema"])]
-    lengths = base.get("LENGTHUNIT"), other.get("LENGTHUNIT")
-    if lengths[0] and lengths[1] and _unit_key(lengths[0]) != _unit_key(lengths[1]):
-        options += ["--length-unit", _length_unit_name(lengths[0])]
+    if a.fields["schema"] != b.fields["schema"]:
+        options += ["--schema", str(a.fields["schema"])]
+    if length in base and length in other and base[length][1] != other[length][1]:
+        options += ["--length-unit", _length_unit_name(a.props[base[length][0]])]
     if not options:
         raise MergeError("B has the schema and the length unit of A already; there is nothing to prepare")
-    geometry = fields[other_id]["geometry"]
+    geometry = b.fields["geometry"]
     with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
         source, target = Path(tmp) / "other.ifc", Path(tmp) / "prepared.ifc"
         await export_file(graph, other_id, source, limits=limits)
