@@ -174,6 +174,15 @@ async def model_facts(graph: Graph, model_id: str) -> dict[str, Any] | None:
     return {"id": model_id, "whole": is_whole(properties), **own}
 
 
+async def models(graph: Graph) -> list[dict[str, Any]]:
+    """The models in the graph, in the order of their ids: ``{"id", "whole"}`` for each, where ``whole`` says that the
+    model is all in the graph."""
+    rows = await graph.run(
+        "MATCH (m:Model) RETURN m.id AS id, m.imported_at AS imported_at, m.state AS state ORDER BY id"
+    )
+    return [{"id": row["id"], "whole": is_whole(row)} for row in rows]
+
+
 async def delete_blocks(graph: Graph, model_id: str) -> None:
     """Remove a model's blocks, a few at a time, for each holds a lot of text."""
     while True:

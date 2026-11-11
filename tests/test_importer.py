@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from ifc_lpg.graph import FORM_VERSION, is_whole
-from ifc_lpg.importer import MODEL_FACTS, import_records, model_facts, relationship_type
+from ifc_lpg.importer import MODEL_FACTS, import_records, model_facts, models, relationship_type
 
 
 class Asked:
@@ -108,6 +108,20 @@ async def test_the_facts_of_a_model_are_the_packages_own() -> None:
         "spatial_boxes": 3,
     }
     assert await model_facts(Asked(), "m") is None
+
+
+async def test_the_models_of_a_graph_are_listed_with_whether_each_is_whole() -> None:
+    graph = Asked(
+        [
+            {"id": "a", "imported_at": "2026-11-11T12:00:00.000Z", "state": None},
+            {"id": "b", "imported_at": None, "state": "done"},
+            {"id": "c", "imported_at": None, "state": "running"},
+        ]
+    )
+    assert await models(graph) == [{"id": "a", "whole": True}, {"id": "b", "whole": True}, {"id": "c", "whole": False}]
+    ((statement, params),) = graph.asked
+    assert "ORDER BY id" in statement and params == {}, "every model, in the order of the ids, and nothing else read"
+    assert await models(Asked()) == []
 
 
 def test_a_model_is_whole_by_its_mark_or_by_the_state_from_before() -> None:

@@ -902,6 +902,7 @@ POSIX and 5 million instances, unless others are given.
 | Write it back | `export_file(graph, model_id, path)` in `ifc_lpg.files` |
 | Take a model out | `delete_model(graph, model_id)` in `ifc_lpg.importer` |
 | Read a model's record | `model_facts(graph, model_id)` in `ifc_lpg.importer` |
+| List the models | `models(graph)` in `ifc_lpg.importer`: each model's id and whether it is all in the graph |
 | Convert or write in steps of your own | `convert_file` and `write_file` in `ifc_lpg.files`, `import_records` in `ifc_lpg.importer`, `export_records` in `ifc_lpg.exporter` |
 | Add the boxes | `add_spatial(graph, path, model_id, dialect=…, meshes=False)` in `ifc_lpg.spatial`; `spatial_file` writes the geometry's file alone, and `import_spatial` reads one in |
 | Report the shapes that cannot be built | `geometry_issues(records)` in `ifc_lpg.spatial` |

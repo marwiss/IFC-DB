@@ -12,7 +12,7 @@ import pytest
 from ifc_lpg.equivalence import compare_files
 from ifc_lpg.exporter import NotExportable
 from ifc_lpg.files import convert_file, export_file, import_file
-from ifc_lpg.importer import MODEL_FACTS, delete_model, import_records, model_facts
+from ifc_lpg.importer import MODEL_FACTS, delete_model, import_records, model_facts, models
 from ifc_lpg.step import StepFile
 from tests.conftest import FIXTURES_DIR
 
@@ -123,6 +123,7 @@ async def test_the_import_keeps_the_models_record_itself(graph: Any, tmp_path: P
     found = await model_facts(graph, "own")
     assert found is not None and found["whole"] and found["id"] == "own"
     assert {key: found[key] for key in MODEL_FACTS} == {key: facts[key] for key in MODEL_FACTS}
+    assert await models(graph) == [{"id": "own", "whole": True}]
     await graph.run("MATCH (m:Model {id: 'own'}) SET m.project_id = 'p', m.state = 'queued'")
     found = await model_facts(graph, "own")
     assert found is not None and found["whole"] and "project_id" not in found and "state" not in found
@@ -132,6 +133,7 @@ async def test_the_import_keeps_the_models_record_itself(graph: Any, tmp_path: P
     await delete_model(graph, "own", keep_model=True)
     emptied = await model_facts(graph, "own")
     assert emptied is not None and not emptied["whole"], "a model that is taken out is not all there"
+    assert await models(graph) == [{"id": "own", "whole": False}]
     broken = tmp_path / "broken.jsonl"
     broken.write_text(records.read_text(encoding="utf-8")[:4000] + "\n{no json\n", encoding="utf-8")
     with pytest.raises(json.JSONDecodeError):
