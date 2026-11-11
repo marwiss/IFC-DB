@@ -14,7 +14,8 @@ IfcIndexedPolyCurve of straight segments an IfcPolyline, ``owner`` gives what IF
 has none, one made by IFC-LPG, and ``virtual`` gives a space boundary without a building element, which IFC4 needs one
 on, an IfcVirtualElement, as IFC4 means virtual boundaries to have, ``dated`` gives an owner history that says
 what changed, and IFC4 needs a date of change on, its date of creation, and ``assignment`` puts the styles of a styled
-item in an IfcPresentationStyleAssignment, which IFC2X3 needs them in. What a later step of a migration through IFC4
+item in an IfcPresentationStyleAssignment, which IFC2X3 needs them in, and ``context`` gives a project without a
+representation context, which IFC2X3 needs one on, a 3D model context at the origin. What a later step of a migration through IFC4
 cannot carry is listed at once, so that one round of choices does. The migrator's own way out, a made-up owner history
 for each instance, is not taken.
 
@@ -38,8 +39,9 @@ from typing import Any
 from ifc_lpg.step import StepFile
 from ifc_lpg.worker import keep_stdout_for_the_answer, limit_memory
 
-RESOLUTIONS = ("type", "proxy", "leave_out", "polyline", "owner", "virtual", "dated", "assignment")
+RESOLUTIONS = ("type", "proxy", "leave_out", "polyline", "owner", "virtual", "dated", "assignment", "context")
 OWNER = "owner_history"
+CONTEXTS = "representation_contexts"
 BOUNDARY = "space_boundary_without_element"
 DATES = "owner_history_dates"
 STYLES = "styled_item_styles"
@@ -143,6 +145,10 @@ def _needs(model: Any, schema: str) -> dict[str, dict[str, Any]]:
         if items := _unassigned(model):
             message = "IFC2X3 needs the styles of a styled item in a style assignment"
             found[STYLES] = _problem(STYLES, STYLES, items, ["assignment", "leave_out"], message)
+        bare = [project for project in model.by_type("IfcProject") if not project.RepresentationContexts]
+        if bare:
+            message = "IFC2X3 needs a representation context on the project, and it has none"
+            found[CONTEXTS] = _problem(CONTEXTS, CONTEXTS, bare, ["context"], message)
     if source == "IFC2X3" and target != "IFC2X3":
         bare = [e for e in model.by_type("IfcRelSpaceBoundary") if e.RelatedBuildingElement is None]
         if bare:
@@ -272,6 +278,12 @@ def _resolve_needs(model: Any, key: str, choice: str, moved: dict[int, int | Non
     elif key == DATES:
         for history in _undated(model):
             history.LastModifiedDate = history.CreationDate
+    elif key == CONTEXTS:
+        for project in model.by_type("IfcProject"):
+            if not project.RepresentationContexts:
+                origin = model.createIfcAxis2Placement3D(model.createIfcCartesianPoint((0.0, 0.0, 0.0)), None, None)
+                context = model.createIfcGeometricRepresentationContext(None, "Model", 3, 1e-5, origin, None)
+                project.RepresentationContexts = [context]
     elif key == BOUNDARY:
         for boundary in [e for e in model.by_type("IfcRelSpaceBoundary") if e.RelatedBuildingElement is None]:
             if choice == "virtual":

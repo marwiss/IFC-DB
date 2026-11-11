@@ -678,8 +678,9 @@ they mean, their kind, SI unit and scale, so Revit's `DEGREE` and Bonsai's
   IfcIndexedPolyCurve of straight segments an IfcPolyline, `virtual` gives a space
   boundary without a building element an IfcVirtualElement, `dated` gives an owner
   history its date of change, `assignment` puts the styles of a styled item in the
-  style assignment IFC2X3 needs, and `owner` gives what IFC2X3 needs an owner
-  history on one made by IFC–LPG. A problem without options, such as the meshes of IFC4 in
+  style assignment IFC2X3 needs, `context` gives a project without a
+  representation context a 3D model context at the origin, and `owner` gives what
+  IFC2X3 needs an owner history on one made by IFC–LPG. A problem without options, such as the meshes of IFC4 in
   IFC2X3, cannot be solved here. The report lists the problems of every step at
   once.
 - **The check:** B and the converted model are both validated, B's issues are

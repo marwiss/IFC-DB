@@ -100,3 +100,34 @@ def test_whatever_goes_wrong_in_the_worker_is_a_failure_and_no_answer(
     captured = capsys.readouterr()
     assert captured.out == "" and "KeyError" in captured.err
     assert prepare.main([str(WINDOW_STYLE), str(tmp_path / "out.ifc"), "--resolve", "IfcWindowStyle=melt"]) == 3
+
+
+BARE = b"""ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('ViewDefinition [DesignTransferView]'),'2;1');
+FILE_NAME('bare.ifc','2026-11-11T00:00:00',(''),(''),'IFC-LPG tests','IFC-LPG tests','');
+FILE_SCHEMA(('IFC4'));
+ENDSEC;
+DATA;
+#1=IFCPROJECT('0Bare00000000000000001',$,'Bare',$,$,$,$,$,#3);
+#2=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);
+#3=IFCUNITASSIGNMENT((#2));
+#4=IFCBUILDING('0Bare00000000000000002',$,'Bare building',$,$,$,$,$,.ELEMENT.,$,$,$);
+#5=IFCRELAGGREGATES('0Bare00000000000000003',$,$,$,#1,(#4));
+ENDSEC;
+END-ISO-10303-21;
+"""
+
+
+def test_a_project_without_a_context_gets_one_if_the_user_chooses(tmp_path: Path) -> None:
+    pytest.importorskip("ifcopenshell", reason="IfcOpenShell is not installed")
+    source, target = tmp_path / "bare.ifc", tmp_path / "out.ifc"
+    source.write_bytes(BARE)
+    answer = prepare_file(source, target, schema="IFC2X3", length_unit=None)
+    found = {problem["key"]: problem["options"] for problem in answer["problems"]}
+    assert found == {"owner_history": ["owner"], "representation_contexts": ["context"]}
+    choices = {"owner_history": "owner", "representation_contexts": "context"}
+    done = prepare_file(source, target, schema="IFC2X3", length_unit=None, choices=choices)
+    assert done["check"] == "passed", done.get("new")
+    written = {keyword: parameters for _step, keyword, parameters in StepFile(target.read_bytes())}
+    assert written[b"IFCGEOMETRICREPRESENTATIONCONTEXT"][1:3] == [b"s5:Model", b"i3"]
