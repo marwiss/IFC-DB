@@ -304,6 +304,7 @@ Models of both formats share one series of ids.
 | `ifc_class` | the concrete class |
 | `GlobalId`, `Name`, `Description`, `Tag`, … | every literal attribute, by its IFC name |
 | `bbox_min`, `bbox_max`, `bbox_centre` | the product's box, when it has been [worked out](#where-the-products-are) |
+| `elevation_m`, `elevation_source` | on a storey: its height in metres, from its `Elevation` (`attribute`) or, where the file leaves that out as IFC4X3 files may, from its placement in the project's coordinates (`placement`); none when the file's length unit is not known |
 
 An attribute that points at another instance becomes a relationship named after
 it, in upper case with underscores at the word boundaries. An inverse attribute
@@ -600,9 +601,9 @@ and gets rows back, without writing Cypher and without knowing the graph's form.
 | `entity` | One rooted entity by its GlobalId: its class, its literal attributes, and what it refers to and is referred to by | `global_id` |
 | `element-classes` | How many elements the model has of each class | |
 | `elements` | The elements of a class, with the spatial structure that contains each | `class` |
-| `storeys` | The storeys, with their elevation and how many elements and spaces each holds | |
+| `storeys` | The storeys, with their elevation as the file gives it, their height in metres and where it comes from, and how many elements and spaces each holds | |
 | `spaces` | The spaces, with their storey and their net and gross floor areas | |
-| `areas` | The net floor area of each storey's spaces, added up | |
+| `areas` | The net floor area of each storey's spaces, added up, with the storey's height | |
 | `materials` | The materials of each element: its own, or those of its layers, list or constituents | `class`, optional |
 | `property` | The value of one property of a property set on every object that has it, with the value's IFC type | `pset`, `property`, and `class`, optional |
 | `site` | Where the model stands: each site's latitude, longitude and elevation as IFC has them, the latitude and longitude in decimal degrees, and the map projection with its eastings, northings, height, rotation and scale | |

@@ -153,16 +153,17 @@ QUERIES: dict[str, NamedQuery] = {
         ),
         NamedQuery(
             "storeys",
-            "The building storeys, with their elevation and how many elements and spaces each holds.",
-            ("global_id", "name", "elevation", "elements", "spaces"),
+            "The building storeys, with their elevation as the file gives it, their height in metres from that or, where "
+            "the file leaves it out, from their placement, and how many elements and spaces each holds.",
+            ("global_id", "name", "elevation", "elevation_m", "elevation_source", "elements", "spaces"),
             """
             MATCH (s:IfcBuildingStorey {model_id: m.id})
             OPTIONAL MATCH (s)<-[:RELATING_STRUCTURE]-(:IfcRelContainedInSpatialStructure)-[:RELATED_ELEMENTS]->(e)
             WITH s, count(DISTINCT e) AS elements
             OPTIONAL MATCH (s)<-[:RELATING_OBJECT]-(:IfcRelAggregates)-[:RELATED_OBJECTS]->(sp:IfcSpace)
-            RETURN s.GlobalId AS global_id, s.Name AS name, s.Elevation AS elevation, elements,
-                   count(DISTINCT sp) AS spaces
-            ORDER BY elevation, name
+            RETURN s.GlobalId AS global_id, s.Name AS name, s.Elevation AS elevation, s.elevation_m AS elevation_m,
+                   s.elevation_source AS elevation_source, elements, count(DISTINCT sp) AS spaces
+            ORDER BY elevation_m, name
             """,
         ),
         NamedQuery(
@@ -185,15 +186,16 @@ QUERIES: dict[str, NamedQuery] = {
         NamedQuery(
             "areas",
             "The net floor area of each storey's spaces, added up; a building's area is the sum of its storeys'.",
-            ("storey", "elevation", "spaces", "net_floor_area"),
+            ("storey", "elevation", "elevation_m", "elevation_source", "spaces", "net_floor_area"),
             """
             MATCH (s:IfcBuildingStorey {model_id: m.id})
             OPTIONAL MATCH (s)<-[:RELATING_OBJECT]-(:IfcRelAggregates)-[:RELATED_OBJECTS]->(sp:IfcSpace)
             OPTIONAL MATCH (sp)<-[:RELATED_OBJECTS]-(:IfcRelDefinesByProperties)-[:RELATING_PROPERTY_DEFINITION]
                   ->(:IfcElementQuantity)-[:QUANTITIES]->(q:IfcQuantityArea {Name: 'NetFloorArea'})
-            RETURN s.Name AS storey, s.Elevation AS elevation, count(DISTINCT sp) AS spaces,
+            RETURN s.Name AS storey, s.Elevation AS elevation, s.elevation_m AS elevation_m,
+                   s.elevation_source AS elevation_source, count(DISTINCT sp) AS spaces,
                    sum(q.AreaValue) AS net_floor_area
-            ORDER BY elevation, storey
+            ORDER BY elevation_m, storey
             """,
         ),
         NamedQuery(

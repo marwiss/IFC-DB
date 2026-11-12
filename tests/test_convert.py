@@ -73,3 +73,66 @@ def test_geometry_can_be_included_and_limits_are_enforced(tmp_path: Path) -> Non
     assert kinds.index("h") > 0 and all(k == "e" for k in kinds[kinds.index("h") + 1 :]), "nodes, header, then edges"
     assert worker_main([str(MODEL), str(out), "--max-entities", "10"]) == 3
     assert worker_main([str(tmp_path / "missing.ifc"), str(out)]) == 4
+
+
+def _heights(data: str) -> dict[int, dict[str, object]]:
+    from ifc_lpg.convert import storey_heights
+    from ifc_lpg.schema import Schema
+    from ifc_lpg.step import StepFile
+
+    text = (
+        "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\n"
+        f"FILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n{data}\nENDSEC;\nEND-ISO-10303-21;\n"
+    )
+    file = StepFile(text.encode("ascii"))
+    return storey_heights(file, Schema(file.schema))
+
+
+_PROJECT = """#1=IFCPROJECT('0Height000000000000001',$,'P',$,$,$,$,$,#3);
+#3=IFCUNITASSIGNMENT((#2));"""
+
+
+def test_a_storey_without_elevation_takes_the_height_of_its_placement() -> None:
+    found = _heights(
+        _PROJECT
+        + """
+#2=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);
+#10=IFCCARTESIANPOINT((0.,0.,10000.));
+#11=IFCAXIS2PLACEMENT3D(#10,$,$);
+#12=IFCLOCALPLACEMENT($,#11);
+#20=IFCDIRECTION((0.,1.,0.));
+#21=IFCDIRECTION((1.,0.,0.));
+#22=IFCCARTESIANPOINT((0.,0.,500.));
+#23=IFCAXIS2PLACEMENT3D(#22,#20,#21);
+#24=IFCLOCALPLACEMENT(#12,#23);
+#30=IFCCARTESIANPOINT((0.,2000.,0.));
+#31=IFCAXIS2PLACEMENT3D(#30,$,$);
+#32=IFCLOCALPLACEMENT(#24,#31);
+#40=IFCBUILDINGSTOREY('0Height000000000000002',$,'Up',$,$,#12,$,$,.ELEMENT.,$);
+#41=IFCBUILDINGSTOREY('0Height000000000000003',$,'Turned',$,$,#32,$,$,.ELEMENT.,$);
+#42=IFCBUILDINGSTOREY('0Height000000000000004',$,'Given',$,$,#32,$,$,.ELEMENT.,2500.);
+#43=IFCBUILDINGSTOREY('0Height000000000000005',$,'Nowhere',$,$,$,$,$,.ELEMENT.,$);"""
+    )
+    assert found[40] == {"elevation_m": 10.0, "elevation_source": "placement"}
+    # the middle placement turns its z axis to the world's y, so the storey's 2 m along y go 2 m down
+    assert found[41]["elevation_source"] == "placement"
+    assert found[41]["elevation_m"] == pytest.approx(10.0 + 0.5 - 2.0)
+    assert found[42] == {"elevation_m": 2.5, "elevation_source": "attribute"}, "the file's own elevation goes first"
+    assert 43 not in found, "a storey with no placement and no elevation has no height"
+
+
+def test_a_length_unit_converted_from_the_metre_scales_the_height() -> None:
+    found = _heights(
+        _PROJECT
+        + """
+#2=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'FOOT',#5);
+#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);
+#5=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(0.3048),#6);
+#6=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);
+#40=IFCBUILDINGSTOREY('0Height000000000000002',$,'Ten feet',$,$,$,$,$,.ELEMENT.,10.);"""
+    )
+    assert found[40]["elevation_m"] == pytest.approx(3.048)
+
+
+def test_no_height_is_given_when_the_length_unit_is_not_known() -> None:
+    assert _heights("#40=IFCBUILDINGSTOREY('0Height000000000000002',$,'S',$,$,$,$,$,.ELEMENT.,3.);") == {}

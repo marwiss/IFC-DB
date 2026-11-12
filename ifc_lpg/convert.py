@@ -81,6 +81,131 @@ class ConversionError(RuntimeError):
     pass
 
 
+# Where a storey lies, for the files that leave its Elevation out, as buildingSMART's rule IFC102 has IFC4X3 files do.
+# Derived values have snake_case names, which no IFC attribute has, so the writer leaves them out.
+_PREFIX = {
+    b".EXA.": 1e18, b".PETA.": 1e15, b".TERA.": 1e12, b".GIGA.": 1e9, b".MEGA.": 1e6, b".KILO.": 1e3, b".HECTO.": 1e2,
+    b".DECA.": 1e1, b".DECI.": 1e-1, b".CENTI.": 1e-2, b".MILLI.": 1e-3, b".MICRO.": 1e-6, b".NANO.": 1e-9,
+    b".PICO.": 1e-12, b".FEMTO.": 1e-15, b".ATTO.": 1e-18,
+}  # fmt: skip
+_Matrix = tuple[tuple[float, ...], ...]  # three rows of four: the axes as columns, and the origin last
+
+
+def _real(value: Any) -> float | None:
+    """A number of the reader's atoms, also inside a typed value such as ``IFCLENGTHMEASURE(0.3048)``."""
+    if isinstance(value, tuple) and len(value) == 2 and isinstance(value[1], list) and len(value[1]) == 1:
+        value = value[1][0]
+    if isinstance(value, bytes) and value[:1] == b"r":
+        return float.fromhex(value[1:].decode("ascii"))
+    if isinstance(value, bytes) and value[:1] == b"i":
+        return float(int(value[1:]))
+    return None
+
+
+def storey_heights(file: StepFile, schema: Schema) -> dict[int, dict[str, Any]]:
+    """For each ``IfcBuildingStorey``, ``elevation_m`` and ``elevation_source``: its Elevation in metres where the file
+    gives one (``attribute``), and otherwise the height of its placement's origin in the project's coordinates
+    (``placement``), through every local placement it is relative to, rotations included. A storey whose height cannot
+    be worked out, and every storey of a file whose length unit is not known, gets neither."""
+
+    def named(step: Any) -> dict[str, Any]:
+        if not isinstance(step, int) or step not in file:
+            return {}
+        keyword, parameters = file[step]
+        attributes = schema.attributes(keyword) or ()  # an instance of another length than its class has is not read
+        return (
+            dict(zip((a.name for a in attributes), parameters, strict=True))
+            if len(attributes) == len(parameters)
+            else {}
+        )
+
+    def keyword(step: Any) -> bytes:
+        return file.keyword_of(step) if isinstance(step, int) and step in file else b""
+
+    def metres(unit: Any, depth: int = 0) -> float | None:
+        found = named(unit)
+        if depth > 8 or not found:
+            return None
+        if keyword(unit) == b"IFCSIUNIT":
+            return _PREFIX.get(found.get("Prefix"), 1.0) if found.get("Name") == b".METRE." else None
+        measure = named(found.get("ConversionFactor"))
+        value, inner = _real(measure.get("ValueComponent")), metres(measure.get("UnitComponent"), depth + 1)
+        return value * inner if value is not None and inner is not None else None
+
+    def numbers(step: Any, name: str) -> list[float] | None:
+        found = [_real(item) for item in named(step).get(name) or ()] if isinstance(named(step).get(name), list) else []
+        return [number for number in found if number is not None] if found and None not in found else None
+
+    def axes(step: Any) -> _Matrix | None:
+        found = named(step)
+        origin = (
+            numbers(found.get("Location"), "Coordinates")
+            if keyword(found.get("Location")) == b"IFCCARTESIANPOINT"
+            else None
+        )
+        if origin is None or keyword(step) not in (b"IFCAXIS2PLACEMENT3D", b"IFCAXIS2PLACEMENT2D"):
+            return None
+        origin = [*origin, 0.0, 0.0][:3]
+        z = _unit((numbers(found.get("Axis"), "DirectionRatios") or [0.0, 0.0, 1.0]) + [0.0])
+        x = _unit((numbers(found.get("RefDirection"), "DirectionRatios") or [1.0, 0.0, 0.0]) + [0.0])
+        if z is None or x is None:
+            return None
+        along = sum(a * b for a, b in zip(x, z, strict=True))
+        x = _unit([a - along * b for a, b in zip(x, z, strict=True)])
+        if x is None:
+            return None
+        y = (z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0])
+        return tuple((x[row], y[row], z[row], origin[row]) for row in range(3))
+
+    def placed(step: Any, seen: frozenset[int] = frozenset()) -> _Matrix | None:
+        found = named(step)
+        if keyword(step) != b"IFCLOCALPLACEMENT" or step in seen or len(seen) > 64:
+            return None
+        local = axes(found.get("RelativePlacement"))
+        parent = found.get("PlacementRelTo")
+        if local is None or not isinstance(parent, int):
+            return local
+        above = placed(parent, seen | {step})
+        return _times(above, local) if above is not None else None
+
+    projects = [step for step in file.ids() if file.keyword_of(step) == b"IFCPROJECT"]
+    units = named(named(projects[0]).get("UnitsInContext")).get("Units") if len(projects) == 1 else None
+    lengths = (
+        [unit for unit in units if named(unit).get("UnitType") == b".LENGTHUNIT."] if isinstance(units, list) else []
+    )
+    scale = metres(lengths[0]) if len(lengths) == 1 else None
+    heights: dict[int, dict[str, Any]] = {}
+    if scale is None:
+        return heights
+    for step in file.ids():
+        if file.keyword_of(step) != b"IFCBUILDINGSTOREY":
+            continue
+        storey = named(step)
+        elevation = _real(storey.get("Elevation"))
+        if elevation is not None:
+            heights[step] = {"elevation_m": elevation * scale, "elevation_source": "attribute"}
+            continue
+        matrix = placed(storey.get("ObjectPlacement"))
+        if matrix is not None:
+            heights[step] = {"elevation_m": matrix[2][3] * scale, "elevation_source": "placement"}
+    return heights
+
+
+def _unit(vector: list[float]) -> tuple[float, ...] | None:
+    length = sum(item * item for item in vector[:3]) ** 0.5
+    return tuple(item / length for item in vector[:3]) if length > 1e-12 else None
+
+
+def _times(a: _Matrix, b: _Matrix) -> _Matrix:
+    """``a`` after ``b``: the placement ``b`` in the coordinates ``a`` places it in."""
+    return tuple(
+        tuple(
+            sum(a[row][k] * b[k][column] for k in range(3)) + (a[row][3] if column == 3 else 0.0) for column in range(4)
+        )
+        for row in range(3)
+    )
+
+
 def _literal(value: Any, points: int = 0) -> Any:
     """A JSON-storable scalar or list, or ``None`` when the value is an entity (handled as an edge). ``points`` is the
     length of the rows when the schema says the value is a list of points."""
@@ -112,6 +237,10 @@ def convert(
     model = ifcopenshell.open(str(path))
     schema = ifcopenshell.schema_by_name(model.schema)
     summary = Summary(schema=model.schema)
+    try:
+        heights = storey_heights(StepFile(path.read_bytes()), Schema(model.schema))
+    except StepError:
+        heights = {}
     label_cache: dict[str, list[str]] = {}
     point_cache: dict[str, dict[str, int]] = {}
 
@@ -205,7 +334,7 @@ def convert(
                     edges.append({"t": "e", "a": step, "b": target.id(), "type": name})
         summary.entities += 1
         summary.classes[class_name] = summary.classes.get(class_name, 0) + 1
-        yield {"t": "n", "step": step, "labels": labels_of(class_name), "props": props}
+        yield {"t": "n", "step": step, "labels": labels_of(class_name), "props": {**props, **heights.get(step, {})}}
 
     summary.relationships = len(edges)
     yield {
@@ -248,6 +377,7 @@ def convert_lossless(
         if len(file) > max_entities:
             raise ConversionError(f"the model has more than {max_entities} entities")
         schema = Schema(file.schema)
+        heights = storey_heights(file, schema)
         keywords = {step: file.keyword_of(step) for step in file.ids()}
         project = next((step for step, keyword in keywords.items() if keyword == b"IFCPROJECT"), None)
         project_history = _second_parameter(file, project)
@@ -286,7 +416,7 @@ def convert_lossless(
                 "t": "n",
                 "step": step,
                 "labels": [name for name in chain if _IDENTIFIER.match(name)],
-                "props": {"ifc_class": class_name, **properties},
+                "props": {"ifc_class": class_name, **properties, **heights.get(step, {})},
             }
         yield from _blocks(file, sorted(in_blocks))
     except StepError as exc:

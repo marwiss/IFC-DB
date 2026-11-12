@@ -151,9 +151,10 @@ async def test_a_graph_that_can_stop_a_statement_itself_is_asked_to() -> None:
         async def read(self, work: Any) -> None:  # a method of the graph's own by another name's meaning
             raise AssertionError("a graph's own read is not the hook")
 
-    graph = Stopping([{"storey": "Plan 1", "elevation": 0.0, "spaces": 2, "net_floor_area": 32.5}])
+    row = {"storey": "Plan 1", "elevation": 0.0, "elevation_m": 0.0, "elevation_source": "attribute", "spaces": 2}
+    graph = Stopping([{**row, "net_floor_area": 32.5}])
     answer = await run_query(graph, "m", "areas", timeout_seconds=3.0)
-    assert answer["rows"] == [["Plan 1", 0.0, 2, 32.5]]
+    assert answer["rows"] == [["Plan 1", 0.0, 0.0, "attribute", 2, 32.5]]
     assert graph.asked[0][1] == {"model_id": "m", "row_limit": 10_001, "timeout_seconds": 3.0}
 
 

@@ -36,6 +36,7 @@ async def test_the_walls_their_classes_storey_materials_and_a_property(graph: An
     assert [row["name"] for row in elements] == ["YVT-A", "YVT-B", "YVT-C"]
     (storey,) = await ask(graph, "walls", "storeys")
     assert storey["name"] == "1. etasje" and storey["elevation"] == 1000.0
+    assert (storey["elevation_m"], storey["elevation_source"]) == (1.0, "attribute"), "millimetres in metres"
     assert storey["elements"] >= 3 and storey["spaces"] == 0
     materials = await ask(graph, "walls", "materials", **{"class": "IfcWall"})
     assert len(materials) == 3 and all(row["materials"] == ["Yttervegg"] for row in materials)
@@ -106,3 +107,23 @@ async def test_where_a_model_stands(graph: Any) -> None:
     await import_file(graph, FIXTURES_DIR / "two_spaces.ifc", "spaces")
     (bare,) = await ask(graph, "spaces", "site")
     assert bare["ref_latitude"] is None and bare["latitude"] is None and bare["longitude"] is None
+
+
+async def test_a_storey_without_elevation_is_placed_by_its_placement(graph: Any, tmp_path: Any) -> None:
+    from ifc_lpg.equivalence import compare_files
+    from ifc_lpg.files import export_file
+
+    source = FIXTURES_DIR / "storey_placement.ifc"
+    await import_file(graph, source, "storeys")
+    found = [
+        (row["name"], row["elevation"], row["elevation_m"], row["elevation_source"])
+        for row in await ask(graph, "storeys", "storeys")
+    ]
+    assert found == [("Ground floor", 0.0, 0.0, "attribute"), ("First floor", None, 13.5, "placement")]
+    areas = [
+        (row["storey"], row["elevation_m"], row["elevation_source"]) for row in await ask(graph, "storeys", "areas")
+    ]
+    assert areas == [("Ground floor", 0.0, "attribute"), ("First floor", 13.5, "placement")]
+    back = tmp_path / "back.ifc"
+    await export_file(graph, "storeys", back)
+    assert compare_files(source, back).identical, "the derived heights are not written to the file"
