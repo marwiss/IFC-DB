@@ -1,0 +1,2385 @@
+{
+ "graph": {
+  "nodes": {
+   "Entity m:1": {
+    "labels": [
+     "Entity",
+     "IfcContext",
+     "IfcObjectDefinition",
+     "IfcProject",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000001",
+     "Name": "Spatial",
+     "RepresentationContexts__step": [
+      10
+     ],
+     "id": "m:1",
+     "ifc_class": "IfcProject",
+     "model_id": "m",
+     "step_id": 1
+    }
+   },
+   "Entity m:100": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcBuildingElementProxy",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000020",
+     "Name": "Outside",
+     "ObjectPlacement__step": 101,
+     "PredefinedType": "ELEMENT",
+     "Representation__step": 105,
+     "id": "m:100",
+     "ifc_class": "IfcBuildingElementProxy",
+     "model_id": "m",
+     "step_id": 100
+    }
+   },
+   "Entity m:108": {
+    "labels": [
+     "Entity",
+     "IfcRelConnects",
+     "IfcRelContainedInSpatialStructure",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000021",
+     "id": "m:108",
+     "ifc_class": "IfcRelContainedInSpatialStructure",
+     "model_id": "m",
+     "step_id": 108
+    }
+   },
+   "Entity m:110": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcBuildingElementProxy",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000022",
+     "Name": "Broken",
+     "ObjectPlacement__step": 101,
+     "PredefinedType": "ELEMENT",
+     "Representation__step": 111,
+     "id": "m:110",
+     "ifc_class": "IfcBuildingElementProxy",
+     "model_id": "m",
+     "step_id": 110
+    }
+   },
+   "Entity m:2": {
+    "labels": [
+     "Entity",
+     "IfcNamedUnit",
+     "IfcSIUnit"
+    ],
+    "properties": {
+     "Name": "METRE",
+     "UnitType": "LENGTHUNIT",
+     "id": "m:2",
+     "ifc_class": "IfcSIUnit",
+     "model_id": "m",
+     "step_id": 2
+    }
+   },
+   "Entity m:20": {
+    "labels": [
+     "Entity",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcSite",
+     "IfcSpatialElement",
+     "IfcSpatialStructureElement"
+    ],
+    "properties": {
+     "CompositionType": "ELEMENT",
+     "GlobalId": "0Spatial00000000000002",
+     "Name": "Site",
+     "ObjectPlacement__step": 21,
+     "id": "m:20",
+     "ifc_class": "IfcSite",
+     "model_id": "m",
+     "step_id": 20
+    }
+   },
+   "Entity m:22": {
+    "labels": [
+     "Entity",
+     "IfcBuilding",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcSpatialElement",
+     "IfcSpatialStructureElement"
+    ],
+    "properties": {
+     "CompositionType": "ELEMENT",
+     "GlobalId": "0Spatial00000000000003",
+     "Name": "Building",
+     "ObjectPlacement__step": 23,
+     "id": "m:22",
+     "ifc_class": "IfcBuilding",
+     "model_id": "m",
+     "step_id": 22
+    }
+   },
+   "Entity m:24": {
+    "labels": [
+     "Entity",
+     "IfcBuildingStorey",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcSpatialElement",
+     "IfcSpatialStructureElement"
+    ],
+    "properties": {
+     "CompositionType": "ELEMENT",
+     "Elevation": 0.0,
+     "GlobalId": "0Spatial00000000000004",
+     "Name": "Ground floor",
+     "ObjectPlacement__step": 25,
+     "elevation_m": 0.0,
+     "elevation_source": "attribute",
+     "id": "m:24",
+     "ifc_class": "IfcBuildingStorey",
+     "model_id": "m",
+     "step_id": 24
+    }
+   },
+   "Entity m:26": {
+    "labels": [
+     "Entity",
+     "IfcRelAggregates",
+     "IfcRelDecomposes",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000005",
+     "id": "m:26",
+     "ifc_class": "IfcRelAggregates",
+     "model_id": "m",
+     "step_id": 26
+    }
+   },
+   "Entity m:27": {
+    "labels": [
+     "Entity",
+     "IfcRelAggregates",
+     "IfcRelDecomposes",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000006",
+     "id": "m:27",
+     "ifc_class": "IfcRelAggregates",
+     "model_id": "m",
+     "step_id": 27
+    }
+   },
+   "Entity m:28": {
+    "labels": [
+     "Entity",
+     "IfcRelAggregates",
+     "IfcRelDecomposes",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000007",
+     "id": "m:28",
+     "ifc_class": "IfcRelAggregates",
+     "model_id": "m",
+     "step_id": 28
+    }
+   },
+   "Entity m:29": {
+    "labels": [
+     "Entity",
+     "IfcRelConnects",
+     "IfcRelContainedInSpatialStructure",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000008",
+     "id": "m:29",
+     "ifc_class": "IfcRelContainedInSpatialStructure",
+     "model_id": "m",
+     "step_id": 29
+    }
+   },
+   "Entity m:3": {
+    "labels": [
+     "Entity",
+     "IfcUnitAssignment"
+    ],
+    "properties": {
+     "id": "m:3",
+     "ifc_class": "IfcUnitAssignment",
+     "model_id": "m",
+     "step_id": 3
+    }
+   },
+   "Entity m:30": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcWall"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000010",
+     "Name": "Wall",
+     "ObjectPlacement__step": 31,
+     "PredefinedType": "STANDARD",
+     "Representation__step": 35,
+     "id": "m:30",
+     "ifc_class": "IfcWall",
+     "model_id": "m",
+     "step_id": 30
+    }
+   },
+   "Entity m:45": {
+    "labels": [
+     "Entity",
+     "IfcRepresentationMap"
+    ],
+    "properties": {
+     "MappedRepresentation__step": 44,
+     "MappingOrigin__step": 5,
+     "id": "m:45",
+     "ifc_class": "IfcRepresentationMap",
+     "model_id": "m",
+     "step_id": 45
+    }
+   },
+   "Entity m:50": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcColumn",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000011",
+     "Name": "Column A",
+     "ObjectPlacement__step": 52,
+     "PredefinedType": "COLUMN",
+     "Representation__step": 49,
+     "id": "m:50",
+     "ifc_class": "IfcColumn",
+     "model_id": "m",
+     "step_id": 50
+    }
+   },
+   "Entity m:51": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcColumn",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000012",
+     "Name": "Column B",
+     "ObjectPlacement__step": 55,
+     "PredefinedType": "COLUMN",
+     "Representation__step": 58,
+     "id": "m:51",
+     "ifc_class": "IfcColumn",
+     "model_id": "m",
+     "step_id": 51
+    }
+   },
+   "Entity m:61": {
+    "labels": [
+     "Entity",
+     "IfcElement",
+     "IfcFeatureElement",
+     "IfcFeatureElementSubtraction",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcOpeningElement",
+     "IfcProduct",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000013",
+     "Name": "Opening",
+     "ObjectPlacement__step": 62,
+     "PredefinedType": "OPENING",
+     "Representation__step": 66,
+     "id": "m:61",
+     "ifc_class": "IfcOpeningElement",
+     "model_id": "m",
+     "step_id": 61
+    }
+   },
+   "Entity m:69": {
+    "labels": [
+     "Entity",
+     "IfcRelDecomposes",
+     "IfcRelVoidsElement",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000014",
+     "id": "m:69",
+     "ifc_class": "IfcRelVoidsElement",
+     "model_id": "m",
+     "step_id": 69
+    }
+   },
+   "Entity m:70": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcDoor",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000015",
+     "Name": "Door",
+     "ObjectPlacement__step": 71,
+     "OperationType": "SINGLE_SWING_LEFT",
+     "OverallHeight": 2.1,
+     "OverallWidth": 0.9,
+     "PredefinedType": "DOOR",
+     "Representation__step": 73,
+     "id": "m:70",
+     "ifc_class": "IfcDoor",
+     "model_id": "m",
+     "step_id": 70
+    }
+   },
+   "Entity m:76": {
+    "labels": [
+     "Entity",
+     "IfcRelConnects",
+     "IfcRelFillsElement",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000016",
+     "id": "m:76",
+     "ifc_class": "IfcRelFillsElement",
+     "model_id": "m",
+     "step_id": 76
+    }
+   },
+   "Entity m:80": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcStair"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000017",
+     "Name": "Stair",
+     "ObjectPlacement__step": 81,
+     "PredefinedType": "STRAIGHT_RUN_STAIR",
+     "id": "m:80",
+     "ifc_class": "IfcStair",
+     "model_id": "m",
+     "step_id": 80
+    }
+   },
+   "Entity m:84": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcStairFlight"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000018",
+     "Name": "Flight",
+     "NumberOfRisers": 8,
+     "NumberOfTreads": 7,
+     "ObjectPlacement__step": 85,
+     "PredefinedType": "STRAIGHT",
+     "Representation__step": 87,
+     "RiserHeight": 0.1875,
+     "TreadLength": 0.25,
+     "id": "m:84",
+     "ifc_class": "IfcStairFlight",
+     "model_id": "m",
+     "step_id": 84
+    }
+   },
+   "Entity m:90": {
+    "labels": [
+     "Entity",
+     "IfcRelAggregates",
+     "IfcRelDecomposes",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000019",
+     "id": "m:90",
+     "ifc_class": "IfcRelAggregates",
+     "model_id": "m",
+     "step_id": 90
+    }
+   },
+   "Model m": {
+    "labels": [
+     "Model"
+    ],
+    "properties": {
+     "entities": 24,
+     "file_name": "spatial.ifc",
+     "form_version": 2,
+     "format": "step",
+     "geometry": "blocks",
+     "id": "m",
+     "ifc_header": "[[\"FILE_DESCRIPTION\", [[\"ViewDefinition [DesignTransferView]\"], \"2;1\"]], [\"FILE_NAME\", [\"spatial.ifc\", \"2026-11-10T00:00:00\", [\"\"], [\"\"], \"IFC-LPG tests\", \"IFC-LPG tests\", \"\"]], [\"FILE_SCHEMA\", [[\"IFC4\"]]]]",
+     "ifc_project_guid": "0Spatial00000000000001",
+     "lossless": true,
+     "relationships": 42,
+     "schema": "IFC4",
+     "skipped": 68,
+     "state": "done"
+    }
+   },
+   "StepBlock m:4": {
+    "labels": [
+     "StepBlock"
+    ],
+    "properties": {
+     "first_step": 4,
+     "id": "m:4",
+     "instances": 68,
+     "text": "eJylVktvm0AQvudvYMlORRH7YFkr6gHD2kHiYQFu01MV1T5EjWIrjVT133d2FpyQLoWksjnNfPP45rUO/5Su4ziqGlWnUbEt06JZLHzPxf/l5dWFE2iN6Cat6TaLYpWromHJwuHuzJ1puRi0gPDwbzgFuDBgqaVJWqm4Scui80wMlPhaulFlrpoqjSu1rVQN+EjrxmXRqJtmMXPn+XF/uJ+7DHDqox+4TmCME/IPfL1bdSbmq+P+9/xs50P7A/+Qo5eXicq+fU7VF8+YpWg2K+MoO6cEYTgBCplFCJBOHFjFrBUzm2kAuQ5jKKc2sunLcjFmrxejXcEY1lxTHhWbDEgp12mmErVeeFGlIsjSdUKXa4sU9TFmUEt2cQNqaZEigdfRVkHeMxeMC+MbewEFfbIXUAu3o7n+dTg91cf7u/1cQ0MDxT6BalS7RCU6jrrMUh031/V0pMs81MOOqZuvEHHaqFwb0FaWl21yS5TvqjXkjmpQ3se77z/mrrcqm2sPlLmPLrn/WhUiT9JiAxpE06l1sCBxmZW7qtqsIF3fE5oY+Agq0Clk+h7THwLYQKKc9hLl/O1ccmYS649kU0VFvS6rHOEl2IuasoKe0LV7nmOOFcij7bZjlkM4XKBMTgkmvz2dDvvqcHo8/Dw8PN0+3R0fMCxTYr4c7SMuzcqhQ2MQcJQz2xiI3tbi9jEIWJdvYB9F7SREuXWxyZ4Ty3JDJ+LsRI7mHCyNreX/UCxMSwt/uIbCSiqDzSSQVGEllbzMVwyQKs6kimDKOKBR41SM8iNM94jw7fMgTDsJOTByImhHjpphDq3rV9B2O4cTZ30Jn28QbDS9kJsz+Y5xDwMDDQbSC2k/PTl4XSSuJmm9LqT3GpAD50Wez4u0zpXsLqAUEzvErEEZjjIoTZXlpB3VZ1Ca2ZPLAQalaBkkXmBeJHYKiX4sMKNhJVE/ap5JBF07i4DuaCT+pDNN8LWE+uNnmvii9f+OQ038sAUPnWoI+UyXeX+R8ZAINVYJfUdIhLXgoaNKyOuQJrFqSnV18Qcqs7TG"
+    }
+   }
+  },
+  "relationships": [
+   "[\"Entity m:1\", \"IS_DECOMPOSED_BY\", {}, \"Entity m:26\"]",
+   "[\"Entity m:1\", \"UNITS_IN_CONTEXT\", {\"position\": 0}, \"Entity m:3\"]",
+   "[\"Entity m:100\", \"CONTAINED_IN_STRUCTURE\", {}, \"Entity m:108\"]",
+   "[\"Entity m:108\", \"RELATED_ELEMENTS\", {\"position\": 0}, \"Entity m:100\"]",
+   "[\"Entity m:108\", \"RELATED_ELEMENTS\", {\"position\": 1}, \"Entity m:110\"]",
+   "[\"Entity m:108\", \"RELATING_STRUCTURE\", {\"position\": 0}, \"Entity m:20\"]",
+   "[\"Entity m:110\", \"CONTAINED_IN_STRUCTURE\", {}, \"Entity m:108\"]",
+   "[\"Entity m:20\", \"CONTAINS_ELEMENTS\", {}, \"Entity m:108\"]",
+   "[\"Entity m:20\", \"DECOMPOSES\", {}, \"Entity m:26\"]",
+   "[\"Entity m:20\", \"IS_DECOMPOSED_BY\", {}, \"Entity m:27\"]",
+   "[\"Entity m:22\", \"DECOMPOSES\", {}, \"Entity m:27\"]",
+   "[\"Entity m:22\", \"IS_DECOMPOSED_BY\", {}, \"Entity m:28\"]",
+   "[\"Entity m:24\", \"CONTAINS_ELEMENTS\", {}, \"Entity m:29\"]",
+   "[\"Entity m:24\", \"DECOMPOSES\", {}, \"Entity m:28\"]",
+   "[\"Entity m:26\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:20\"]",
+   "[\"Entity m:26\", \"RELATING_OBJECT\", {\"position\": 0}, \"Entity m:1\"]",
+   "[\"Entity m:27\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:22\"]",
+   "[\"Entity m:27\", \"RELATING_OBJECT\", {\"position\": 0}, \"Entity m:20\"]",
+   "[\"Entity m:28\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:24\"]",
+   "[\"Entity m:28\", \"RELATING_OBJECT\", {\"position\": 0}, \"Entity m:22\"]",
+   "[\"Entity m:29\", \"RELATED_ELEMENTS\", {\"position\": 0}, \"Entity m:30\"]",
+   "[\"Entity m:29\", \"RELATED_ELEMENTS\", {\"position\": 1}, \"Entity m:50\"]",
+   "[\"Entity m:29\", \"RELATED_ELEMENTS\", {\"position\": 2}, \"Entity m:51\"]",
+   "[\"Entity m:29\", \"RELATED_ELEMENTS\", {\"position\": 3}, \"Entity m:80\"]",
+   "[\"Entity m:29\", \"RELATING_STRUCTURE\", {\"position\": 0}, \"Entity m:24\"]",
+   "[\"Entity m:3\", \"UNITS\", {\"position\": 0}, \"Entity m:2\"]",
+   "[\"Entity m:30\", \"CONTAINED_IN_STRUCTURE\", {}, \"Entity m:29\"]",
+   "[\"Entity m:30\", \"HAS_OPENINGS\", {}, \"Entity m:69\"]",
+   "[\"Entity m:50\", \"CONTAINED_IN_STRUCTURE\", {}, \"Entity m:29\"]",
+   "[\"Entity m:51\", \"CONTAINED_IN_STRUCTURE\", {}, \"Entity m:29\"]",
+   "[\"Entity m:61\", \"HAS_FILLINGS\", {}, \"Entity m:76\"]",
+   "[\"Entity m:61\", \"VOIDS_ELEMENTS\", {}, \"Entity m:69\"]",
+   "[\"Entity m:69\", \"RELATED_OPENING_ELEMENT\", {\"position\": 0}, \"Entity m:61\"]",
+   "[\"Entity m:69\", \"RELATING_BUILDING_ELEMENT\", {\"position\": 0}, \"Entity m:30\"]",
+   "[\"Entity m:70\", \"FILLS_VOIDS\", {}, \"Entity m:76\"]",
+   "[\"Entity m:76\", \"RELATED_BUILDING_ELEMENT\", {\"position\": 0}, \"Entity m:70\"]",
+   "[\"Entity m:76\", \"RELATING_OPENING_ELEMENT\", {\"position\": 0}, \"Entity m:61\"]",
+   "[\"Entity m:80\", \"CONTAINED_IN_STRUCTURE\", {}, \"Entity m:29\"]",
+   "[\"Entity m:80\", \"IS_DECOMPOSED_BY\", {}, \"Entity m:90\"]",
+   "[\"Entity m:84\", \"DECOMPOSES\", {}, \"Entity m:90\"]",
+   "[\"Entity m:90\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:84\"]",
+   "[\"Entity m:90\", \"RELATING_OBJECT\", {\"position\": 0}, \"Entity m:80\"]",
+   "[\"Model m\", \"HAS_PROJECT\", {}, \"Entity m:1\"]",
+   "[\"Model m\", \"HAS_STEP_BLOCK\", {}, \"StepBlock m:4\"]"
+  ]
+ },
+ "paths": {
+  "1": {
+   "global_id": "0Spatial00000000000001",
+   "path": ""
+  },
+  "10": {
+   "global_id": "0Spatial00000000000001",
+   "path": "RepresentationContexts"
+  },
+  "100": {
+   "global_id": "0Spatial00000000000020",
+   "path": ""
+  },
+  "101": {
+   "global_id": "0Spatial00000000000020",
+   "path": "ObjectPlacement"
+  },
+  "102": null,
+  "103": null,
+  "104": null,
+  "105": {
+   "global_id": "0Spatial00000000000020",
+   "path": "Representation"
+  },
+  "106": null,
+  "107": null,
+  "108": {
+   "global_id": "0Spatial00000000000021",
+   "path": ""
+  },
+  "11": null,
+  "110": {
+   "global_id": "0Spatial00000000000022",
+   "path": ""
+  },
+  "111": {
+   "global_id": "0Spatial00000000000022",
+   "path": "Representation"
+  },
+  "112": null,
+  "113": null,
+  "114": null,
+  "2": {
+   "global_id": "0Spatial00000000000001",
+   "path": "UnitsInContext.Units"
+  },
+  "20": {
+   "global_id": "0Spatial00000000000002",
+   "path": ""
+  },
+  "21": {
+   "global_id": "0Spatial00000000000002",
+   "path": "ObjectPlacement"
+  },
+  "22": {
+   "global_id": "0Spatial00000000000003",
+   "path": ""
+  },
+  "23": {
+   "global_id": "0Spatial00000000000003",
+   "path": "ObjectPlacement"
+  },
+  "24": {
+   "global_id": "0Spatial00000000000004",
+   "path": ""
+  },
+  "25": {
+   "global_id": "0Spatial00000000000004",
+   "path": "ObjectPlacement"
+  },
+  "26": {
+   "global_id": "0Spatial00000000000005",
+   "path": ""
+  },
+  "27": {
+   "global_id": "0Spatial00000000000006",
+   "path": ""
+  },
+  "28": {
+   "global_id": "0Spatial00000000000007",
+   "path": ""
+  },
+  "29": {
+   "global_id": "0Spatial00000000000008",
+   "path": ""
+  },
+  "3": {
+   "global_id": "0Spatial00000000000001",
+   "path": "UnitsInContext"
+  },
+  "30": {
+   "global_id": "0Spatial00000000000010",
+   "path": ""
+  },
+  "31": {
+   "global_id": "0Spatial00000000000010",
+   "path": "ObjectPlacement"
+  },
+  "32": null,
+  "33": null,
+  "34": null,
+  "35": {
+   "global_id": "0Spatial00000000000010",
+   "path": "Representation"
+  },
+  "36": null,
+  "37": null,
+  "38": null,
+  "39": null,
+  "4": null,
+  "40": null,
+  "41": null,
+  "42": null,
+  "43": null,
+  "44": null,
+  "45": null,
+  "46": null,
+  "47": null,
+  "48": null,
+  "49": {
+   "global_id": "0Spatial00000000000011",
+   "path": "Representation"
+  },
+  "5": null,
+  "50": {
+   "global_id": "0Spatial00000000000011",
+   "path": ""
+  },
+  "51": {
+   "global_id": "0Spatial00000000000012",
+   "path": ""
+  },
+  "52": {
+   "global_id": "0Spatial00000000000011",
+   "path": "ObjectPlacement"
+  },
+  "53": null,
+  "54": null,
+  "55": {
+   "global_id": "0Spatial00000000000012",
+   "path": "ObjectPlacement"
+  },
+  "56": null,
+  "57": null,
+  "58": {
+   "global_id": "0Spatial00000000000012",
+   "path": "Representation"
+  },
+  "59": null,
+  "6": null,
+  "60": null,
+  "61": {
+   "global_id": "0Spatial00000000000013",
+   "path": ""
+  },
+  "62": {
+   "global_id": "0Spatial00000000000013",
+   "path": "ObjectPlacement"
+  },
+  "63": null,
+  "64": null,
+  "65": null,
+  "66": {
+   "global_id": "0Spatial00000000000013",
+   "path": "Representation"
+  },
+  "67": null,
+  "68": null,
+  "69": {
+   "global_id": "0Spatial00000000000014",
+   "path": ""
+  },
+  "7": null,
+  "70": {
+   "global_id": "0Spatial00000000000015",
+   "path": ""
+  },
+  "71": {
+   "global_id": "0Spatial00000000000015",
+   "path": "ObjectPlacement"
+  },
+  "72": null,
+  "73": {
+   "global_id": "0Spatial00000000000015",
+   "path": "Representation"
+  },
+  "74": null,
+  "75": null,
+  "76": {
+   "global_id": "0Spatial00000000000016",
+   "path": ""
+  },
+  "8": null,
+  "80": {
+   "global_id": "0Spatial00000000000017",
+   "path": ""
+  },
+  "81": {
+   "global_id": "0Spatial00000000000017",
+   "path": "ObjectPlacement"
+  },
+  "82": null,
+  "83": null,
+  "84": {
+   "global_id": "0Spatial00000000000018",
+   "path": ""
+  },
+  "85": {
+   "global_id": "0Spatial00000000000018",
+   "path": "ObjectPlacement"
+  },
+  "86": null,
+  "87": {
+   "global_id": "0Spatial00000000000018",
+   "path": "Representation"
+  },
+  "88": null,
+  "89": null,
+  "90": {
+   "global_id": "0Spatial00000000000019",
+   "path": ""
+  }
+ },
+ "property_values": {},
+ "queries": {
+  "[\"areas\", {}]": {
+   "columns": [
+    "storey",
+    "elevation",
+    "elevation_m",
+    "elevation_source",
+    "spaces",
+    "net_floor_area"
+   ],
+   "name": "areas",
+   "rows": [
+    [
+     "Ground floor",
+     0.0,
+     0.0,
+     "attribute",
+     0,
+     0
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"element-classes\", {}]": {
+   "columns": [
+    "class",
+    "count"
+   ],
+   "name": "element-classes",
+   "rows": [
+    [
+     "IfcBuildingElementProxy",
+     2
+    ],
+    [
+     "IfcColumn",
+     2
+    ],
+    [
+     "IfcDoor",
+     1
+    ],
+    [
+     "IfcOpeningElement",
+     1
+    ],
+    [
+     "IfcStair",
+     1
+    ],
+    [
+     "IfcStairFlight",
+     1
+    ],
+    [
+     "IfcWall",
+     1
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcProduct\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [
+    [
+     "0Spatial00000000000022",
+     "IfcBuildingElementProxy",
+     "Broken",
+     "Site"
+    ],
+    [
+     "0Spatial00000000000003",
+     "IfcBuilding",
+     "Building",
+     null
+    ],
+    [
+     "0Spatial00000000000011",
+     "IfcColumn",
+     "Column A",
+     "Ground floor"
+    ],
+    [
+     "0Spatial00000000000012",
+     "IfcColumn",
+     "Column B",
+     "Ground floor"
+    ],
+    [
+     "0Spatial00000000000015",
+     "IfcDoor",
+     "Door",
+     null
+    ],
+    [
+     "0Spatial00000000000018",
+     "IfcStairFlight",
+     "Flight",
+     null
+    ],
+    [
+     "0Spatial00000000000004",
+     "IfcBuildingStorey",
+     "Ground floor",
+     null
+    ],
+    [
+     "0Spatial00000000000013",
+     "IfcOpeningElement",
+     "Opening",
+     null
+    ],
+    [
+     "0Spatial00000000000020",
+     "IfcBuildingElementProxy",
+     "Outside",
+     "Site"
+    ],
+    [
+     "0Spatial00000000000002",
+     "IfcSite",
+     "Site",
+     null
+    ],
+    [
+     "0Spatial00000000000017",
+     "IfcStair",
+     "Stair",
+     "Ground floor"
+    ],
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     "Wall",
+     "Ground floor"
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcSpace\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcWall\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     "Wall",
+     "Ground floor"
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000001\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000001",
+     "IfcProject",
+     1,
+     {
+      "GlobalId": "0Spatial00000000000001",
+      "Name": "Spatial",
+      "RepresentationContexts__step": [
+       10
+      ],
+      "id": "m:1",
+      "ifc_class": "IfcProject",
+      "model_id": "m",
+      "step_id": 1
+     },
+     [
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000005",
+       "step_id": 26
+      },
+      {
+       "attribute": "UNITS_IN_CONTEXT",
+       "class": "IfcUnitAssignment",
+       "global_id": null,
+       "step_id": 3
+      }
+     ],
+     [
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000005",
+       "step_id": 26
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000002\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000002",
+     "IfcSite",
+     20,
+     {
+      "CompositionType": "ELEMENT",
+      "GlobalId": "0Spatial00000000000002",
+      "Name": "Site",
+      "ObjectPlacement__step": 21,
+      "id": "m:20",
+      "ifc_class": "IfcSite",
+      "model_id": "m",
+      "step_id": 20
+     },
+     [
+      {
+       "attribute": "CONTAINS_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000021",
+       "step_id": 108
+      },
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000005",
+       "step_id": 26
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000006",
+       "step_id": 27
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000005",
+       "step_id": 26
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000006",
+       "step_id": 27
+      },
+      {
+       "attribute": "RELATING_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000021",
+       "step_id": 108
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000003\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000003",
+     "IfcBuilding",
+     22,
+     {
+      "CompositionType": "ELEMENT",
+      "GlobalId": "0Spatial00000000000003",
+      "Name": "Building",
+      "ObjectPlacement__step": 23,
+      "id": "m:22",
+      "ifc_class": "IfcBuilding",
+      "model_id": "m",
+      "step_id": 22
+     },
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000006",
+       "step_id": 27
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000007",
+       "step_id": 28
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000006",
+       "step_id": 27
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000007",
+       "step_id": 28
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000004\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000004",
+     "IfcBuildingStorey",
+     24,
+     {
+      "CompositionType": "ELEMENT",
+      "Elevation": 0.0,
+      "GlobalId": "0Spatial00000000000004",
+      "Name": "Ground floor",
+      "ObjectPlacement__step": 25,
+      "elevation_m": 0.0,
+      "elevation_source": "attribute",
+      "id": "m:24",
+      "ifc_class": "IfcBuildingStorey",
+      "model_id": "m",
+      "step_id": 24
+     },
+     [
+      {
+       "attribute": "CONTAINS_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000008",
+       "step_id": 29
+      },
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000007",
+       "step_id": 28
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000007",
+       "step_id": 28
+      },
+      {
+       "attribute": "RELATING_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000008",
+       "step_id": 29
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000005\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000005",
+     "IfcRelAggregates",
+     26,
+     {
+      "GlobalId": "0Spatial00000000000005",
+      "id": "m:26",
+      "ifc_class": "IfcRelAggregates",
+      "model_id": "m",
+      "step_id": 26
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcSite",
+       "global_id": "0Spatial00000000000002",
+       "step_id": 20
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcProject",
+       "global_id": "0Spatial00000000000001",
+       "step_id": 1
+      }
+     ],
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcSite",
+       "global_id": "0Spatial00000000000002",
+       "step_id": 20
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcProject",
+       "global_id": "0Spatial00000000000001",
+       "step_id": 1
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000006\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000006",
+     "IfcRelAggregates",
+     27,
+     {
+      "GlobalId": "0Spatial00000000000006",
+      "id": "m:27",
+      "ifc_class": "IfcRelAggregates",
+      "model_id": "m",
+      "step_id": 27
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcBuilding",
+       "global_id": "0Spatial00000000000003",
+       "step_id": 22
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcSite",
+       "global_id": "0Spatial00000000000002",
+       "step_id": 20
+      }
+     ],
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcBuilding",
+       "global_id": "0Spatial00000000000003",
+       "step_id": 22
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcSite",
+       "global_id": "0Spatial00000000000002",
+       "step_id": 20
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000007\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000007",
+     "IfcRelAggregates",
+     28,
+     {
+      "GlobalId": "0Spatial00000000000007",
+      "id": "m:28",
+      "ifc_class": "IfcRelAggregates",
+      "model_id": "m",
+      "step_id": 28
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Spatial00000000000004",
+       "step_id": 24
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcBuilding",
+       "global_id": "0Spatial00000000000003",
+       "step_id": 22
+      }
+     ],
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Spatial00000000000004",
+       "step_id": 24
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcBuilding",
+       "global_id": "0Spatial00000000000003",
+       "step_id": 22
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000008\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000008",
+     "IfcRelContainedInSpatialStructure",
+     29,
+     {
+      "GlobalId": "0Spatial00000000000008",
+      "id": "m:29",
+      "ifc_class": "IfcRelContainedInSpatialStructure",
+      "model_id": "m",
+      "step_id": 29
+     },
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcColumn",
+       "global_id": "0Spatial00000000000011",
+       "step_id": 50
+      },
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcColumn",
+       "global_id": "0Spatial00000000000012",
+       "step_id": 51
+      },
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcStair",
+       "global_id": "0Spatial00000000000017",
+       "step_id": 80
+      },
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcWall",
+       "global_id": "0Spatial00000000000010",
+       "step_id": 30
+      },
+      {
+       "attribute": "RELATING_STRUCTURE",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Spatial00000000000004",
+       "step_id": 24
+      }
+     ],
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcColumn",
+       "global_id": "0Spatial00000000000011",
+       "step_id": 50
+      },
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcColumn",
+       "global_id": "0Spatial00000000000012",
+       "step_id": 51
+      },
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcStair",
+       "global_id": "0Spatial00000000000017",
+       "step_id": 80
+      },
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcWall",
+       "global_id": "0Spatial00000000000010",
+       "step_id": 30
+      },
+      {
+       "attribute": "CONTAINS_ELEMENTS",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Spatial00000000000004",
+       "step_id": 24
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000010\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     30,
+     {
+      "GlobalId": "0Spatial00000000000010",
+      "Name": "Wall",
+      "ObjectPlacement__step": 31,
+      "PredefinedType": "STANDARD",
+      "Representation__step": 35,
+      "id": "m:30",
+      "ifc_class": "IfcWall",
+      "model_id": "m",
+      "step_id": 30
+     },
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000008",
+       "step_id": 29
+      },
+      {
+       "attribute": "HAS_OPENINGS",
+       "class": "IfcRelVoidsElement",
+       "global_id": "0Spatial00000000000014",
+       "step_id": 69
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000008",
+       "step_id": 29
+      },
+      {
+       "attribute": "RELATING_BUILDING_ELEMENT",
+       "class": "IfcRelVoidsElement",
+       "global_id": "0Spatial00000000000014",
+       "step_id": 69
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000011\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000011",
+     "IfcColumn",
+     50,
+     {
+      "GlobalId": "0Spatial00000000000011",
+      "Name": "Column A",
+      "ObjectPlacement__step": 52,
+      "PredefinedType": "COLUMN",
+      "Representation__step": 49,
+      "id": "m:50",
+      "ifc_class": "IfcColumn",
+      "model_id": "m",
+      "step_id": 50
+     },
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000008",
+       "step_id": 29
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000008",
+       "step_id": 29
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000012\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000012",
+     "IfcColumn",
+     51,
+     {
+      "GlobalId": "0Spatial00000000000012",
+      "Name": "Column B",
+      "ObjectPlacement__step": 55,
+      "PredefinedType": "COLUMN",
+      "Representation__step": 58,
+      "id": "m:51",
+      "ifc_class": "IfcColumn",
+      "model_id": "m",
+      "step_id": 51
+     },
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000008",
+       "step_id": 29
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000008",
+       "step_id": 29
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000013\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000013",
+     "IfcOpeningElement",
+     61,
+     {
+      "GlobalId": "0Spatial00000000000013",
+      "Name": "Opening",
+      "ObjectPlacement__step": 62,
+      "PredefinedType": "OPENING",
+      "Representation__step": 66,
+      "id": "m:61",
+      "ifc_class": "IfcOpeningElement",
+      "model_id": "m",
+      "step_id": 61
+     },
+     [
+      {
+       "attribute": "HAS_FILLINGS",
+       "class": "IfcRelFillsElement",
+       "global_id": "0Spatial00000000000016",
+       "step_id": 76
+      },
+      {
+       "attribute": "VOIDS_ELEMENTS",
+       "class": "IfcRelVoidsElement",
+       "global_id": "0Spatial00000000000014",
+       "step_id": 69
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_OPENING_ELEMENT",
+       "class": "IfcRelVoidsElement",
+       "global_id": "0Spatial00000000000014",
+       "step_id": 69
+      },
+      {
+       "attribute": "RELATING_OPENING_ELEMENT",
+       "class": "IfcRelFillsElement",
+       "global_id": "0Spatial00000000000016",
+       "step_id": 76
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000014\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000014",
+     "IfcRelVoidsElement",
+     69,
+     {
+      "GlobalId": "0Spatial00000000000014",
+      "id": "m:69",
+      "ifc_class": "IfcRelVoidsElement",
+      "model_id": "m",
+      "step_id": 69
+     },
+     [
+      {
+       "attribute": "RELATED_OPENING_ELEMENT",
+       "class": "IfcOpeningElement",
+       "global_id": "0Spatial00000000000013",
+       "step_id": 61
+      },
+      {
+       "attribute": "RELATING_BUILDING_ELEMENT",
+       "class": "IfcWall",
+       "global_id": "0Spatial00000000000010",
+       "step_id": 30
+      }
+     ],
+     [
+      {
+       "attribute": "HAS_OPENINGS",
+       "class": "IfcWall",
+       "global_id": "0Spatial00000000000010",
+       "step_id": 30
+      },
+      {
+       "attribute": "VOIDS_ELEMENTS",
+       "class": "IfcOpeningElement",
+       "global_id": "0Spatial00000000000013",
+       "step_id": 61
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000015\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000015",
+     "IfcDoor",
+     70,
+     {
+      "GlobalId": "0Spatial00000000000015",
+      "Name": "Door",
+      "ObjectPlacement__step": 71,
+      "OperationType": "SINGLE_SWING_LEFT",
+      "OverallHeight": 2.1,
+      "OverallWidth": 0.9,
+      "PredefinedType": "DOOR",
+      "Representation__step": 73,
+      "id": "m:70",
+      "ifc_class": "IfcDoor",
+      "model_id": "m",
+      "step_id": 70
+     },
+     [
+      {
+       "attribute": "FILLS_VOIDS",
+       "class": "IfcRelFillsElement",
+       "global_id": "0Spatial00000000000016",
+       "step_id": 76
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_BUILDING_ELEMENT",
+       "class": "IfcRelFillsElement",
+       "global_id": "0Spatial00000000000016",
+       "step_id": 76
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000016\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000016",
+     "IfcRelFillsElement",
+     76,
+     {
+      "GlobalId": "0Spatial00000000000016",
+      "id": "m:76",
+      "ifc_class": "IfcRelFillsElement",
+      "model_id": "m",
+      "step_id": 76
+     },
+     [
+      {
+       "attribute": "RELATED_BUILDING_ELEMENT",
+       "class": "IfcDoor",
+       "global_id": "0Spatial00000000000015",
+       "step_id": 70
+      },
+      {
+       "attribute": "RELATING_OPENING_ELEMENT",
+       "class": "IfcOpeningElement",
+       "global_id": "0Spatial00000000000013",
+       "step_id": 61
+      }
+     ],
+     [
+      {
+       "attribute": "FILLS_VOIDS",
+       "class": "IfcDoor",
+       "global_id": "0Spatial00000000000015",
+       "step_id": 70
+      },
+      {
+       "attribute": "HAS_FILLINGS",
+       "class": "IfcOpeningElement",
+       "global_id": "0Spatial00000000000013",
+       "step_id": 61
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000017\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000017",
+     "IfcStair",
+     80,
+     {
+      "GlobalId": "0Spatial00000000000017",
+      "Name": "Stair",
+      "ObjectPlacement__step": 81,
+      "PredefinedType": "STRAIGHT_RUN_STAIR",
+      "id": "m:80",
+      "ifc_class": "IfcStair",
+      "model_id": "m",
+      "step_id": 80
+     },
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000008",
+       "step_id": 29
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000019",
+       "step_id": 90
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000008",
+       "step_id": 29
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000019",
+       "step_id": 90
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000018\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000018",
+     "IfcStairFlight",
+     84,
+     {
+      "GlobalId": "0Spatial00000000000018",
+      "Name": "Flight",
+      "NumberOfRisers": 8,
+      "NumberOfTreads": 7,
+      "ObjectPlacement__step": 85,
+      "PredefinedType": "STRAIGHT",
+      "Representation__step": 87,
+      "RiserHeight": 0.1875,
+      "TreadLength": 0.25,
+      "id": "m:84",
+      "ifc_class": "IfcStairFlight",
+      "model_id": "m",
+      "step_id": 84
+     },
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000019",
+       "step_id": 90
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAggregates",
+       "global_id": "0Spatial00000000000019",
+       "step_id": 90
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000019\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000019",
+     "IfcRelAggregates",
+     90,
+     {
+      "GlobalId": "0Spatial00000000000019",
+      "id": "m:90",
+      "ifc_class": "IfcRelAggregates",
+      "model_id": "m",
+      "step_id": 90
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcStairFlight",
+       "global_id": "0Spatial00000000000018",
+       "step_id": 84
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcStair",
+       "global_id": "0Spatial00000000000017",
+       "step_id": 80
+      }
+     ],
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcStairFlight",
+       "global_id": "0Spatial00000000000018",
+       "step_id": 84
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcStair",
+       "global_id": "0Spatial00000000000017",
+       "step_id": 80
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000020\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000020",
+     "IfcBuildingElementProxy",
+     100,
+     {
+      "GlobalId": "0Spatial00000000000020",
+      "Name": "Outside",
+      "ObjectPlacement__step": 101,
+      "PredefinedType": "ELEMENT",
+      "Representation__step": 105,
+      "id": "m:100",
+      "ifc_class": "IfcBuildingElementProxy",
+      "model_id": "m",
+      "step_id": 100
+     },
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000021",
+       "step_id": 108
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000021",
+       "step_id": 108
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000021\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000021",
+     "IfcRelContainedInSpatialStructure",
+     108,
+     {
+      "GlobalId": "0Spatial00000000000021",
+      "id": "m:108",
+      "ifc_class": "IfcRelContainedInSpatialStructure",
+      "model_id": "m",
+      "step_id": 108
+     },
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcBuildingElementProxy",
+       "global_id": "0Spatial00000000000020",
+       "step_id": 100
+      },
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcBuildingElementProxy",
+       "global_id": "0Spatial00000000000022",
+       "step_id": 110
+      },
+      {
+       "attribute": "RELATING_STRUCTURE",
+       "class": "IfcSite",
+       "global_id": "0Spatial00000000000002",
+       "step_id": 20
+      }
+     ],
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcBuildingElementProxy",
+       "global_id": "0Spatial00000000000020",
+       "step_id": 100
+      },
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcBuildingElementProxy",
+       "global_id": "0Spatial00000000000022",
+       "step_id": 110
+      },
+      {
+       "attribute": "CONTAINS_ELEMENTS",
+       "class": "IfcSite",
+       "global_id": "0Spatial00000000000002",
+       "step_id": 20
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000022\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000022",
+     "IfcBuildingElementProxy",
+     110,
+     {
+      "GlobalId": "0Spatial00000000000022",
+      "Name": "Broken",
+      "ObjectPlacement__step": 101,
+      "PredefinedType": "ELEMENT",
+      "Representation__step": 111,
+      "id": "m:110",
+      "ifc_class": "IfcBuildingElementProxy",
+      "model_id": "m",
+      "step_id": 110
+     },
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000021",
+       "step_id": 108
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Spatial00000000000021",
+       "step_id": 108
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"materials\", {\"class\": \"IfcWall\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "materials"
+   ],
+   "name": "materials",
+   "rows": [
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     "Wall",
+     []
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"materials\", {}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "materials"
+   ],
+   "name": "materials",
+   "rows": [
+    [
+     "0Spatial00000000000022",
+     "IfcBuildingElementProxy",
+     "Broken",
+     []
+    ],
+    [
+     "0Spatial00000000000011",
+     "IfcColumn",
+     "Column A",
+     []
+    ],
+    [
+     "0Spatial00000000000012",
+     "IfcColumn",
+     "Column B",
+     []
+    ],
+    [
+     "0Spatial00000000000015",
+     "IfcDoor",
+     "Door",
+     []
+    ],
+    [
+     "0Spatial00000000000018",
+     "IfcStairFlight",
+     "Flight",
+     []
+    ],
+    [
+     "0Spatial00000000000013",
+     "IfcOpeningElement",
+     "Opening",
+     []
+    ],
+    [
+     "0Spatial00000000000020",
+     "IfcBuildingElementProxy",
+     "Outside",
+     []
+    ],
+    [
+     "0Spatial00000000000017",
+     "IfcStair",
+     "Stair",
+     []
+    ],
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     "Wall",
+     []
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"site\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "ref_latitude",
+    "ref_longitude",
+    "ref_elevation",
+    "latitude",
+    "longitude",
+    "crs",
+    "vertical_datum",
+    "eastings",
+    "northings",
+    "orthogonal_height",
+    "x_axis_abscissa",
+    "x_axis_ordinate",
+    "scale"
+   ],
+   "name": "site",
+   "rows": [
+    [
+     "0Spatial00000000000002",
+     "Site",
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"spaces\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "long_name",
+    "storey",
+    "net_floor_area",
+    "gross_floor_area"
+   ],
+   "name": "spaces",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"storeys\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "elevation",
+    "elevation_m",
+    "elevation_source",
+    "elements",
+    "spaces"
+   ],
+   "name": "storeys",
+   "rows": [
+    [
+     "0Spatial00000000000004",
+     "Ground floor",
+     0.0,
+     0.0,
+     "attribute",
+     4,
+     0
+    ]
+   ],
+   "truncated": false
+  }
+ },
+ "records": [
+  "{\"ifc_header\": \"[[\\\"FILE_DESCRIPTION\\\", [[\\\"ViewDefinition [DesignTransferView]\\\"], \\\"2;1\\\"]], [\\\"FILE_NAME\\\", [\\\"spatial.ifc\\\", \\\"2026-11-10T00:00:00\\\", [\\\"\\\"], [\\\"\\\"], \\\"IFC-LPG tests\\\", \\\"IFC-LPG tests\\\", \\\"\\\"]], [\\\"FILE_SCHEMA\\\", [[\\\"IFC4\\\"]]]]\", \"schema\": \"IFC4\"}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000001\", \"Name\": \"Spatial\", \"RepresentationContexts__step\": [10], \"id\": \"m:1\", \"ifc_class\": \"IfcProject\", \"model_id\": \"m\", \"step_id\": 1}, \"references\": [[\"UNITS_IN_CONTEXT\", 0, 3]], \"step\": 1}",
+  "{\"props\": {\"Name\": \"METRE\", \"UnitType\": \"LENGTHUNIT\", \"id\": \"m:2\", \"ifc_class\": \"IfcSIUnit\", \"model_id\": \"m\", \"step_id\": 2}, \"references\": [], \"step\": 2}",
+  "{\"props\": {\"id\": \"m:3\", \"ifc_class\": \"IfcUnitAssignment\", \"model_id\": \"m\", \"step_id\": 3}, \"references\": [[\"UNITS\", 0, 2]], \"step\": 3}",
+  "{\"line\": \"#4=IFCCARTESIANPOINT((0.,0.,0.));\", \"step\": 4}",
+  "{\"line\": \"#5=IFCAXIS2PLACEMENT3D(#4,$,$);\", \"step\": 5}",
+  "{\"line\": \"#6=IFCCARTESIANPOINT((0.,0.));\", \"step\": 6}",
+  "{\"line\": \"#7=IFCAXIS2PLACEMENT2D(#6,$);\", \"step\": 7}",
+  "{\"line\": \"#8=IFCDIRECTION((0.,0.,1.));\", \"step\": 8}",
+  "{\"line\": \"#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#5,$);\", \"step\": 10}",
+  "{\"line\": \"#11=IFCGEOMETRICREPRESENTATIONSUBCONTEXT('Body','Model',*,*,*,*,#10,$,.MODEL_VIEW.,$);\", \"step\": 11}",
+  "{\"props\": {\"CompositionType\": \"ELEMENT\", \"GlobalId\": \"0Spatial00000000000002\", \"Name\": \"Site\", \"ObjectPlacement__step\": 21, \"id\": \"m:20\", \"ifc_class\": \"IfcSite\", \"model_id\": \"m\", \"step_id\": 20}, \"references\": [], \"step\": 20}",
+  "{\"line\": \"#21=IFCLOCALPLACEMENT($,#5);\", \"step\": 21}",
+  "{\"props\": {\"CompositionType\": \"ELEMENT\", \"GlobalId\": \"0Spatial00000000000003\", \"Name\": \"Building\", \"ObjectPlacement__step\": 23, \"id\": \"m:22\", \"ifc_class\": \"IfcBuilding\", \"model_id\": \"m\", \"step_id\": 22}, \"references\": [], \"step\": 22}",
+  "{\"line\": \"#23=IFCLOCALPLACEMENT(#21,#5);\", \"step\": 23}",
+  "{\"props\": {\"CompositionType\": \"ELEMENT\", \"Elevation\": 0.0, \"GlobalId\": \"0Spatial00000000000004\", \"Name\": \"Ground floor\", \"ObjectPlacement__step\": 25, \"elevation_m\": 0.0, \"elevation_source\": \"attribute\", \"id\": \"m:24\", \"ifc_class\": \"IfcBuildingStorey\", \"model_id\": \"m\", \"step_id\": 24}, \"references\": [], \"step\": 24}",
+  "{\"line\": \"#25=IFCLOCALPLACEMENT(#23,#5);\", \"step\": 25}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000005\", \"id\": \"m:26\", \"ifc_class\": \"IfcRelAggregates\", \"model_id\": \"m\", \"step_id\": 26}, \"references\": [[\"RELATED_OBJECTS\", 0, 20], [\"RELATING_OBJECT\", 0, 1]], \"step\": 26}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000006\", \"id\": \"m:27\", \"ifc_class\": \"IfcRelAggregates\", \"model_id\": \"m\", \"step_id\": 27}, \"references\": [[\"RELATED_OBJECTS\", 0, 22], [\"RELATING_OBJECT\", 0, 20]], \"step\": 27}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000007\", \"id\": \"m:28\", \"ifc_class\": \"IfcRelAggregates\", \"model_id\": \"m\", \"step_id\": 28}, \"references\": [[\"RELATED_OBJECTS\", 0, 24], [\"RELATING_OBJECT\", 0, 22]], \"step\": 28}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000008\", \"id\": \"m:29\", \"ifc_class\": \"IfcRelContainedInSpatialStructure\", \"model_id\": \"m\", \"step_id\": 29}, \"references\": [[\"RELATED_ELEMENTS\", 0, 30], [\"RELATED_ELEMENTS\", 1, 50], [\"RELATED_ELEMENTS\", 2, 51], [\"RELATED_ELEMENTS\", 3, 80], [\"RELATING_STRUCTURE\", 0, 24]], \"step\": 29}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000010\", \"Name\": \"Wall\", \"ObjectPlacement__step\": 31, \"PredefinedType\": \"STANDARD\", \"Representation__step\": 35, \"id\": \"m:30\", \"ifc_class\": \"IfcWall\", \"model_id\": \"m\", \"step_id\": 30}, \"references\": [], \"step\": 30}",
+  "{\"line\": \"#31=IFCLOCALPLACEMENT(#25,#33);\", \"step\": 31}",
+  "{\"line\": \"#32=IFCCARTESIANPOINT((2.,0.,0.));\", \"step\": 32}",
+  "{\"line\": \"#33=IFCAXIS2PLACEMENT3D(#32,$,$);\", \"step\": 33}",
+  "{\"line\": \"#34=IFCRECTANGLEPROFILEDEF(.AREA.,$,#7,4.,0.2);\", \"step\": 34}",
+  "{\"line\": \"#35=IFCPRODUCTDEFINITIONSHAPE($,$,(#36));\", \"step\": 35}",
+  "{\"line\": \"#36=IFCSHAPEREPRESENTATION(#11,'Body','SweptSolid',(#37));\", \"step\": 36}",
+  "{\"line\": \"#37=IFCEXTRUDEDAREASOLID(#34,#5,#8,3.);\", \"step\": 37}",
+  "{\"line\": \"#38=IFCSTYLEDITEM(#37,(#39),$);\", \"step\": 38}",
+  "{\"line\": \"#39=IFCSURFACESTYLE('Brick',.BOTH.,(#40));\", \"step\": 39}",
+  "{\"line\": \"#40=IFCSURFACESTYLESHADING(#41,0.);\", \"step\": 40}",
+  "{\"line\": \"#41=IFCCOLOURRGB($,0.6,0.2,0.1);\", \"step\": 41}",
+  "{\"line\": \"#42=IFCRECTANGLEPROFILEDEF(.AREA.,$,#7,0.3,0.3);\", \"step\": 42}",
+  "{\"line\": \"#43=IFCEXTRUDEDAREASOLID(#42,#5,#8,3.);\", \"step\": 43}",
+  "{\"line\": \"#44=IFCSHAPEREPRESENTATION(#11,'Body','SweptSolid',(#43));\", \"step\": 44}",
+  "{\"props\": {\"MappedRepresentation__step\": 44, \"MappingOrigin__step\": 5, \"id\": \"m:45\", \"ifc_class\": \"IfcRepresentationMap\", \"model_id\": \"m\", \"step_id\": 45}, \"references\": [], \"step\": 45}",
+  "{\"line\": \"#46=IFCCARTESIANTRANSFORMATIONOPERATOR3D($,$,#4,$,$);\", \"step\": 46}",
+  "{\"line\": \"#47=IFCMAPPEDITEM(#45,#46);\", \"step\": 47}",
+  "{\"line\": \"#48=IFCSHAPEREPRESENTATION(#11,'Body','MappedRepresentation',(#47));\", \"step\": 48}",
+  "{\"line\": \"#49=IFCPRODUCTDEFINITIONSHAPE($,$,(#48));\", \"step\": 49}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000011\", \"Name\": \"Column A\", \"ObjectPlacement__step\": 52, \"PredefinedType\": \"COLUMN\", \"Representation__step\": 49, \"id\": \"m:50\", \"ifc_class\": \"IfcColumn\", \"model_id\": \"m\", \"step_id\": 50}, \"references\": [], \"step\": 50}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000012\", \"Name\": \"Column B\", \"ObjectPlacement__step\": 55, \"PredefinedType\": \"COLUMN\", \"Representation__step\": 58, \"id\": \"m:51\", \"ifc_class\": \"IfcColumn\", \"model_id\": \"m\", \"step_id\": 51}, \"references\": [], \"step\": 51}",
+  "{\"line\": \"#52=IFCLOCALPLACEMENT(#25,#54);\", \"step\": 52}",
+  "{\"line\": \"#53=IFCCARTESIANPOINT((6.,0.,0.));\", \"step\": 53}",
+  "{\"line\": \"#54=IFCAXIS2PLACEMENT3D(#53,$,$);\", \"step\": 54}",
+  "{\"line\": \"#55=IFCLOCALPLACEMENT(#25,#57);\", \"step\": 55}",
+  "{\"line\": \"#56=IFCCARTESIANPOINT((8.,0.,0.));\", \"step\": 56}",
+  "{\"line\": \"#57=IFCAXIS2PLACEMENT3D(#56,$,$);\", \"step\": 57}",
+  "{\"line\": \"#58=IFCPRODUCTDEFINITIONSHAPE($,$,(#59));\", \"step\": 58}",
+  "{\"line\": \"#59=IFCSHAPEREPRESENTATION(#11,'Body','MappedRepresentation',(#60));\", \"step\": 59}",
+  "{\"line\": \"#60=IFCMAPPEDITEM(#45,#46);\", \"step\": 60}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000013\", \"Name\": \"Opening\", \"ObjectPlacement__step\": 62, \"PredefinedType\": \"OPENING\", \"Representation__step\": 66, \"id\": \"m:61\", \"ifc_class\": \"IfcOpeningElement\", \"model_id\": \"m\", \"step_id\": 61}, \"references\": [], \"step\": 61}",
+  "{\"line\": \"#62=IFCLOCALPLACEMENT(#31,#64);\", \"step\": 62}",
+  "{\"line\": \"#63=IFCCARTESIANPOINT((1.,0.,0.));\", \"step\": 63}",
+  "{\"line\": \"#64=IFCAXIS2PLACEMENT3D(#63,$,$);\", \"step\": 64}",
+  "{\"line\": \"#65=IFCRECTANGLEPROFILEDEF(.AREA.,$,#7,1.,0.4);\", \"step\": 65}",
+  "{\"line\": \"#66=IFCPRODUCTDEFINITIONSHAPE($,$,(#67));\", \"step\": 66}",
+  "{\"line\": \"#67=IFCSHAPEREPRESENTATION(#11,'Body','SweptSolid',(#68));\", \"step\": 67}",
+  "{\"line\": \"#68=IFCEXTRUDEDAREASOLID(#65,#5,#8,2.1);\", \"step\": 68}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000014\", \"id\": \"m:69\", \"ifc_class\": \"IfcRelVoidsElement\", \"model_id\": \"m\", \"step_id\": 69}, \"references\": [[\"RELATED_OPENING_ELEMENT\", 0, 61], [\"RELATING_BUILDING_ELEMENT\", 0, 30]], \"step\": 69}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000015\", \"Name\": \"Door\", \"ObjectPlacement__step\": 71, \"OperationType\": \"SINGLE_SWING_LEFT\", \"OverallHeight\": 2.1, \"OverallWidth\": 0.9, \"PredefinedType\": \"DOOR\", \"Representation__step\": 73, \"id\": \"m:70\", \"ifc_class\": \"IfcDoor\", \"model_id\": \"m\", \"step_id\": 70}, \"references\": [], \"step\": 70}",
+  "{\"line\": \"#71=IFCLOCALPLACEMENT(#62,#5);\", \"step\": 71}",
+  "{\"line\": \"#72=IFCRECTANGLEPROFILEDEF(.AREA.,$,#7,0.9,0.05);\", \"step\": 72}",
+  "{\"line\": \"#73=IFCPRODUCTDEFINITIONSHAPE($,$,(#74));\", \"step\": 73}",
+  "{\"line\": \"#74=IFCSHAPEREPRESENTATION(#11,'Body','SweptSolid',(#75));\", \"step\": 74}",
+  "{\"line\": \"#75=IFCEXTRUDEDAREASOLID(#72,#5,#8,2.1);\", \"step\": 75}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000016\", \"id\": \"m:76\", \"ifc_class\": \"IfcRelFillsElement\", \"model_id\": \"m\", \"step_id\": 76}, \"references\": [[\"RELATED_BUILDING_ELEMENT\", 0, 70], [\"RELATING_OPENING_ELEMENT\", 0, 61]], \"step\": 76}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000017\", \"Name\": \"Stair\", \"ObjectPlacement__step\": 81, \"PredefinedType\": \"STRAIGHT_RUN_STAIR\", \"id\": \"m:80\", \"ifc_class\": \"IfcStair\", \"model_id\": \"m\", \"step_id\": 80}, \"references\": [], \"step\": 80}",
+  "{\"line\": \"#81=IFCLOCALPLACEMENT(#25,#83);\", \"step\": 81}",
+  "{\"line\": \"#82=IFCCARTESIANPOINT((10.,0.,0.));\", \"step\": 82}",
+  "{\"line\": \"#83=IFCAXIS2PLACEMENT3D(#82,$,$);\", \"step\": 83}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000018\", \"Name\": \"Flight\", \"NumberOfRisers\": 8, \"NumberOfTreads\": 7, \"ObjectPlacement__step\": 85, \"PredefinedType\": \"STRAIGHT\", \"Representation__step\": 87, \"RiserHeight\": 0.1875, \"TreadLength\": 0.25, \"id\": \"m:84\", \"ifc_class\": \"IfcStairFlight\", \"model_id\": \"m\", \"step_id\": 84}, \"references\": [], \"step\": 84}",
+  "{\"line\": \"#85=IFCLOCALPLACEMENT(#81,#5);\", \"step\": 85}",
+  "{\"line\": \"#86=IFCRECTANGLEPROFILEDEF(.AREA.,$,#7,1.,3.);\", \"step\": 86}",
+  "{\"line\": \"#87=IFCPRODUCTDEFINITIONSHAPE($,$,(#88));\", \"step\": 87}",
+  "{\"line\": \"#88=IFCSHAPEREPRESENTATION(#11,'Body','SweptSolid',(#89));\", \"step\": 88}",
+  "{\"line\": \"#89=IFCEXTRUDEDAREASOLID(#86,#5,#8,1.5);\", \"step\": 89}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000019\", \"id\": \"m:90\", \"ifc_class\": \"IfcRelAggregates\", \"model_id\": \"m\", \"step_id\": 90}, \"references\": [[\"RELATED_OBJECTS\", 0, 84], [\"RELATING_OBJECT\", 0, 80]], \"step\": 90}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000020\", \"Name\": \"Outside\", \"ObjectPlacement__step\": 101, \"PredefinedType\": \"ELEMENT\", \"Representation__step\": 105, \"id\": \"m:100\", \"ifc_class\": \"IfcBuildingElementProxy\", \"model_id\": \"m\", \"step_id\": 100}, \"references\": [], \"step\": 100}",
+  "{\"line\": \"#101=IFCLOCALPLACEMENT(#21,#103);\", \"step\": 101}",
+  "{\"line\": \"#102=IFCCARTESIANPOINT((0.,10.,0.));\", \"step\": 102}",
+  "{\"line\": \"#103=IFCAXIS2PLACEMENT3D(#102,$,$);\", \"step\": 103}",
+  "{\"line\": \"#104=IFCRECTANGLEPROFILEDEF(.AREA.,$,#7,1.,1.);\", \"step\": 104}",
+  "{\"line\": \"#105=IFCPRODUCTDEFINITIONSHAPE($,$,(#106));\", \"step\": 105}",
+  "{\"line\": \"#106=IFCSHAPEREPRESENTATION(#11,'Body','SweptSolid',(#107));\", \"step\": 106}",
+  "{\"line\": \"#107=IFCEXTRUDEDAREASOLID(#104,#5,#8,1.);\", \"step\": 107}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000021\", \"id\": \"m:108\", \"ifc_class\": \"IfcRelContainedInSpatialStructure\", \"model_id\": \"m\", \"step_id\": 108}, \"references\": [[\"RELATED_ELEMENTS\", 0, 100], [\"RELATED_ELEMENTS\", 1, 110], [\"RELATING_STRUCTURE\", 0, 20]], \"step\": 108}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000022\", \"Name\": \"Broken\", \"ObjectPlacement__step\": 101, \"PredefinedType\": \"ELEMENT\", \"Representation__step\": 111, \"id\": \"m:110\", \"ifc_class\": \"IfcBuildingElementProxy\", \"model_id\": \"m\", \"step_id\": 110}, \"references\": [], \"step\": 110}",
+  "{\"line\": \"#111=IFCPRODUCTDEFINITIONSHAPE($,$,(#112));\", \"step\": 111}",
+  "{\"line\": \"#112=IFCSHAPEREPRESENTATION(#11,'Body','SweptSolid',(#113));\", \"step\": 112}",
+  "{\"line\": \"#113=IFCEXTRUDEDAREASOLID(#114,#5,#8,1.);\", \"step\": 113}",
+  "{\"line\": \"#114=IFCRECTANGLEPROFILEDEF(.AREA.,$,#7,0.,0.);\", \"step\": 114}"
+ ],
+ "unreachable": []
+}

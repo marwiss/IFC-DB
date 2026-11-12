@@ -1,0 +1,1971 @@
+{
+ "graph": {
+  "nodes": {
+   "Entity m:1": {
+    "labels": [
+     "Entity",
+     "IfcContext",
+     "IfcObjectDefinition",
+     "IfcProject",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000001",
+     "Name": "Annex",
+     "RepresentationContexts__step": [
+      10,
+      12
+     ],
+     "id": "m:1",
+     "ifc_class": "IfcProject",
+     "model_id": "m",
+     "step_id": 1
+    }
+   },
+   "Entity m:2": {
+    "labels": [
+     "Entity",
+     "IfcNamedUnit",
+     "IfcSIUnit"
+    ],
+    "properties": {
+     "Name": "METRE",
+     "UnitType": "LENGTHUNIT",
+     "id": "m:2",
+     "ifc_class": "IfcSIUnit",
+     "model_id": "m",
+     "step_id": 2
+    }
+   },
+   "Entity m:20": {
+    "labels": [
+     "Entity",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcSite",
+     "IfcSpatialElement",
+     "IfcSpatialStructureElement"
+    ],
+    "properties": {
+     "CompositionType": "ELEMENT",
+     "GlobalId": "0Annex0000000000000002",
+     "Name": "Annex site",
+     "ObjectPlacement__step": 21,
+     "id": "m:20",
+     "ifc_class": "IfcSite",
+     "model_id": "m",
+     "step_id": 20
+    }
+   },
+   "Entity m:3": {
+    "labels": [
+     "Entity",
+     "IfcUnitAssignment"
+    ],
+    "properties": {
+     "id": "m:3",
+     "ifc_class": "IfcUnitAssignment",
+     "model_id": "m",
+     "step_id": 3
+    }
+   },
+   "Entity m:30": {
+    "labels": [
+     "Entity",
+     "IfcBuilding",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcSpatialElement",
+     "IfcSpatialStructureElement"
+    ],
+    "properties": {
+     "CompositionType": "ELEMENT",
+     "GlobalId": "0Annex0000000000000003",
+     "Name": "Annex",
+     "ObjectPlacement__step": 31,
+     "id": "m:30",
+     "ifc_class": "IfcBuilding",
+     "model_id": "m",
+     "step_id": 30
+    }
+   },
+   "Entity m:34": {
+    "labels": [
+     "Entity",
+     "IfcBuildingStorey",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcSpatialElement",
+     "IfcSpatialStructureElement"
+    ],
+    "properties": {
+     "CompositionType": "ELEMENT",
+     "Elevation": 0.0,
+     "GlobalId": "0Annex0000000000000004",
+     "Name": "Annex floor",
+     "ObjectPlacement__step": 35,
+     "elevation_m": 0.0,
+     "elevation_source": "attribute",
+     "id": "m:34",
+     "ifc_class": "IfcBuildingStorey",
+     "model_id": "m",
+     "step_id": 34
+    }
+   },
+   "Entity m:40": {
+    "labels": [
+     "Entity",
+     "IfcRelAggregates",
+     "IfcRelDecomposes",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000005",
+     "id": "m:40",
+     "ifc_class": "IfcRelAggregates",
+     "model_id": "m",
+     "step_id": 40
+    }
+   },
+   "Entity m:41": {
+    "labels": [
+     "Entity",
+     "IfcRelAggregates",
+     "IfcRelDecomposes",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000006",
+     "Name": "Site to building",
+     "id": "m:41",
+     "ifc_class": "IfcRelAggregates",
+     "model_id": "m",
+     "step_id": 41
+    }
+   },
+   "Entity m:42": {
+    "labels": [
+     "Entity",
+     "IfcRelAggregates",
+     "IfcRelDecomposes",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000007",
+     "id": "m:42",
+     "ifc_class": "IfcRelAggregates",
+     "model_id": "m",
+     "step_id": 42
+    }
+   },
+   "Entity m:43": {
+    "labels": [
+     "Entity",
+     "IfcRelConnects",
+     "IfcRelContainedInSpatialStructure",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000008",
+     "id": "m:43",
+     "ifc_class": "IfcRelContainedInSpatialStructure",
+     "model_id": "m",
+     "step_id": 43
+    }
+   },
+   "Entity m:50": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcWall"
+    ],
+    "properties": {
+     "GlobalId": "0Spatial00000000000010",
+     "Name": "Annex wall",
+     "ObjectPlacement__step": 51,
+     "PredefinedType": "STANDARD",
+     "Representation__step": 55,
+     "id": "m:50",
+     "ifc_class": "IfcWall",
+     "model_id": "m",
+     "step_id": 50
+    }
+   },
+   "Entity m:60": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcColumn",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000011",
+     "Name": "Annex column",
+     "ObjectPlacement__step": 62,
+     "PredefinedType": "COLUMN",
+     "Representation__step": 65,
+     "id": "m:60",
+     "ifc_class": "IfcColumn",
+     "model_id": "m",
+     "step_id": 60
+    }
+   },
+   "Entity m:80": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcBuildingElementProxy",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000020",
+     "Name": "Shed",
+     "ObjectPlacement__step": 81,
+     "PredefinedType": "ELEMENT",
+     "Representation__step": 85,
+     "id": "m:80",
+     "ifc_class": "IfcBuildingElementProxy",
+     "model_id": "m",
+     "step_id": 80
+    }
+   },
+   "Entity m:88": {
+    "labels": [
+     "Entity",
+     "IfcRelConnects",
+     "IfcRelContainedInSpatialStructure",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000021",
+     "id": "m:88",
+     "ifc_class": "IfcRelContainedInSpatialStructure",
+     "model_id": "m",
+     "step_id": 88
+    }
+   },
+   "Entity m:91": {
+    "labels": [
+     "Entity",
+     "IfcProperty",
+     "IfcPropertyAbstraction",
+     "IfcPropertySingleValue",
+     "IfcSimpleProperty"
+    ],
+    "properties": {
+     "Name": "IsExternal",
+     "NominalValue": true,
+     "NominalValue__type": "IFCBOOLEAN",
+     "id": "m:91",
+     "ifc_class": "IfcPropertySingleValue",
+     "model_id": "m",
+     "step_id": 91
+    }
+   },
+   "Entity m:92": {
+    "labels": [
+     "Entity",
+     "IfcPropertyDefinition",
+     "IfcPropertySet",
+     "IfcPropertySetDefinition",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000030",
+     "Name": "Pset_WallCommon",
+     "id": "m:92",
+     "ifc_class": "IfcPropertySet",
+     "model_id": "m",
+     "step_id": 92
+    }
+   },
+   "Entity m:93": {
+    "labels": [
+     "Entity",
+     "IfcRelDefines",
+     "IfcRelDefinesByProperties",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000031",
+     "id": "m:93",
+     "ifc_class": "IfcRelDefinesByProperties",
+     "model_id": "m",
+     "step_id": 93
+    }
+   },
+   "Entity m:94": {
+    "labels": [
+     "Entity",
+     "IfcGroup",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000032",
+     "Name": "Phase 2",
+     "id": "m:94",
+     "ifc_class": "IfcGroup",
+     "model_id": "m",
+     "step_id": 94
+    }
+   },
+   "Entity m:95": {
+    "labels": [
+     "Entity",
+     "IfcRelAssigns",
+     "IfcRelAssignsToGroup",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Annex0000000000000033",
+     "id": "m:95",
+     "ifc_class": "IfcRelAssignsToGroup",
+     "model_id": "m",
+     "step_id": 95
+    }
+   },
+   "Model m": {
+    "labels": [
+     "Model"
+    ],
+    "properties": {
+     "entities": 19,
+     "file_name": "annex.ifc",
+     "form_version": 2,
+     "format": "step",
+     "geometry": "blocks",
+     "id": "m",
+     "ifc_header": "[[\"FILE_DESCRIPTION\", [[\"ViewDefinition [DesignTransferView]\"], \"2;1\"]], [\"FILE_NAME\", [\"annex.ifc\", \"2026-11-10T00:00:00\", [\"\"], [\"\"], \"IFC-LPG tests\", \"IFC-LPG tests\", \"\"]], [\"FILE_SCHEMA\", [[\"IFC4\"]]]]",
+     "ifc_project_guid": "0Annex0000000000000001",
+     "lossless": true,
+     "relationships": 38,
+     "schema": "IFC4",
+     "skipped": 45,
+     "state": "done"
+    }
+   },
+   "StepBlock m:4": {
+    "labels": [
+     "StepBlock"
+    ],
+    "properties": {
+     "first_step": 4,
+     "id": "m:4",
+     "instances": 45,
+     "text": "eJydVV1v2jAUfd+vqBSkpJMbJTYxRtMeTGKopRBHSVjbp6kSSKuEYAK2af9+19cQypasqAKe7sc5Pvfcizf8rKdpKqtG1VoWpdFFEwRRSPB7e/vpg5fYDPmoa1rmMlVzVTQsC7whGZCBjfPeDlg++recQjl3xcJGM12ptNGmOCHHrnTc1Zm1nePIxmfKzFVT6bRSZaVqaC9tq9QUjXpsggHx59vlau0TBm3VXZQQL3HYcfyf+noxObXwJ9vlb7/t8/H4AXyQIJybTOVfv2j1EB7b0utolevnjU9oy2p0LGdXspput4dy97I5+KdeZ2bUMgO9i9fEKL43N6nM21EAEY8mGO10QhxdeIH2mIG2bmBdIABNPMYwTnvsQs8ojHWjMNqiJF0oDFDwLUknCWZHjySSThLxhet7OCQthwQFs86VxSyHMZmpzlWmpkEoKyVBdDtTtCvFfOQMadkibSBNFxpHei9LBWMYEGjOgaFw+LhWGLy0QAC+JSdL1r9W3w/1dv2y9G35yJXiyoFHqkWmMsulNrm23IfW+54gNHQyiX4MRi4Mlv7Y/VzRDFHGDgW3szT5U64LFdiN9lyE0z71+RDjrEv95LX6fNitPmft1XlbTc5dr3coyZ2SvE9JLi6V5OIaL0Qhsz+8ini76uYJsnSj5nZ4gDuKb93zRujgelFN4fWYFtgl3x9WO5+EE9PchzaduhNL/06G12a6mEGGRcQcJ7rJzaKqZhOQKArHx5/AS9y7uAIZi77FvYvPcxM9WyParRFXbQ2Fe4C0xdtjFm7M4h1jFm7Mom/M4rww+H8UOTLn3rl8UpWsaz0rUC//4Xm93t88b5Y3+2+r5d5v1xpYogB/AFlj0Ac="
+    }
+   }
+  },
+  "relationships": [
+   "[\"Entity m:1\", \"IS_DECOMPOSED_BY\", {}, \"Entity m:40\"]",
+   "[\"Entity m:1\", \"UNITS_IN_CONTEXT\", {\"position\": 0}, \"Entity m:3\"]",
+   "[\"Entity m:20\", \"CONTAINS_ELEMENTS\", {}, \"Entity m:88\"]",
+   "[\"Entity m:20\", \"DECOMPOSES\", {}, \"Entity m:40\"]",
+   "[\"Entity m:20\", \"IS_DECOMPOSED_BY\", {}, \"Entity m:41\"]",
+   "[\"Entity m:3\", \"UNITS\", {\"position\": 0}, \"Entity m:2\"]",
+   "[\"Entity m:30\", \"DECOMPOSES\", {}, \"Entity m:41\"]",
+   "[\"Entity m:30\", \"IS_DECOMPOSED_BY\", {}, \"Entity m:42\"]",
+   "[\"Entity m:34\", \"CONTAINS_ELEMENTS\", {}, \"Entity m:43\"]",
+   "[\"Entity m:34\", \"DECOMPOSES\", {}, \"Entity m:42\"]",
+   "[\"Entity m:40\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:20\"]",
+   "[\"Entity m:40\", \"RELATING_OBJECT\", {\"position\": 0}, \"Entity m:1\"]",
+   "[\"Entity m:41\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:30\"]",
+   "[\"Entity m:41\", \"RELATING_OBJECT\", {\"position\": 0}, \"Entity m:20\"]",
+   "[\"Entity m:42\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:34\"]",
+   "[\"Entity m:42\", \"RELATING_OBJECT\", {\"position\": 0}, \"Entity m:30\"]",
+   "[\"Entity m:43\", \"RELATED_ELEMENTS\", {\"position\": 0}, \"Entity m:50\"]",
+   "[\"Entity m:43\", \"RELATED_ELEMENTS\", {\"position\": 1}, \"Entity m:60\"]",
+   "[\"Entity m:43\", \"RELATING_STRUCTURE\", {\"position\": 0}, \"Entity m:34\"]",
+   "[\"Entity m:50\", \"CONTAINED_IN_STRUCTURE\", {}, \"Entity m:43\"]",
+   "[\"Entity m:50\", \"HAS_ASSIGNMENTS\", {}, \"Entity m:95\"]",
+   "[\"Entity m:50\", \"IS_DEFINED_BY\", {}, \"Entity m:93\"]",
+   "[\"Entity m:60\", \"CONTAINED_IN_STRUCTURE\", {}, \"Entity m:43\"]",
+   "[\"Entity m:80\", \"CONTAINED_IN_STRUCTURE\", {}, \"Entity m:88\"]",
+   "[\"Entity m:80\", \"HAS_ASSIGNMENTS\", {}, \"Entity m:95\"]",
+   "[\"Entity m:80\", \"IS_DEFINED_BY\", {}, \"Entity m:93\"]",
+   "[\"Entity m:88\", \"RELATED_ELEMENTS\", {\"position\": 0}, \"Entity m:80\"]",
+   "[\"Entity m:88\", \"RELATING_STRUCTURE\", {\"position\": 0}, \"Entity m:20\"]",
+   "[\"Entity m:91\", \"PART_OF_PSET\", {}, \"Entity m:92\"]",
+   "[\"Entity m:92\", \"DEFINES_OCCURRENCE\", {}, \"Entity m:93\"]",
+   "[\"Entity m:92\", \"HAS_PROPERTIES\", {\"position\": 0}, \"Entity m:91\"]",
+   "[\"Entity m:93\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:50\"]",
+   "[\"Entity m:93\", \"RELATED_OBJECTS\", {\"position\": 1}, \"Entity m:80\"]",
+   "[\"Entity m:93\", \"RELATING_PROPERTY_DEFINITION\", {\"position\": 0}, \"Entity m:92\"]",
+   "[\"Entity m:94\", \"IS_GROUPED_BY\", {}, \"Entity m:95\"]",
+   "[\"Entity m:95\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:50\"]",
+   "[\"Entity m:95\", \"RELATED_OBJECTS\", {\"position\": 1}, \"Entity m:80\"]",
+   "[\"Entity m:95\", \"RELATING_GROUP\", {\"position\": 0}, \"Entity m:94\"]",
+   "[\"Model m\", \"HAS_PROJECT\", {}, \"Entity m:1\"]",
+   "[\"Model m\", \"HAS_STEP_BLOCK\", {}, \"StepBlock m:4\"]"
+  ]
+ },
+ "paths": {
+  "1": {
+   "global_id": "0Annex0000000000000001",
+   "path": ""
+  },
+  "10": {
+   "global_id": "0Annex0000000000000001",
+   "path": "RepresentationContexts"
+  },
+  "11": null,
+  "12": {
+   "global_id": "0Annex0000000000000001",
+   "path": "RepresentationContexts[1]"
+  },
+  "13": null,
+  "2": {
+   "global_id": "0Annex0000000000000001",
+   "path": "UnitsInContext.Units"
+  },
+  "20": {
+   "global_id": "0Annex0000000000000002",
+   "path": ""
+  },
+  "21": {
+   "global_id": "0Annex0000000000000002",
+   "path": "ObjectPlacement"
+  },
+  "24": null,
+  "25": null,
+  "3": {
+   "global_id": "0Annex0000000000000001",
+   "path": "UnitsInContext"
+  },
+  "30": {
+   "global_id": "0Annex0000000000000003",
+   "path": ""
+  },
+  "31": {
+   "global_id": "0Annex0000000000000003",
+   "path": "ObjectPlacement"
+  },
+  "32": null,
+  "33": null,
+  "34": {
+   "global_id": "0Annex0000000000000004",
+   "path": ""
+  },
+  "35": {
+   "global_id": "0Annex0000000000000004",
+   "path": "ObjectPlacement"
+  },
+  "4": null,
+  "40": {
+   "global_id": "0Annex0000000000000005",
+   "path": ""
+  },
+  "41": {
+   "global_id": "0Annex0000000000000006",
+   "path": ""
+  },
+  "42": {
+   "global_id": "0Annex0000000000000007",
+   "path": ""
+  },
+  "43": {
+   "global_id": "0Annex0000000000000008",
+   "path": ""
+  },
+  "5": null,
+  "50": {
+   "global_id": "0Spatial00000000000010",
+   "path": ""
+  },
+  "51": {
+   "global_id": "0Spatial00000000000010",
+   "path": "ObjectPlacement"
+  },
+  "52": null,
+  "53": null,
+  "54": null,
+  "55": {
+   "global_id": "0Spatial00000000000010",
+   "path": "Representation"
+  },
+  "56": null,
+  "57": null,
+  "58": null,
+  "59": null,
+  "6": null,
+  "60": {
+   "global_id": "0Annex0000000000000011",
+   "path": ""
+  },
+  "62": {
+   "global_id": "0Annex0000000000000011",
+   "path": "ObjectPlacement"
+  },
+  "63": null,
+  "64": null,
+  "65": {
+   "global_id": "0Annex0000000000000011",
+   "path": "Representation"
+  },
+  "66": null,
+  "67": null,
+  "68": null,
+  "7": null,
+  "70": null,
+  "71": null,
+  "72": null,
+  "73": null,
+  "8": null,
+  "80": {
+   "global_id": "0Annex0000000000000020",
+   "path": ""
+  },
+  "81": {
+   "global_id": "0Annex0000000000000020",
+   "path": "ObjectPlacement"
+  },
+  "82": null,
+  "83": null,
+  "84": null,
+  "85": {
+   "global_id": "0Annex0000000000000020",
+   "path": "Representation"
+  },
+  "86": null,
+  "87": null,
+  "88": {
+   "global_id": "0Annex0000000000000021",
+   "path": ""
+  },
+  "9": null,
+  "90": null,
+  "91": {
+   "global_id": "0Annex0000000000000030",
+   "path": "HasProperties"
+  },
+  "92": {
+   "global_id": "0Annex0000000000000030",
+   "path": ""
+  },
+  "93": {
+   "global_id": "0Annex0000000000000031",
+   "path": ""
+  },
+  "94": {
+   "global_id": "0Annex0000000000000032",
+   "path": ""
+  },
+  "95": {
+   "global_id": "0Annex0000000000000033",
+   "path": ""
+  }
+ },
+ "property_values": {
+  "Pset_WallCommon IsExternal": [
+   {
+    "global_id": "0Annex0000000000000001",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000002",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000003",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000004",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000005",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000006",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000007",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000008",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000011",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000020",
+    "type": "IFCBOOLEAN",
+    "value": true
+   },
+   {
+    "global_id": "0Annex0000000000000021",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000030",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000031",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000032",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Annex0000000000000033",
+    "type": null,
+    "value": null
+   },
+   {
+    "global_id": "0Spatial00000000000010",
+    "type": "IFCBOOLEAN",
+    "value": true
+   }
+  ]
+ },
+ "queries": {
+  "[\"areas\", {}]": {
+   "columns": [
+    "storey",
+    "elevation",
+    "elevation_m",
+    "elevation_source",
+    "spaces",
+    "net_floor_area"
+   ],
+   "name": "areas",
+   "rows": [
+    [
+     "Annex floor",
+     0.0,
+     0.0,
+     "attribute",
+     0,
+     0
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"element-classes\", {}]": {
+   "columns": [
+    "class",
+    "count"
+   ],
+   "name": "element-classes",
+   "rows": [
+    [
+     "IfcBuildingElementProxy",
+     1
+    ],
+    [
+     "IfcColumn",
+     1
+    ],
+    [
+     "IfcWall",
+     1
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcProduct\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [
+    [
+     "0Annex0000000000000003",
+     "IfcBuilding",
+     "Annex",
+     null
+    ],
+    [
+     "0Annex0000000000000011",
+     "IfcColumn",
+     "Annex column",
+     "Annex floor"
+    ],
+    [
+     "0Annex0000000000000004",
+     "IfcBuildingStorey",
+     "Annex floor",
+     null
+    ],
+    [
+     "0Annex0000000000000002",
+     "IfcSite",
+     "Annex site",
+     null
+    ],
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     "Annex wall",
+     "Annex floor"
+    ],
+    [
+     "0Annex0000000000000020",
+     "IfcBuildingElementProxy",
+     "Shed",
+     "Annex site"
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcSpace\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcWall\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     "Annex wall",
+     "Annex floor"
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000001\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000001",
+     "IfcProject",
+     1,
+     {
+      "GlobalId": "0Annex0000000000000001",
+      "Name": "Annex",
+      "RepresentationContexts__step": [
+       10,
+       12
+      ],
+      "id": "m:1",
+      "ifc_class": "IfcProject",
+      "model_id": "m",
+      "step_id": 1
+     },
+     [
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000005",
+       "step_id": 40
+      },
+      {
+       "attribute": "UNITS_IN_CONTEXT",
+       "class": "IfcUnitAssignment",
+       "global_id": null,
+       "step_id": 3
+      }
+     ],
+     [
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000005",
+       "step_id": 40
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000002\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000002",
+     "IfcSite",
+     20,
+     {
+      "CompositionType": "ELEMENT",
+      "GlobalId": "0Annex0000000000000002",
+      "Name": "Annex site",
+      "ObjectPlacement__step": 21,
+      "id": "m:20",
+      "ifc_class": "IfcSite",
+      "model_id": "m",
+      "step_id": 20
+     },
+     [
+      {
+       "attribute": "CONTAINS_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Annex0000000000000021",
+       "step_id": 88
+      },
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000005",
+       "step_id": 40
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000006",
+       "step_id": 41
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000005",
+       "step_id": 40
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000006",
+       "step_id": 41
+      },
+      {
+       "attribute": "RELATING_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Annex0000000000000021",
+       "step_id": 88
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000003\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000003",
+     "IfcBuilding",
+     30,
+     {
+      "CompositionType": "ELEMENT",
+      "GlobalId": "0Annex0000000000000003",
+      "Name": "Annex",
+      "ObjectPlacement__step": 31,
+      "id": "m:30",
+      "ifc_class": "IfcBuilding",
+      "model_id": "m",
+      "step_id": 30
+     },
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000006",
+       "step_id": 41
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000007",
+       "step_id": 42
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000006",
+       "step_id": 41
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000007",
+       "step_id": 42
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000004\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000004",
+     "IfcBuildingStorey",
+     34,
+     {
+      "CompositionType": "ELEMENT",
+      "Elevation": 0.0,
+      "GlobalId": "0Annex0000000000000004",
+      "Name": "Annex floor",
+      "ObjectPlacement__step": 35,
+      "elevation_m": 0.0,
+      "elevation_source": "attribute",
+      "id": "m:34",
+      "ifc_class": "IfcBuildingStorey",
+      "model_id": "m",
+      "step_id": 34
+     },
+     [
+      {
+       "attribute": "CONTAINS_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Annex0000000000000008",
+       "step_id": 43
+      },
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000007",
+       "step_id": 42
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAggregates",
+       "global_id": "0Annex0000000000000007",
+       "step_id": 42
+      },
+      {
+       "attribute": "RELATING_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Annex0000000000000008",
+       "step_id": 43
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000005\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000005",
+     "IfcRelAggregates",
+     40,
+     {
+      "GlobalId": "0Annex0000000000000005",
+      "id": "m:40",
+      "ifc_class": "IfcRelAggregates",
+      "model_id": "m",
+      "step_id": 40
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcSite",
+       "global_id": "0Annex0000000000000002",
+       "step_id": 20
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcProject",
+       "global_id": "0Annex0000000000000001",
+       "step_id": 1
+      }
+     ],
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcSite",
+       "global_id": "0Annex0000000000000002",
+       "step_id": 20
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcProject",
+       "global_id": "0Annex0000000000000001",
+       "step_id": 1
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000006\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000006",
+     "IfcRelAggregates",
+     41,
+     {
+      "GlobalId": "0Annex0000000000000006",
+      "Name": "Site to building",
+      "id": "m:41",
+      "ifc_class": "IfcRelAggregates",
+      "model_id": "m",
+      "step_id": 41
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcBuilding",
+       "global_id": "0Annex0000000000000003",
+       "step_id": 30
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcSite",
+       "global_id": "0Annex0000000000000002",
+       "step_id": 20
+      }
+     ],
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcBuilding",
+       "global_id": "0Annex0000000000000003",
+       "step_id": 30
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcSite",
+       "global_id": "0Annex0000000000000002",
+       "step_id": 20
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000007\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000007",
+     "IfcRelAggregates",
+     42,
+     {
+      "GlobalId": "0Annex0000000000000007",
+      "id": "m:42",
+      "ifc_class": "IfcRelAggregates",
+      "model_id": "m",
+      "step_id": 42
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Annex0000000000000004",
+       "step_id": 34
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcBuilding",
+       "global_id": "0Annex0000000000000003",
+       "step_id": 30
+      }
+     ],
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Annex0000000000000004",
+       "step_id": 34
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcBuilding",
+       "global_id": "0Annex0000000000000003",
+       "step_id": 30
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000008\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000008",
+     "IfcRelContainedInSpatialStructure",
+     43,
+     {
+      "GlobalId": "0Annex0000000000000008",
+      "id": "m:43",
+      "ifc_class": "IfcRelContainedInSpatialStructure",
+      "model_id": "m",
+      "step_id": 43
+     },
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcColumn",
+       "global_id": "0Annex0000000000000011",
+       "step_id": 60
+      },
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcWall",
+       "global_id": "0Spatial00000000000010",
+       "step_id": 50
+      },
+      {
+       "attribute": "RELATING_STRUCTURE",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Annex0000000000000004",
+       "step_id": 34
+      }
+     ],
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcColumn",
+       "global_id": "0Annex0000000000000011",
+       "step_id": 60
+      },
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcWall",
+       "global_id": "0Spatial00000000000010",
+       "step_id": 50
+      },
+      {
+       "attribute": "CONTAINS_ELEMENTS",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Annex0000000000000004",
+       "step_id": 34
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000011\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000011",
+     "IfcColumn",
+     60,
+     {
+      "GlobalId": "0Annex0000000000000011",
+      "Name": "Annex column",
+      "ObjectPlacement__step": 62,
+      "PredefinedType": "COLUMN",
+      "Representation__step": 65,
+      "id": "m:60",
+      "ifc_class": "IfcColumn",
+      "model_id": "m",
+      "step_id": 60
+     },
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Annex0000000000000008",
+       "step_id": 43
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Annex0000000000000008",
+       "step_id": 43
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000020\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000020",
+     "IfcBuildingElementProxy",
+     80,
+     {
+      "GlobalId": "0Annex0000000000000020",
+      "Name": "Shed",
+      "ObjectPlacement__step": 81,
+      "PredefinedType": "ELEMENT",
+      "Representation__step": 85,
+      "id": "m:80",
+      "ifc_class": "IfcBuildingElementProxy",
+      "model_id": "m",
+      "step_id": 80
+     },
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Annex0000000000000021",
+       "step_id": 88
+      },
+      {
+       "attribute": "HAS_ASSIGNMENTS",
+       "class": "IfcRelAssignsToGroup",
+       "global_id": "0Annex0000000000000033",
+       "step_id": 95
+      },
+      {
+       "attribute": "IS_DEFINED_BY",
+       "class": "IfcRelDefinesByProperties",
+       "global_id": "0Annex0000000000000031",
+       "step_id": 93
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Annex0000000000000021",
+       "step_id": 88
+      },
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAssignsToGroup",
+       "global_id": "0Annex0000000000000033",
+       "step_id": 95
+      },
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelDefinesByProperties",
+       "global_id": "0Annex0000000000000031",
+       "step_id": 93
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000021\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000021",
+     "IfcRelContainedInSpatialStructure",
+     88,
+     {
+      "GlobalId": "0Annex0000000000000021",
+      "id": "m:88",
+      "ifc_class": "IfcRelContainedInSpatialStructure",
+      "model_id": "m",
+      "step_id": 88
+     },
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcBuildingElementProxy",
+       "global_id": "0Annex0000000000000020",
+       "step_id": 80
+      },
+      {
+       "attribute": "RELATING_STRUCTURE",
+       "class": "IfcSite",
+       "global_id": "0Annex0000000000000002",
+       "step_id": 20
+      }
+     ],
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcBuildingElementProxy",
+       "global_id": "0Annex0000000000000020",
+       "step_id": 80
+      },
+      {
+       "attribute": "CONTAINS_ELEMENTS",
+       "class": "IfcSite",
+       "global_id": "0Annex0000000000000002",
+       "step_id": 20
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000030\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000030",
+     "IfcPropertySet",
+     92,
+     {
+      "GlobalId": "0Annex0000000000000030",
+      "Name": "Pset_WallCommon",
+      "id": "m:92",
+      "ifc_class": "IfcPropertySet",
+      "model_id": "m",
+      "step_id": 92
+     },
+     [
+      {
+       "attribute": "DEFINES_OCCURRENCE",
+       "class": "IfcRelDefinesByProperties",
+       "global_id": "0Annex0000000000000031",
+       "step_id": 93
+      },
+      {
+       "attribute": "HAS_PROPERTIES",
+       "class": "IfcPropertySingleValue",
+       "global_id": null,
+       "step_id": 91
+      }
+     ],
+     [
+      {
+       "attribute": "PART_OF_PSET",
+       "class": "IfcPropertySingleValue",
+       "global_id": null,
+       "step_id": 91
+      },
+      {
+       "attribute": "RELATING_PROPERTY_DEFINITION",
+       "class": "IfcRelDefinesByProperties",
+       "global_id": "0Annex0000000000000031",
+       "step_id": 93
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000031\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000031",
+     "IfcRelDefinesByProperties",
+     93,
+     {
+      "GlobalId": "0Annex0000000000000031",
+      "id": "m:93",
+      "ifc_class": "IfcRelDefinesByProperties",
+      "model_id": "m",
+      "step_id": 93
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcBuildingElementProxy",
+       "global_id": "0Annex0000000000000020",
+       "step_id": 80
+      },
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcWall",
+       "global_id": "0Spatial00000000000010",
+       "step_id": 50
+      },
+      {
+       "attribute": "RELATING_PROPERTY_DEFINITION",
+       "class": "IfcPropertySet",
+       "global_id": "0Annex0000000000000030",
+       "step_id": 92
+      }
+     ],
+     [
+      {
+       "attribute": "DEFINES_OCCURRENCE",
+       "class": "IfcPropertySet",
+       "global_id": "0Annex0000000000000030",
+       "step_id": 92
+      },
+      {
+       "attribute": "IS_DEFINED_BY",
+       "class": "IfcBuildingElementProxy",
+       "global_id": "0Annex0000000000000020",
+       "step_id": 80
+      },
+      {
+       "attribute": "IS_DEFINED_BY",
+       "class": "IfcWall",
+       "global_id": "0Spatial00000000000010",
+       "step_id": 50
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000032\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000032",
+     "IfcGroup",
+     94,
+     {
+      "GlobalId": "0Annex0000000000000032",
+      "Name": "Phase 2",
+      "id": "m:94",
+      "ifc_class": "IfcGroup",
+      "model_id": "m",
+      "step_id": 94
+     },
+     [
+      {
+       "attribute": "IS_GROUPED_BY",
+       "class": "IfcRelAssignsToGroup",
+       "global_id": "0Annex0000000000000033",
+       "step_id": 95
+      }
+     ],
+     [
+      {
+       "attribute": "RELATING_GROUP",
+       "class": "IfcRelAssignsToGroup",
+       "global_id": "0Annex0000000000000033",
+       "step_id": 95
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Annex0000000000000033\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Annex0000000000000033",
+     "IfcRelAssignsToGroup",
+     95,
+     {
+      "GlobalId": "0Annex0000000000000033",
+      "id": "m:95",
+      "ifc_class": "IfcRelAssignsToGroup",
+      "model_id": "m",
+      "step_id": 95
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcBuildingElementProxy",
+       "global_id": "0Annex0000000000000020",
+       "step_id": 80
+      },
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcWall",
+       "global_id": "0Spatial00000000000010",
+       "step_id": 50
+      },
+      {
+       "attribute": "RELATING_GROUP",
+       "class": "IfcGroup",
+       "global_id": "0Annex0000000000000032",
+       "step_id": 94
+      }
+     ],
+     [
+      {
+       "attribute": "HAS_ASSIGNMENTS",
+       "class": "IfcBuildingElementProxy",
+       "global_id": "0Annex0000000000000020",
+       "step_id": 80
+      },
+      {
+       "attribute": "HAS_ASSIGNMENTS",
+       "class": "IfcWall",
+       "global_id": "0Spatial00000000000010",
+       "step_id": 50
+      },
+      {
+       "attribute": "IS_GROUPED_BY",
+       "class": "IfcGroup",
+       "global_id": "0Annex0000000000000032",
+       "step_id": 94
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Spatial00000000000010\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     50,
+     {
+      "GlobalId": "0Spatial00000000000010",
+      "Name": "Annex wall",
+      "ObjectPlacement__step": 51,
+      "PredefinedType": "STANDARD",
+      "Representation__step": 55,
+      "id": "m:50",
+      "ifc_class": "IfcWall",
+      "model_id": "m",
+      "step_id": 50
+     },
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Annex0000000000000008",
+       "step_id": 43
+      },
+      {
+       "attribute": "HAS_ASSIGNMENTS",
+       "class": "IfcRelAssignsToGroup",
+       "global_id": "0Annex0000000000000033",
+       "step_id": 95
+      },
+      {
+       "attribute": "IS_DEFINED_BY",
+       "class": "IfcRelDefinesByProperties",
+       "global_id": "0Annex0000000000000031",
+       "step_id": 93
+      }
+     ],
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Annex0000000000000008",
+       "step_id": 43
+      },
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAssignsToGroup",
+       "global_id": "0Annex0000000000000033",
+       "step_id": 95
+      },
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelDefinesByProperties",
+       "global_id": "0Annex0000000000000031",
+       "step_id": 93
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"materials\", {\"class\": \"IfcWall\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "materials"
+   ],
+   "name": "materials",
+   "rows": [
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     "Annex wall",
+     []
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"materials\", {}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "materials"
+   ],
+   "name": "materials",
+   "rows": [
+    [
+     "0Annex0000000000000011",
+     "IfcColumn",
+     "Annex column",
+     []
+    ],
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     "Annex wall",
+     []
+    ],
+    [
+     "0Annex0000000000000020",
+     "IfcBuildingElementProxy",
+     "Shed",
+     []
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"property\", {\"class\": \"IfcWall\", \"property\": \"IsExternal\", \"pset\": \"Pset_WallCommon\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "value",
+    "type"
+   ],
+   "name": "property",
+   "rows": [
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     "Annex wall",
+     true,
+     "IFCBOOLEAN"
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"property\", {\"property\": \"IsExternal\", \"pset\": \"Pset_WallCommon\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "value",
+    "type"
+   ],
+   "name": "property",
+   "rows": [
+    [
+     "0Spatial00000000000010",
+     "IfcWall",
+     "Annex wall",
+     true,
+     "IFCBOOLEAN"
+    ],
+    [
+     "0Annex0000000000000020",
+     "IfcBuildingElementProxy",
+     "Shed",
+     true,
+     "IFCBOOLEAN"
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"site\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "ref_latitude",
+    "ref_longitude",
+    "ref_elevation",
+    "latitude",
+    "longitude",
+    "crs",
+    "vertical_datum",
+    "eastings",
+    "northings",
+    "orthogonal_height",
+    "x_axis_abscissa",
+    "x_axis_ordinate",
+    "scale"
+   ],
+   "name": "site",
+   "rows": [
+    [
+     "0Annex0000000000000002",
+     "Annex site",
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"spaces\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "long_name",
+    "storey",
+    "net_floor_area",
+    "gross_floor_area"
+   ],
+   "name": "spaces",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"storeys\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "elevation",
+    "elevation_m",
+    "elevation_source",
+    "elements",
+    "spaces"
+   ],
+   "name": "storeys",
+   "rows": [
+    [
+     "0Annex0000000000000004",
+     "Annex floor",
+     0.0,
+     0.0,
+     "attribute",
+     2,
+     0
+    ]
+   ],
+   "truncated": false
+  }
+ },
+ "records": [
+  "{\"ifc_header\": \"[[\\\"FILE_DESCRIPTION\\\", [[\\\"ViewDefinition [DesignTransferView]\\\"], \\\"2;1\\\"]], [\\\"FILE_NAME\\\", [\\\"annex.ifc\\\", \\\"2026-11-10T00:00:00\\\", [\\\"\\\"], [\\\"\\\"], \\\"IFC-LPG tests\\\", \\\"IFC-LPG tests\\\", \\\"\\\"]], [\\\"FILE_SCHEMA\\\", [[\\\"IFC4\\\"]]]]\", \"schema\": \"IFC4\"}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000001\", \"Name\": \"Annex\", \"RepresentationContexts__step\": [10, 12], \"id\": \"m:1\", \"ifc_class\": \"IfcProject\", \"model_id\": \"m\", \"step_id\": 1}, \"references\": [[\"UNITS_IN_CONTEXT\", 0, 3]], \"step\": 1}",
+  "{\"props\": {\"Name\": \"METRE\", \"UnitType\": \"LENGTHUNIT\", \"id\": \"m:2\", \"ifc_class\": \"IfcSIUnit\", \"model_id\": \"m\", \"step_id\": 2}, \"references\": [], \"step\": 2}",
+  "{\"props\": {\"id\": \"m:3\", \"ifc_class\": \"IfcUnitAssignment\", \"model_id\": \"m\", \"step_id\": 3}, \"references\": [[\"UNITS\", 0, 2]], \"step\": 3}",
+  "{\"line\": \"#4=IFCCARTESIANPOINT((0.,0.,0.));\", \"step\": 4}",
+  "{\"line\": \"#5=IFCAXIS2PLACEMENT3D(#4,$,$);\", \"step\": 5}",
+  "{\"line\": \"#6=IFCCARTESIANPOINT((0.,0.));\", \"step\": 6}",
+  "{\"line\": \"#7=IFCAXIS2PLACEMENT2D(#6,$);\", \"step\": 7}",
+  "{\"line\": \"#8=IFCDIRECTION((0.,0.,1.));\", \"step\": 8}",
+  "{\"line\": \"#9=IFCCARTESIANPOINT((3.,0.));\", \"step\": 9}",
+  "{\"line\": \"#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#5,$);\", \"step\": 10}",
+  "{\"line\": \"#11=IFCGEOMETRICREPRESENTATIONSUBCONTEXT('Body','Model',*,*,*,*,#10,$,.MODEL_VIEW.,$);\", \"step\": 11}",
+  "{\"line\": \"#12=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Plan',2,1.E-05,#7,$);\", \"step\": 12}",
+  "{\"line\": \"#13=IFCGEOMETRICREPRESENTATIONSUBCONTEXT('FootPrint','Plan',*,*,*,*,#12,$,.PLAN_VIEW.,$);\", \"step\": 13}",
+  "{\"props\": {\"CompositionType\": \"ELEMENT\", \"GlobalId\": \"0Annex0000000000000002\", \"Name\": \"Annex site\", \"ObjectPlacement__step\": 21, \"id\": \"m:20\", \"ifc_class\": \"IfcSite\", \"model_id\": \"m\", \"step_id\": 20}, \"references\": [], \"step\": 20}",
+  "{\"line\": \"#21=IFCLOCALPLACEMENT($,#25);\", \"step\": 21}",
+  "{\"line\": \"#24=IFCCARTESIANPOINT((100.,0.,0.));\", \"step\": 24}",
+  "{\"line\": \"#25=IFCAXIS2PLACEMENT3D(#24,$,$);\", \"step\": 25}",
+  "{\"props\": {\"CompositionType\": \"ELEMENT\", \"GlobalId\": \"0Annex0000000000000003\", \"Name\": \"Annex\", \"ObjectPlacement__step\": 31, \"id\": \"m:30\", \"ifc_class\": \"IfcBuilding\", \"model_id\": \"m\", \"step_id\": 30}, \"references\": [], \"step\": 30}",
+  "{\"line\": \"#31=IFCLOCALPLACEMENT(#21,#33);\", \"step\": 31}",
+  "{\"line\": \"#32=IFCCARTESIANPOINT((0.,20.,0.));\", \"step\": 32}",
+  "{\"line\": \"#33=IFCAXIS2PLACEMENT3D(#32,$,$);\", \"step\": 33}",
+  "{\"props\": {\"CompositionType\": \"ELEMENT\", \"Elevation\": 0.0, \"GlobalId\": \"0Annex0000000000000004\", \"Name\": \"Annex floor\", \"ObjectPlacement__step\": 35, \"elevation_m\": 0.0, \"elevation_source\": \"attribute\", \"id\": \"m:34\", \"ifc_class\": \"IfcBuildingStorey\", \"model_id\": \"m\", \"step_id\": 34}, \"references\": [], \"step\": 34}",
+  "{\"line\": \"#35=IFCLOCALPLACEMENT(#31,#5);\", \"step\": 35}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000005\", \"id\": \"m:40\", \"ifc_class\": \"IfcRelAggregates\", \"model_id\": \"m\", \"step_id\": 40}, \"references\": [[\"RELATED_OBJECTS\", 0, 20], [\"RELATING_OBJECT\", 0, 1]], \"step\": 40}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000006\", \"Name\": \"Site to building\", \"id\": \"m:41\", \"ifc_class\": \"IfcRelAggregates\", \"model_id\": \"m\", \"step_id\": 41}, \"references\": [[\"RELATED_OBJECTS\", 0, 30], [\"RELATING_OBJECT\", 0, 20]], \"step\": 41}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000007\", \"id\": \"m:42\", \"ifc_class\": \"IfcRelAggregates\", \"model_id\": \"m\", \"step_id\": 42}, \"references\": [[\"RELATED_OBJECTS\", 0, 34], [\"RELATING_OBJECT\", 0, 30]], \"step\": 42}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000008\", \"id\": \"m:43\", \"ifc_class\": \"IfcRelContainedInSpatialStructure\", \"model_id\": \"m\", \"step_id\": 43}, \"references\": [[\"RELATED_ELEMENTS\", 0, 50], [\"RELATED_ELEMENTS\", 1, 60], [\"RELATING_STRUCTURE\", 0, 34]], \"step\": 43}",
+  "{\"props\": {\"GlobalId\": \"0Spatial00000000000010\", \"Name\": \"Annex wall\", \"ObjectPlacement__step\": 51, \"PredefinedType\": \"STANDARD\", \"Representation__step\": 55, \"id\": \"m:50\", \"ifc_class\": \"IfcWall\", \"model_id\": \"m\", \"step_id\": 50}, \"references\": [], \"step\": 50}",
+  "{\"line\": \"#51=IFCLOCALPLACEMENT(#35,#53);\", \"step\": 51}",
+  "{\"line\": \"#52=IFCCARTESIANPOINT((1.,0.,0.));\", \"step\": 52}",
+  "{\"line\": \"#53=IFCAXIS2PLACEMENT3D(#52,$,$);\", \"step\": 53}",
+  "{\"line\": \"#54=IFCRECTANGLEPROFILEDEF(.AREA.,$,#7,3.,0.2);\", \"step\": 54}",
+  "{\"line\": \"#55=IFCPRODUCTDEFINITIONSHAPE($,$,(#56,#58));\", \"step\": 55}",
+  "{\"line\": \"#56=IFCSHAPEREPRESENTATION(#11,'Body','SweptSolid',(#57));\", \"step\": 56}",
+  "{\"line\": \"#57=IFCEXTRUDEDAREASOLID(#54,#5,#8,2.5);\", \"step\": 57}",
+  "{\"line\": \"#58=IFCSHAPEREPRESENTATION(#13,'FootPrint','Curve2D',(#59));\", \"step\": 58}",
+  "{\"line\": \"#59=IFCPOLYLINE((#6,#9));\", \"step\": 59}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000011\", \"Name\": \"Annex column\", \"ObjectPlacement__step\": 62, \"PredefinedType\": \"COLUMN\", \"Representation__step\": 65, \"id\": \"m:60\", \"ifc_class\": \"IfcColumn\", \"model_id\": \"m\", \"step_id\": 60}, \"references\": [], \"step\": 60}",
+  "{\"line\": \"#62=IFCLOCALPLACEMENT(#35,#64);\", \"step\": 62}",
+  "{\"line\": \"#63=IFCCARTESIANPOINT((5.,0.,0.));\", \"step\": 63}",
+  "{\"line\": \"#64=IFCAXIS2PLACEMENT3D(#63,$,$);\", \"step\": 64}",
+  "{\"line\": \"#65=IFCPRODUCTDEFINITIONSHAPE($,$,(#66));\", \"step\": 65}",
+  "{\"line\": \"#66=IFCSHAPEREPRESENTATION(#11,'Body','SweptSolid',(#67));\", \"step\": 66}",
+  "{\"line\": \"#67=IFCEXTRUDEDAREASOLID(#68,#5,#8,2.5);\", \"step\": 67}",
+  "{\"line\": \"#68=IFCRECTANGLEPROFILEDEF(.AREA.,$,#7,0.3,0.3);\", \"step\": 68}",
+  "{\"line\": \"#70=IFCSTYLEDITEM(#57,(#71),$);\", \"step\": 70}",
+  "{\"line\": \"#71=IFCSURFACESTYLE('Plaster',.BOTH.,(#72));\", \"step\": 71}",
+  "{\"line\": \"#72=IFCSURFACESTYLESHADING(#73,0.);\", \"step\": 72}",
+  "{\"line\": \"#73=IFCCOLOURRGB($,0.9,0.9,0.8);\", \"step\": 73}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000020\", \"Name\": \"Shed\", \"ObjectPlacement__step\": 81, \"PredefinedType\": \"ELEMENT\", \"Representation__step\": 85, \"id\": \"m:80\", \"ifc_class\": \"IfcBuildingElementProxy\", \"model_id\": \"m\", \"step_id\": 80}, \"references\": [], \"step\": 80}",
+  "{\"line\": \"#81=IFCLOCALPLACEMENT(#21,#83);\", \"step\": 81}",
+  "{\"line\": \"#82=IFCCARTESIANPOINT((0.,-10.,0.));\", \"step\": 82}",
+  "{\"line\": \"#83=IFCAXIS2PLACEMENT3D(#82,$,$);\", \"step\": 83}",
+  "{\"line\": \"#84=IFCRECTANGLEPROFILEDEF(.AREA.,$,#7,2.,2.);\", \"step\": 84}",
+  "{\"line\": \"#85=IFCPRODUCTDEFINITIONSHAPE($,$,(#86));\", \"step\": 85}",
+  "{\"line\": \"#86=IFCSHAPEREPRESENTATION(#11,'Body','SweptSolid',(#87));\", \"step\": 86}",
+  "{\"line\": \"#87=IFCEXTRUDEDAREASOLID(#84,#5,#8,2.);\", \"step\": 87}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000021\", \"id\": \"m:88\", \"ifc_class\": \"IfcRelContainedInSpatialStructure\", \"model_id\": \"m\", \"step_id\": 88}, \"references\": [[\"RELATED_ELEMENTS\", 0, 80], [\"RELATING_STRUCTURE\", 0, 20]], \"step\": 88}",
+  "{\"line\": \"#90=IFCPRESENTATIONLAYERASSIGNMENT('Walls and sheds',$,(#56,#86),$);\", \"step\": 90}",
+  "{\"props\": {\"Name\": \"IsExternal\", \"NominalValue\": true, \"NominalValue__type\": \"IFCBOOLEAN\", \"id\": \"m:91\", \"ifc_class\": \"IfcPropertySingleValue\", \"model_id\": \"m\", \"step_id\": 91}, \"references\": [], \"step\": 91}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000030\", \"Name\": \"Pset_WallCommon\", \"id\": \"m:92\", \"ifc_class\": \"IfcPropertySet\", \"model_id\": \"m\", \"step_id\": 92}, \"references\": [[\"HAS_PROPERTIES\", 0, 91]], \"step\": 92}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000031\", \"id\": \"m:93\", \"ifc_class\": \"IfcRelDefinesByProperties\", \"model_id\": \"m\", \"step_id\": 93}, \"references\": [[\"RELATED_OBJECTS\", 0, 50], [\"RELATED_OBJECTS\", 1, 80], [\"RELATING_PROPERTY_DEFINITION\", 0, 92]], \"step\": 93}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000032\", \"Name\": \"Phase 2\", \"id\": \"m:94\", \"ifc_class\": \"IfcGroup\", \"model_id\": \"m\", \"step_id\": 94}, \"references\": [], \"step\": 94}",
+  "{\"props\": {\"GlobalId\": \"0Annex0000000000000033\", \"id\": \"m:95\", \"ifc_class\": \"IfcRelAssignsToGroup\", \"model_id\": \"m\", \"step_id\": 95}, \"references\": [[\"RELATED_OBJECTS\", 0, 50], [\"RELATED_OBJECTS\", 1, 80], [\"RELATING_GROUP\", 0, 94]], \"step\": 95}"
+ ],
+ "unreachable": []
+}

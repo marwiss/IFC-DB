@@ -612,7 +612,8 @@ and gets rows back, without writing Cypher and without knowing the graph's form.
   "columns", "rows", "truncated"}`. The rows are lists in the order of the
   columns, of JSON values. There are at most `max_rows` of them, 10,000 unless
   another number is given, and `truncated` says that there were more. A query
-  has `timeout_seconds`, 10, to run.
+  has `timeout_seconds`, 10, to run. The lists in a row, an entity's
+  references and an element's materials, come in no given order.
 - **A class takes its subclasses with it:** `IfcWall` finds an
   `IfcWallStandardCase` too.
 - **The parameters are checked before the graph is asked.** A class must be the

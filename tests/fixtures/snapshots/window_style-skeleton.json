@@ -1,0 +1,1813 @@
+{
+ "graph": {
+  "nodes": {
+   "Entity m:1": {
+    "labels": [
+     "Entity",
+     "IfcPerson"
+    ],
+    "properties": {
+     "FamilyName": "Tester",
+     "id": "m:1",
+     "ifc_class": "IfcPerson",
+     "model_id": "m",
+     "step_id": 1
+    }
+   },
+   "Entity m:10": {
+    "labels": [
+     "Entity",
+     "IfcGeometricRepresentationContext",
+     "IfcRepresentationContext"
+    ],
+    "properties": {
+     "ContextType": "Model",
+     "CoordinateSpaceDimension": 3,
+     "Precision": 1e-05,
+     "id": "m:10",
+     "ifc_class": "IfcGeometricRepresentationContext",
+     "model_id": "m",
+     "step_id": 10
+    }
+   },
+   "Entity m:11": {
+    "labels": [
+     "Entity",
+     "IfcGeometricRepresentationContext",
+     "IfcGeometricRepresentationSubContext",
+     "IfcRepresentationContext"
+    ],
+    "properties": {
+     "ContextIdentifier": "Body",
+     "ContextType": "Model",
+     "TargetView": "MODEL_VIEW",
+     "id": "m:11",
+     "ifc_class": "IfcGeometricRepresentationSubContext",
+     "model_id": "m",
+     "step_id": 11
+    }
+   },
+   "Entity m:12": {
+    "labels": [
+     "Entity",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProject",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Window000000000000001",
+     "Name": "Windows",
+     "id": "m:12",
+     "ifc_class": "IfcProject",
+     "model_id": "m",
+     "step_id": 12
+    }
+   },
+   "Entity m:2": {
+    "labels": [
+     "Entity",
+     "IfcOrganization"
+    ],
+    "properties": {
+     "Name": "IFC-LPG tests",
+     "id": "m:2",
+     "ifc_class": "IfcOrganization",
+     "model_id": "m",
+     "step_id": 2
+    }
+   },
+   "Entity m:20": {
+    "labels": [
+     "Entity",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcSite",
+     "IfcSpatialStructureElement"
+    ],
+    "properties": {
+     "CompositionType": "ELEMENT",
+     "GlobalId": "0Window000000000000002",
+     "Name": "Site",
+     "OwnerHistory__step": 5,
+     "id": "m:20",
+     "ifc_class": "IfcSite",
+     "model_id": "m",
+     "step_id": 20
+    }
+   },
+   "Entity m:21": {
+    "labels": [
+     "Entity",
+     "IfcLocalPlacement",
+     "IfcObjectPlacement"
+    ],
+    "properties": {
+     "id": "m:21",
+     "ifc_class": "IfcLocalPlacement",
+     "model_id": "m",
+     "step_id": 21
+    }
+   },
+   "Entity m:22": {
+    "labels": [
+     "Entity",
+     "IfcBuilding",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcSpatialStructureElement"
+    ],
+    "properties": {
+     "CompositionType": "ELEMENT",
+     "GlobalId": "0Window000000000000003",
+     "Name": "Windowed",
+     "OwnerHistory__step": 5,
+     "id": "m:22",
+     "ifc_class": "IfcBuilding",
+     "model_id": "m",
+     "step_id": 22
+    }
+   },
+   "Entity m:23": {
+    "labels": [
+     "Entity",
+     "IfcLocalPlacement",
+     "IfcObjectPlacement"
+    ],
+    "properties": {
+     "id": "m:23",
+     "ifc_class": "IfcLocalPlacement",
+     "model_id": "m",
+     "step_id": 23
+    }
+   },
+   "Entity m:24": {
+    "labels": [
+     "Entity",
+     "IfcBuildingStorey",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcSpatialStructureElement"
+    ],
+    "properties": {
+     "CompositionType": "ELEMENT",
+     "Elevation": 0.0,
+     "GlobalId": "0Window000000000000004",
+     "Name": "Floor",
+     "OwnerHistory__step": 5,
+     "elevation_m": 0.0,
+     "elevation_source": "attribute",
+     "id": "m:24",
+     "ifc_class": "IfcBuildingStorey",
+     "model_id": "m",
+     "step_id": 24
+    }
+   },
+   "Entity m:25": {
+    "labels": [
+     "Entity",
+     "IfcLocalPlacement",
+     "IfcObjectPlacement"
+    ],
+    "properties": {
+     "id": "m:25",
+     "ifc_class": "IfcLocalPlacement",
+     "model_id": "m",
+     "step_id": 25
+    }
+   },
+   "Entity m:26": {
+    "labels": [
+     "Entity",
+     "IfcRelAggregates",
+     "IfcRelDecomposes",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Window000000000000005",
+     "OwnerHistory__step": 5,
+     "id": "m:26",
+     "ifc_class": "IfcRelAggregates",
+     "model_id": "m",
+     "step_id": 26
+    }
+   },
+   "Entity m:27": {
+    "labels": [
+     "Entity",
+     "IfcRelAggregates",
+     "IfcRelDecomposes",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Window000000000000006",
+     "OwnerHistory__step": 5,
+     "id": "m:27",
+     "ifc_class": "IfcRelAggregates",
+     "model_id": "m",
+     "step_id": 27
+    }
+   },
+   "Entity m:28": {
+    "labels": [
+     "Entity",
+     "IfcRelAggregates",
+     "IfcRelDecomposes",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Window000000000000007",
+     "OwnerHistory__step": 5,
+     "id": "m:28",
+     "ifc_class": "IfcRelAggregates",
+     "model_id": "m",
+     "step_id": 28
+    }
+   },
+   "Entity m:3": {
+    "labels": [
+     "Entity",
+     "IfcPersonAndOrganization"
+    ],
+    "properties": {
+     "id": "m:3",
+     "ifc_class": "IfcPersonAndOrganization",
+     "model_id": "m",
+     "step_id": 3
+    }
+   },
+   "Entity m:30": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcWindow"
+    ],
+    "properties": {
+     "GlobalId": "0Window000000000000010",
+     "Name": "Window",
+     "OverallHeight": 1.2,
+     "OverallWidth": 1.0,
+     "OwnerHistory__step": 5,
+     "id": "m:30",
+     "ifc_class": "IfcWindow",
+     "model_id": "m",
+     "step_id": 30
+    }
+   },
+   "Entity m:31": {
+    "labels": [
+     "Entity",
+     "IfcLocalPlacement",
+     "IfcObjectPlacement"
+    ],
+    "properties": {
+     "id": "m:31",
+     "ifc_class": "IfcLocalPlacement",
+     "model_id": "m",
+     "step_id": 31
+    }
+   },
+   "Entity m:32": {
+    "labels": [
+     "Entity",
+     "IfcObjectDefinition",
+     "IfcRoot",
+     "IfcTypeObject",
+     "IfcTypeProduct",
+     "IfcWindowStyle"
+    ],
+    "properties": {
+     "ConstructionType": "ALUMINIUM",
+     "GlobalId": "0Window000000000000011",
+     "Name": "Casement",
+     "OperationType": "SINGLE_PANEL",
+     "OwnerHistory__step": 5,
+     "ParameterTakesPrecedence": false,
+     "Sizeable": false,
+     "id": "m:32",
+     "ifc_class": "IfcWindowStyle",
+     "model_id": "m",
+     "step_id": 32
+    }
+   },
+   "Entity m:33": {
+    "labels": [
+     "Entity",
+     "IfcRelDefines",
+     "IfcRelDefinesByType",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Window000000000000012",
+     "OwnerHistory__step": 5,
+     "id": "m:33",
+     "ifc_class": "IfcRelDefinesByType",
+     "model_id": "m",
+     "step_id": 33
+    }
+   },
+   "Entity m:34": {
+    "labels": [
+     "Entity",
+     "IfcRelConnects",
+     "IfcRelContainedInSpatialStructure",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Window000000000000013",
+     "OwnerHistory__step": 5,
+     "id": "m:34",
+     "ifc_class": "IfcRelContainedInSpatialStructure",
+     "model_id": "m",
+     "step_id": 34
+    }
+   },
+   "Entity m:4": {
+    "labels": [
+     "Entity",
+     "IfcApplication"
+    ],
+    "properties": {
+     "ApplicationFullName": "IFC-LPG tests",
+     "ApplicationIdentifier": "ifclpg-tests",
+     "Version": "1",
+     "id": "m:4",
+     "ifc_class": "IfcApplication",
+     "model_id": "m",
+     "step_id": 4
+    }
+   },
+   "Entity m:40": {
+    "labels": [
+     "Entity",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot",
+     "IfcSpace",
+     "IfcSpatialStructureElement"
+    ],
+    "properties": {
+     "CompositionType": "ELEMENT",
+     "GlobalId": "0Window000000000000020",
+     "InteriorOrExteriorSpace": "INTERNAL",
+     "Name": "Room",
+     "OwnerHistory__step": 5,
+     "id": "m:40",
+     "ifc_class": "IfcSpace",
+     "model_id": "m",
+     "step_id": 40
+    }
+   },
+   "Entity m:41": {
+    "labels": [
+     "Entity",
+     "IfcRelAggregates",
+     "IfcRelDecomposes",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Window000000000000021",
+     "OwnerHistory__step": 5,
+     "id": "m:41",
+     "ifc_class": "IfcRelAggregates",
+     "model_id": "m",
+     "step_id": 41
+    }
+   },
+   "Entity m:42": {
+    "labels": [
+     "Entity",
+     "IfcLocalPlacement",
+     "IfcObjectPlacement"
+    ],
+    "properties": {
+     "id": "m:42",
+     "ifc_class": "IfcLocalPlacement",
+     "model_id": "m",
+     "step_id": 42
+    }
+   },
+   "Entity m:43": {
+    "labels": [
+     "Entity",
+     "IfcRelConnects",
+     "IfcRelSpaceBoundary",
+     "IfcRelationship",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0Window000000000000022",
+     "InternalOrExternalBoundary": "INTERNAL",
+     "Name": "2ndLevel",
+     "OwnerHistory__step": 5,
+     "PhysicalOrVirtualBoundary": "VIRTUAL",
+     "id": "m:43",
+     "ifc_class": "IfcRelSpaceBoundary",
+     "model_id": "m",
+     "step_id": 43
+    }
+   },
+   "Entity m:5": {
+    "labels": [
+     "Entity",
+     "IfcOwnerHistory"
+    ],
+    "properties": {
+     "ChangeAction": "ADDED",
+     "CreationDate": 1762819200,
+     "id": "m:5",
+     "ifc_class": "IfcOwnerHistory",
+     "model_id": "m",
+     "step_id": 5
+    }
+   },
+   "Entity m:6": {
+    "labels": [
+     "Entity",
+     "IfcNamedUnit",
+     "IfcSIUnit"
+    ],
+    "properties": {
+     "Name": "METRE",
+     "UnitType": "LENGTHUNIT",
+     "id": "m:6",
+     "ifc_class": "IfcSIUnit",
+     "model_id": "m",
+     "step_id": 6
+    }
+   },
+   "Entity m:7": {
+    "labels": [
+     "Entity",
+     "IfcUnitAssignment"
+    ],
+    "properties": {
+     "id": "m:7",
+     "ifc_class": "IfcUnitAssignment",
+     "model_id": "m",
+     "step_id": 7
+    }
+   },
+   "Entity m:9": {
+    "labels": [
+     "Entity",
+     "IfcAxis2Placement3D",
+     "IfcGeometricRepresentationItem",
+     "IfcPlacement",
+     "IfcRepresentationItem"
+    ],
+    "properties": {
+     "Location__step": 8,
+     "id": "m:9",
+     "ifc_class": "IfcAxis2Placement3D",
+     "model_id": "m",
+     "step_id": 9
+    }
+   },
+   "Model m": {
+    "labels": [
+     "Model"
+    ],
+    "properties": {
+     "entities": 29,
+     "file_name": "window_style.ifc",
+     "form_version": 2,
+     "format": "step",
+     "geometry": "skeleton",
+     "id": "m",
+     "ifc_header": "[[\"FILE_DESCRIPTION\", [[\"ViewDefinition [CoordinationView]\"], \"2;1\"]], [\"FILE_NAME\", [\"window_style.ifc\", \"2026-11-11T00:00:00\", [\"\"], [\"\"], \"IFC-LPG tests\", \"IFC-LPG tests\", \"\"]], [\"FILE_SCHEMA\", [[\"IFC2X3\"]]]]",
+     "ifc_project_guid": "0Window000000000000001",
+     "lossless": true,
+     "relationships": 63,
+     "schema": "IFC2X3",
+     "skipped": 1,
+     "state": "done"
+    }
+   },
+   "StepBlock m:8": {
+    "labels": [
+     "StepBlock"
+    ],
+    "properties": {
+     "first_step": 8,
+     "id": "m:8",
+     "instances": 1,
+     "text": "eJxTtrD1dHN2dgwKcQ32dPQL8Pf0C9HQMNDTASNNTWsuAJbfB+g="
+    }
+   }
+  },
+  "relationships": [
+   "[\"Entity m:1\", \"ENGAGED_IN\", {}, \"Entity m:3\"]",
+   "[\"Entity m:10\", \"HAS_SUB_CONTEXTS\", {}, \"Entity m:11\"]",
+   "[\"Entity m:10\", \"WORLD_COORDINATE_SYSTEM\", {\"position\": 0}, \"Entity m:9\"]",
+   "[\"Entity m:11\", \"PARENT_CONTEXT\", {\"position\": 0}, \"Entity m:10\"]",
+   "[\"Entity m:12\", \"IS_DECOMPOSED_BY\", {}, \"Entity m:26\"]",
+   "[\"Entity m:12\", \"OWNER_HISTORY\", {\"position\": 0}, \"Entity m:5\"]",
+   "[\"Entity m:12\", \"REPRESENTATION_CONTEXTS\", {\"position\": 0}, \"Entity m:10\"]",
+   "[\"Entity m:12\", \"UNITS_IN_CONTEXT\", {\"position\": 0}, \"Entity m:7\"]",
+   "[\"Entity m:2\", \"ENGAGES\", {}, \"Entity m:3\"]",
+   "[\"Entity m:20\", \"DECOMPOSES\", {}, \"Entity m:26\"]",
+   "[\"Entity m:20\", \"IS_DECOMPOSED_BY\", {}, \"Entity m:27\"]",
+   "[\"Entity m:20\", \"OBJECT_PLACEMENT\", {\"position\": 0}, \"Entity m:21\"]",
+   "[\"Entity m:21\", \"PLACES_OBJECT\", {}, \"Entity m:20\"]",
+   "[\"Entity m:21\", \"REFERENCED_BY_PLACEMENTS\", {}, \"Entity m:23\"]",
+   "[\"Entity m:21\", \"RELATIVE_PLACEMENT\", {\"position\": 0}, \"Entity m:9\"]",
+   "[\"Entity m:22\", \"DECOMPOSES\", {}, \"Entity m:27\"]",
+   "[\"Entity m:22\", \"IS_DECOMPOSED_BY\", {}, \"Entity m:28\"]",
+   "[\"Entity m:22\", \"OBJECT_PLACEMENT\", {\"position\": 0}, \"Entity m:23\"]",
+   "[\"Entity m:23\", \"PLACEMENT_REL_TO\", {\"position\": 0}, \"Entity m:21\"]",
+   "[\"Entity m:23\", \"PLACES_OBJECT\", {}, \"Entity m:22\"]",
+   "[\"Entity m:23\", \"REFERENCED_BY_PLACEMENTS\", {}, \"Entity m:25\"]",
+   "[\"Entity m:23\", \"RELATIVE_PLACEMENT\", {\"position\": 0}, \"Entity m:9\"]",
+   "[\"Entity m:24\", \"CONTAINS_ELEMENTS\", {}, \"Entity m:34\"]",
+   "[\"Entity m:24\", \"DECOMPOSES\", {}, \"Entity m:28\"]",
+   "[\"Entity m:24\", \"IS_DECOMPOSED_BY\", {}, \"Entity m:41\"]",
+   "[\"Entity m:24\", \"OBJECT_PLACEMENT\", {\"position\": 0}, \"Entity m:25\"]",
+   "[\"Entity m:25\", \"PLACEMENT_REL_TO\", {\"position\": 0}, \"Entity m:23\"]",
+   "[\"Entity m:25\", \"PLACES_OBJECT\", {}, \"Entity m:24\"]",
+   "[\"Entity m:25\", \"REFERENCED_BY_PLACEMENTS\", {}, \"Entity m:31\"]",
+   "[\"Entity m:25\", \"REFERENCED_BY_PLACEMENTS\", {}, \"Entity m:42\"]",
+   "[\"Entity m:25\", \"RELATIVE_PLACEMENT\", {\"position\": 0}, \"Entity m:9\"]",
+   "[\"Entity m:26\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:20\"]",
+   "[\"Entity m:26\", \"RELATING_OBJECT\", {\"position\": 0}, \"Entity m:12\"]",
+   "[\"Entity m:27\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:22\"]",
+   "[\"Entity m:27\", \"RELATING_OBJECT\", {\"position\": 0}, \"Entity m:20\"]",
+   "[\"Entity m:28\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:24\"]",
+   "[\"Entity m:28\", \"RELATING_OBJECT\", {\"position\": 0}, \"Entity m:22\"]",
+   "[\"Entity m:3\", \"THE_ORGANIZATION\", {\"position\": 0}, \"Entity m:2\"]",
+   "[\"Entity m:3\", \"THE_PERSON\", {\"position\": 0}, \"Entity m:1\"]",
+   "[\"Entity m:30\", \"CONTAINED_IN_STRUCTURE\", {}, \"Entity m:34\"]",
+   "[\"Entity m:30\", \"IS_DEFINED_BY\", {}, \"Entity m:33\"]",
+   "[\"Entity m:30\", \"OBJECT_PLACEMENT\", {\"position\": 0}, \"Entity m:31\"]",
+   "[\"Entity m:31\", \"PLACEMENT_REL_TO\", {\"position\": 0}, \"Entity m:25\"]",
+   "[\"Entity m:31\", \"PLACES_OBJECT\", {}, \"Entity m:30\"]",
+   "[\"Entity m:31\", \"RELATIVE_PLACEMENT\", {\"position\": 0}, \"Entity m:9\"]",
+   "[\"Entity m:32\", \"OBJECT_TYPE_OF\", {}, \"Entity m:33\"]",
+   "[\"Entity m:33\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:30\"]",
+   "[\"Entity m:33\", \"RELATING_TYPE\", {\"position\": 0}, \"Entity m:32\"]",
+   "[\"Entity m:34\", \"RELATED_ELEMENTS\", {\"position\": 0}, \"Entity m:30\"]",
+   "[\"Entity m:34\", \"RELATING_STRUCTURE\", {\"position\": 0}, \"Entity m:24\"]",
+   "[\"Entity m:4\", \"APPLICATION_DEVELOPER\", {\"position\": 0}, \"Entity m:2\"]",
+   "[\"Entity m:40\", \"BOUNDED_BY\", {}, \"Entity m:43\"]",
+   "[\"Entity m:40\", \"DECOMPOSES\", {}, \"Entity m:41\"]",
+   "[\"Entity m:40\", \"OBJECT_PLACEMENT\", {\"position\": 0}, \"Entity m:42\"]",
+   "[\"Entity m:41\", \"RELATED_OBJECTS\", {\"position\": 0}, \"Entity m:40\"]",
+   "[\"Entity m:41\", \"RELATING_OBJECT\", {\"position\": 0}, \"Entity m:24\"]",
+   "[\"Entity m:42\", \"PLACEMENT_REL_TO\", {\"position\": 0}, \"Entity m:25\"]",
+   "[\"Entity m:42\", \"PLACES_OBJECT\", {}, \"Entity m:40\"]",
+   "[\"Entity m:42\", \"RELATIVE_PLACEMENT\", {\"position\": 0}, \"Entity m:9\"]",
+   "[\"Entity m:43\", \"RELATING_SPACE\", {\"position\": 0}, \"Entity m:40\"]",
+   "[\"Entity m:5\", \"OWNING_APPLICATION\", {\"position\": 0}, \"Entity m:4\"]",
+   "[\"Entity m:5\", \"OWNING_USER\", {\"position\": 0}, \"Entity m:3\"]",
+   "[\"Entity m:7\", \"UNITS\", {\"position\": 0}, \"Entity m:6\"]",
+   "[\"Model m\", \"HAS_PROJECT\", {}, \"Entity m:12\"]",
+   "[\"Model m\", \"HAS_STEP_BLOCK\", {}, \"StepBlock m:8\"]"
+  ]
+ },
+ "paths": {
+  "1": {
+   "global_id": "0Window000000000000001",
+   "path": "OwnerHistory.OwningUser.ThePerson"
+  },
+  "10": {
+   "global_id": "0Window000000000000001",
+   "path": "RepresentationContexts"
+  },
+  "11": {
+   "global_id": "0Window000000000000001",
+   "path": "RepresentationContexts.HasSubContexts[0]"
+  },
+  "12": {
+   "global_id": "0Window000000000000001",
+   "path": ""
+  },
+  "2": {
+   "global_id": "0Window000000000000001",
+   "path": "OwnerHistory.OwningApplication.ApplicationDeveloper"
+  },
+  "20": {
+   "global_id": "0Window000000000000002",
+   "path": ""
+  },
+  "21": {
+   "global_id": "0Window000000000000002",
+   "path": "ObjectPlacement"
+  },
+  "22": {
+   "global_id": "0Window000000000000003",
+   "path": ""
+  },
+  "23": {
+   "global_id": "0Window000000000000003",
+   "path": "ObjectPlacement"
+  },
+  "24": {
+   "global_id": "0Window000000000000004",
+   "path": ""
+  },
+  "25": {
+   "global_id": "0Window000000000000004",
+   "path": "ObjectPlacement"
+  },
+  "26": {
+   "global_id": "0Window000000000000005",
+   "path": ""
+  },
+  "27": {
+   "global_id": "0Window000000000000006",
+   "path": ""
+  },
+  "28": {
+   "global_id": "0Window000000000000007",
+   "path": ""
+  },
+  "3": {
+   "global_id": "0Window000000000000001",
+   "path": "OwnerHistory.OwningUser"
+  },
+  "30": {
+   "global_id": "0Window000000000000010",
+   "path": ""
+  },
+  "31": {
+   "global_id": "0Window000000000000010",
+   "path": "ObjectPlacement"
+  },
+  "32": {
+   "global_id": "0Window000000000000011",
+   "path": ""
+  },
+  "33": {
+   "global_id": "0Window000000000000012",
+   "path": ""
+  },
+  "34": {
+   "global_id": "0Window000000000000013",
+   "path": ""
+  },
+  "4": {
+   "global_id": "0Window000000000000001",
+   "path": "OwnerHistory.OwningApplication"
+  },
+  "40": {
+   "global_id": "0Window000000000000020",
+   "path": ""
+  },
+  "41": {
+   "global_id": "0Window000000000000021",
+   "path": ""
+  },
+  "42": {
+   "global_id": "0Window000000000000020",
+   "path": "ObjectPlacement"
+  },
+  "43": {
+   "global_id": "0Window000000000000022",
+   "path": ""
+  },
+  "5": {
+   "global_id": "0Window000000000000001",
+   "path": "OwnerHistory"
+  },
+  "6": {
+   "global_id": "0Window000000000000001",
+   "path": "UnitsInContext.Units"
+  },
+  "7": {
+   "global_id": "0Window000000000000001",
+   "path": "UnitsInContext"
+  },
+  "8": {
+   "global_id": "0Window000000000000002",
+   "path": "ObjectPlacement.RelativePlacement.Location"
+  },
+  "9": {
+   "global_id": "0Window000000000000002",
+   "path": "ObjectPlacement.RelativePlacement"
+  }
+ },
+ "property_values": {},
+ "queries": {
+  "[\"areas\", {}]": {
+   "columns": [
+    "storey",
+    "elevation",
+    "elevation_m",
+    "elevation_source",
+    "spaces",
+    "net_floor_area"
+   ],
+   "name": "areas",
+   "rows": [
+    [
+     "Floor",
+     0.0,
+     0.0,
+     "attribute",
+     1,
+     0
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"element-classes\", {}]": {
+   "columns": [
+    "class",
+    "count"
+   ],
+   "name": "element-classes",
+   "rows": [
+    [
+     "IfcWindow",
+     1
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcProduct\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [
+    [
+     "0Window000000000000004",
+     "IfcBuildingStorey",
+     "Floor",
+     null
+    ],
+    [
+     "0Window000000000000020",
+     "IfcSpace",
+     "Room",
+     null
+    ],
+    [
+     "0Window000000000000002",
+     "IfcSite",
+     "Site",
+     null
+    ],
+    [
+     "0Window000000000000010",
+     "IfcWindow",
+     "Window",
+     "Floor"
+    ],
+    [
+     "0Window000000000000003",
+     "IfcBuilding",
+     "Windowed",
+     null
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcSpace\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [
+    [
+     "0Window000000000000020",
+     "IfcSpace",
+     "Room",
+     null
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcWall\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000001\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000001",
+     "IfcProject",
+     12,
+     {
+      "GlobalId": "0Window000000000000001",
+      "Name": "Windows",
+      "id": "m:12",
+      "ifc_class": "IfcProject",
+      "model_id": "m",
+      "step_id": 12
+     },
+     [
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000005",
+       "step_id": 26
+      },
+      {
+       "attribute": "OWNER_HISTORY",
+       "class": "IfcOwnerHistory",
+       "global_id": null,
+       "step_id": 5
+      },
+      {
+       "attribute": "REPRESENTATION_CONTEXTS",
+       "class": "IfcGeometricRepresentationContext",
+       "global_id": null,
+       "step_id": 10
+      },
+      {
+       "attribute": "UNITS_IN_CONTEXT",
+       "class": "IfcUnitAssignment",
+       "global_id": null,
+       "step_id": 7
+      }
+     ],
+     [
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000005",
+       "step_id": 26
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000002\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000002",
+     "IfcSite",
+     20,
+     {
+      "CompositionType": "ELEMENT",
+      "GlobalId": "0Window000000000000002",
+      "Name": "Site",
+      "OwnerHistory__step": 5,
+      "id": "m:20",
+      "ifc_class": "IfcSite",
+      "model_id": "m",
+      "step_id": 20
+     },
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000005",
+       "step_id": 26
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000006",
+       "step_id": 27
+      },
+      {
+       "attribute": "OBJECT_PLACEMENT",
+       "class": "IfcLocalPlacement",
+       "global_id": null,
+       "step_id": 21
+      }
+     ],
+     [
+      {
+       "attribute": "PLACES_OBJECT",
+       "class": "IfcLocalPlacement",
+       "global_id": null,
+       "step_id": 21
+      },
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000005",
+       "step_id": 26
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000006",
+       "step_id": 27
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000003\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000003",
+     "IfcBuilding",
+     22,
+     {
+      "CompositionType": "ELEMENT",
+      "GlobalId": "0Window000000000000003",
+      "Name": "Windowed",
+      "OwnerHistory__step": 5,
+      "id": "m:22",
+      "ifc_class": "IfcBuilding",
+      "model_id": "m",
+      "step_id": 22
+     },
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000006",
+       "step_id": 27
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000007",
+       "step_id": 28
+      },
+      {
+       "attribute": "OBJECT_PLACEMENT",
+       "class": "IfcLocalPlacement",
+       "global_id": null,
+       "step_id": 23
+      }
+     ],
+     [
+      {
+       "attribute": "PLACES_OBJECT",
+       "class": "IfcLocalPlacement",
+       "global_id": null,
+       "step_id": 23
+      },
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000006",
+       "step_id": 27
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000007",
+       "step_id": 28
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000004\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000004",
+     "IfcBuildingStorey",
+     24,
+     {
+      "CompositionType": "ELEMENT",
+      "Elevation": 0.0,
+      "GlobalId": "0Window000000000000004",
+      "Name": "Floor",
+      "OwnerHistory__step": 5,
+      "elevation_m": 0.0,
+      "elevation_source": "attribute",
+      "id": "m:24",
+      "ifc_class": "IfcBuildingStorey",
+      "model_id": "m",
+      "step_id": 24
+     },
+     [
+      {
+       "attribute": "CONTAINS_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Window000000000000013",
+       "step_id": 34
+      },
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000007",
+       "step_id": 28
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000021",
+       "step_id": 41
+      },
+      {
+       "attribute": "OBJECT_PLACEMENT",
+       "class": "IfcLocalPlacement",
+       "global_id": null,
+       "step_id": 25
+      }
+     ],
+     [
+      {
+       "attribute": "PLACES_OBJECT",
+       "class": "IfcLocalPlacement",
+       "global_id": null,
+       "step_id": 25
+      },
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000007",
+       "step_id": 28
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000021",
+       "step_id": 41
+      },
+      {
+       "attribute": "RELATING_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Window000000000000013",
+       "step_id": 34
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000005\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000005",
+     "IfcRelAggregates",
+     26,
+     {
+      "GlobalId": "0Window000000000000005",
+      "OwnerHistory__step": 5,
+      "id": "m:26",
+      "ifc_class": "IfcRelAggregates",
+      "model_id": "m",
+      "step_id": 26
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcSite",
+       "global_id": "0Window000000000000002",
+       "step_id": 20
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcProject",
+       "global_id": "0Window000000000000001",
+       "step_id": 12
+      }
+     ],
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcSite",
+       "global_id": "0Window000000000000002",
+       "step_id": 20
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcProject",
+       "global_id": "0Window000000000000001",
+       "step_id": 12
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000006\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000006",
+     "IfcRelAggregates",
+     27,
+     {
+      "GlobalId": "0Window000000000000006",
+      "OwnerHistory__step": 5,
+      "id": "m:27",
+      "ifc_class": "IfcRelAggregates",
+      "model_id": "m",
+      "step_id": 27
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcBuilding",
+       "global_id": "0Window000000000000003",
+       "step_id": 22
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcSite",
+       "global_id": "0Window000000000000002",
+       "step_id": 20
+      }
+     ],
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcBuilding",
+       "global_id": "0Window000000000000003",
+       "step_id": 22
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcSite",
+       "global_id": "0Window000000000000002",
+       "step_id": 20
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000007\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000007",
+     "IfcRelAggregates",
+     28,
+     {
+      "GlobalId": "0Window000000000000007",
+      "OwnerHistory__step": 5,
+      "id": "m:28",
+      "ifc_class": "IfcRelAggregates",
+      "model_id": "m",
+      "step_id": 28
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Window000000000000004",
+       "step_id": 24
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcBuilding",
+       "global_id": "0Window000000000000003",
+       "step_id": 22
+      }
+     ],
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Window000000000000004",
+       "step_id": 24
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcBuilding",
+       "global_id": "0Window000000000000003",
+       "step_id": 22
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000010\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000010",
+     "IfcWindow",
+     30,
+     {
+      "GlobalId": "0Window000000000000010",
+      "Name": "Window",
+      "OverallHeight": 1.2,
+      "OverallWidth": 1.0,
+      "OwnerHistory__step": 5,
+      "id": "m:30",
+      "ifc_class": "IfcWindow",
+      "model_id": "m",
+      "step_id": 30
+     },
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Window000000000000013",
+       "step_id": 34
+      },
+      {
+       "attribute": "IS_DEFINED_BY",
+       "class": "IfcRelDefinesByType",
+       "global_id": "0Window000000000000012",
+       "step_id": 33
+      },
+      {
+       "attribute": "OBJECT_PLACEMENT",
+       "class": "IfcLocalPlacement",
+       "global_id": null,
+       "step_id": 31
+      }
+     ],
+     [
+      {
+       "attribute": "PLACES_OBJECT",
+       "class": "IfcLocalPlacement",
+       "global_id": null,
+       "step_id": 31
+      },
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcRelContainedInSpatialStructure",
+       "global_id": "0Window000000000000013",
+       "step_id": 34
+      },
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelDefinesByType",
+       "global_id": "0Window000000000000012",
+       "step_id": 33
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000011\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000011",
+     "IfcWindowStyle",
+     32,
+     {
+      "ConstructionType": "ALUMINIUM",
+      "GlobalId": "0Window000000000000011",
+      "Name": "Casement",
+      "OperationType": "SINGLE_PANEL",
+      "OwnerHistory__step": 5,
+      "ParameterTakesPrecedence": false,
+      "Sizeable": false,
+      "id": "m:32",
+      "ifc_class": "IfcWindowStyle",
+      "model_id": "m",
+      "step_id": 32
+     },
+     [
+      {
+       "attribute": "OBJECT_TYPE_OF",
+       "class": "IfcRelDefinesByType",
+       "global_id": "0Window000000000000012",
+       "step_id": 33
+      }
+     ],
+     [
+      {
+       "attribute": "RELATING_TYPE",
+       "class": "IfcRelDefinesByType",
+       "global_id": "0Window000000000000012",
+       "step_id": 33
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000012\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000012",
+     "IfcRelDefinesByType",
+     33,
+     {
+      "GlobalId": "0Window000000000000012",
+      "OwnerHistory__step": 5,
+      "id": "m:33",
+      "ifc_class": "IfcRelDefinesByType",
+      "model_id": "m",
+      "step_id": 33
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcWindow",
+       "global_id": "0Window000000000000010",
+       "step_id": 30
+      },
+      {
+       "attribute": "RELATING_TYPE",
+       "class": "IfcWindowStyle",
+       "global_id": "0Window000000000000011",
+       "step_id": 32
+      }
+     ],
+     [
+      {
+       "attribute": "IS_DEFINED_BY",
+       "class": "IfcWindow",
+       "global_id": "0Window000000000000010",
+       "step_id": 30
+      },
+      {
+       "attribute": "OBJECT_TYPE_OF",
+       "class": "IfcWindowStyle",
+       "global_id": "0Window000000000000011",
+       "step_id": 32
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000013\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000013",
+     "IfcRelContainedInSpatialStructure",
+     34,
+     {
+      "GlobalId": "0Window000000000000013",
+      "OwnerHistory__step": 5,
+      "id": "m:34",
+      "ifc_class": "IfcRelContainedInSpatialStructure",
+      "model_id": "m",
+      "step_id": 34
+     },
+     [
+      {
+       "attribute": "RELATED_ELEMENTS",
+       "class": "IfcWindow",
+       "global_id": "0Window000000000000010",
+       "step_id": 30
+      },
+      {
+       "attribute": "RELATING_STRUCTURE",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Window000000000000004",
+       "step_id": 24
+      }
+     ],
+     [
+      {
+       "attribute": "CONTAINED_IN_STRUCTURE",
+       "class": "IfcWindow",
+       "global_id": "0Window000000000000010",
+       "step_id": 30
+      },
+      {
+       "attribute": "CONTAINS_ELEMENTS",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Window000000000000004",
+       "step_id": 24
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000020\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000020",
+     "IfcSpace",
+     40,
+     {
+      "CompositionType": "ELEMENT",
+      "GlobalId": "0Window000000000000020",
+      "InteriorOrExteriorSpace": "INTERNAL",
+      "Name": "Room",
+      "OwnerHistory__step": 5,
+      "id": "m:40",
+      "ifc_class": "IfcSpace",
+      "model_id": "m",
+      "step_id": 40
+     },
+     [
+      {
+       "attribute": "BOUNDED_BY",
+       "class": "IfcRelSpaceBoundary",
+       "global_id": "0Window000000000000022",
+       "step_id": 43
+      },
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000021",
+       "step_id": 41
+      },
+      {
+       "attribute": "OBJECT_PLACEMENT",
+       "class": "IfcLocalPlacement",
+       "global_id": null,
+       "step_id": 42
+      }
+     ],
+     [
+      {
+       "attribute": "PLACES_OBJECT",
+       "class": "IfcLocalPlacement",
+       "global_id": null,
+       "step_id": 42
+      },
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcRelAggregates",
+       "global_id": "0Window000000000000021",
+       "step_id": 41
+      },
+      {
+       "attribute": "RELATING_SPACE",
+       "class": "IfcRelSpaceBoundary",
+       "global_id": "0Window000000000000022",
+       "step_id": 43
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000021\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000021",
+     "IfcRelAggregates",
+     41,
+     {
+      "GlobalId": "0Window000000000000021",
+      "OwnerHistory__step": 5,
+      "id": "m:41",
+      "ifc_class": "IfcRelAggregates",
+      "model_id": "m",
+      "step_id": 41
+     },
+     [
+      {
+       "attribute": "RELATED_OBJECTS",
+       "class": "IfcSpace",
+       "global_id": "0Window000000000000020",
+       "step_id": 40
+      },
+      {
+       "attribute": "RELATING_OBJECT",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Window000000000000004",
+       "step_id": 24
+      }
+     ],
+     [
+      {
+       "attribute": "DECOMPOSES",
+       "class": "IfcSpace",
+       "global_id": "0Window000000000000020",
+       "step_id": 40
+      },
+      {
+       "attribute": "IS_DECOMPOSED_BY",
+       "class": "IfcBuildingStorey",
+       "global_id": "0Window000000000000004",
+       "step_id": 24
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0Window000000000000022\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0Window000000000000022",
+     "IfcRelSpaceBoundary",
+     43,
+     {
+      "GlobalId": "0Window000000000000022",
+      "InternalOrExternalBoundary": "INTERNAL",
+      "Name": "2ndLevel",
+      "OwnerHistory__step": 5,
+      "PhysicalOrVirtualBoundary": "VIRTUAL",
+      "id": "m:43",
+      "ifc_class": "IfcRelSpaceBoundary",
+      "model_id": "m",
+      "step_id": 43
+     },
+     [
+      {
+       "attribute": "RELATING_SPACE",
+       "class": "IfcSpace",
+       "global_id": "0Window000000000000020",
+       "step_id": 40
+      }
+     ],
+     [
+      {
+       "attribute": "BOUNDED_BY",
+       "class": "IfcSpace",
+       "global_id": "0Window000000000000020",
+       "step_id": 40
+      }
+     ]
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"materials\", {\"class\": \"IfcWall\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "materials"
+   ],
+   "name": "materials",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"materials\", {}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "materials"
+   ],
+   "name": "materials",
+   "rows": [
+    [
+     "0Window000000000000010",
+     "IfcWindow",
+     "Window",
+     []
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"site\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "ref_latitude",
+    "ref_longitude",
+    "ref_elevation",
+    "latitude",
+    "longitude",
+    "crs",
+    "vertical_datum",
+    "eastings",
+    "northings",
+    "orthogonal_height",
+    "x_axis_abscissa",
+    "x_axis_ordinate",
+    "scale"
+   ],
+   "name": "site",
+   "rows": [
+    [
+     "0Window000000000000002",
+     "Site",
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"spaces\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "long_name",
+    "storey",
+    "net_floor_area",
+    "gross_floor_area"
+   ],
+   "name": "spaces",
+   "rows": [
+    [
+     "0Window000000000000020",
+     "Room",
+     null,
+     "Floor",
+     null,
+     null
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"storeys\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "elevation",
+    "elevation_m",
+    "elevation_source",
+    "elements",
+    "spaces"
+   ],
+   "name": "storeys",
+   "rows": [
+    [
+     "0Window000000000000004",
+     "Floor",
+     0.0,
+     0.0,
+     "attribute",
+     1,
+     1
+    ]
+   ],
+   "truncated": false
+  }
+ },
+ "records": [
+  "{\"ifc_header\": \"[[\\\"FILE_DESCRIPTION\\\", [[\\\"ViewDefinition [CoordinationView]\\\"], \\\"2;1\\\"]], [\\\"FILE_NAME\\\", [\\\"window_style.ifc\\\", \\\"2026-11-11T00:00:00\\\", [\\\"\\\"], [\\\"\\\"], \\\"IFC-LPG tests\\\", \\\"IFC-LPG tests\\\", \\\"\\\"]], [\\\"FILE_SCHEMA\\\", [[\\\"IFC2X3\\\"]]]]\", \"schema\": \"IFC2X3\"}",
+  "{\"props\": {\"FamilyName\": \"Tester\", \"id\": \"m:1\", \"ifc_class\": \"IfcPerson\", \"model_id\": \"m\", \"step_id\": 1}, \"references\": [], \"step\": 1}",
+  "{\"props\": {\"Name\": \"IFC-LPG tests\", \"id\": \"m:2\", \"ifc_class\": \"IfcOrganization\", \"model_id\": \"m\", \"step_id\": 2}, \"references\": [], \"step\": 2}",
+  "{\"props\": {\"id\": \"m:3\", \"ifc_class\": \"IfcPersonAndOrganization\", \"model_id\": \"m\", \"step_id\": 3}, \"references\": [[\"THE_ORGANIZATION\", 0, 2], [\"THE_PERSON\", 0, 1]], \"step\": 3}",
+  "{\"props\": {\"ApplicationFullName\": \"IFC-LPG tests\", \"ApplicationIdentifier\": \"ifclpg-tests\", \"Version\": \"1\", \"id\": \"m:4\", \"ifc_class\": \"IfcApplication\", \"model_id\": \"m\", \"step_id\": 4}, \"references\": [[\"APPLICATION_DEVELOPER\", 0, 2]], \"step\": 4}",
+  "{\"props\": {\"ChangeAction\": \"ADDED\", \"CreationDate\": 1762819200, \"id\": \"m:5\", \"ifc_class\": \"IfcOwnerHistory\", \"model_id\": \"m\", \"step_id\": 5}, \"references\": [[\"OWNING_APPLICATION\", 0, 4], [\"OWNING_USER\", 0, 3]], \"step\": 5}",
+  "{\"props\": {\"Name\": \"METRE\", \"UnitType\": \"LENGTHUNIT\", \"id\": \"m:6\", \"ifc_class\": \"IfcSIUnit\", \"model_id\": \"m\", \"step_id\": 6}, \"references\": [], \"step\": 6}",
+  "{\"props\": {\"id\": \"m:7\", \"ifc_class\": \"IfcUnitAssignment\", \"model_id\": \"m\", \"step_id\": 7}, \"references\": [[\"UNITS\", 0, 6]], \"step\": 7}",
+  "{\"line\": \"#8=IFCCARTESIANPOINT((0.,0.,0.));\", \"step\": 8}",
+  "{\"props\": {\"Location__step\": 8, \"id\": \"m:9\", \"ifc_class\": \"IfcAxis2Placement3D\", \"model_id\": \"m\", \"step_id\": 9}, \"references\": [], \"step\": 9}",
+  "{\"props\": {\"ContextType\": \"Model\", \"CoordinateSpaceDimension\": 3, \"Precision\": 1e-05, \"id\": \"m:10\", \"ifc_class\": \"IfcGeometricRepresentationContext\", \"model_id\": \"m\", \"step_id\": 10}, \"references\": [[\"WORLD_COORDINATE_SYSTEM\", 0, 9]], \"step\": 10}",
+  "{\"props\": {\"ContextIdentifier\": \"Body\", \"ContextType\": \"Model\", \"TargetView\": \"MODEL_VIEW\", \"id\": \"m:11\", \"ifc_class\": \"IfcGeometricRepresentationSubContext\", \"model_id\": \"m\", \"step_id\": 11}, \"references\": [[\"PARENT_CONTEXT\", 0, 10]], \"step\": 11}",
+  "{\"props\": {\"GlobalId\": \"0Window000000000000001\", \"Name\": \"Windows\", \"id\": \"m:12\", \"ifc_class\": \"IfcProject\", \"model_id\": \"m\", \"step_id\": 12}, \"references\": [[\"OWNER_HISTORY\", 0, 5], [\"REPRESENTATION_CONTEXTS\", 0, 10], [\"UNITS_IN_CONTEXT\", 0, 7]], \"step\": 12}",
+  "{\"props\": {\"CompositionType\": \"ELEMENT\", \"GlobalId\": \"0Window000000000000002\", \"Name\": \"Site\", \"OwnerHistory__step\": 5, \"id\": \"m:20\", \"ifc_class\": \"IfcSite\", \"model_id\": \"m\", \"step_id\": 20}, \"references\": [[\"OBJECT_PLACEMENT\", 0, 21]], \"step\": 20}",
+  "{\"props\": {\"id\": \"m:21\", \"ifc_class\": \"IfcLocalPlacement\", \"model_id\": \"m\", \"step_id\": 21}, \"references\": [[\"RELATIVE_PLACEMENT\", 0, 9]], \"step\": 21}",
+  "{\"props\": {\"CompositionType\": \"ELEMENT\", \"GlobalId\": \"0Window000000000000003\", \"Name\": \"Windowed\", \"OwnerHistory__step\": 5, \"id\": \"m:22\", \"ifc_class\": \"IfcBuilding\", \"model_id\": \"m\", \"step_id\": 22}, \"references\": [[\"OBJECT_PLACEMENT\", 0, 23]], \"step\": 22}",
+  "{\"props\": {\"id\": \"m:23\", \"ifc_class\": \"IfcLocalPlacement\", \"model_id\": \"m\", \"step_id\": 23}, \"references\": [[\"PLACEMENT_REL_TO\", 0, 21], [\"RELATIVE_PLACEMENT\", 0, 9]], \"step\": 23}",
+  "{\"props\": {\"CompositionType\": \"ELEMENT\", \"Elevation\": 0.0, \"GlobalId\": \"0Window000000000000004\", \"Name\": \"Floor\", \"OwnerHistory__step\": 5, \"elevation_m\": 0.0, \"elevation_source\": \"attribute\", \"id\": \"m:24\", \"ifc_class\": \"IfcBuildingStorey\", \"model_id\": \"m\", \"step_id\": 24}, \"references\": [[\"OBJECT_PLACEMENT\", 0, 25]], \"step\": 24}",
+  "{\"props\": {\"id\": \"m:25\", \"ifc_class\": \"IfcLocalPlacement\", \"model_id\": \"m\", \"step_id\": 25}, \"references\": [[\"PLACEMENT_REL_TO\", 0, 23], [\"RELATIVE_PLACEMENT\", 0, 9]], \"step\": 25}",
+  "{\"props\": {\"GlobalId\": \"0Window000000000000005\", \"OwnerHistory__step\": 5, \"id\": \"m:26\", \"ifc_class\": \"IfcRelAggregates\", \"model_id\": \"m\", \"step_id\": 26}, \"references\": [[\"RELATED_OBJECTS\", 0, 20], [\"RELATING_OBJECT\", 0, 12]], \"step\": 26}",
+  "{\"props\": {\"GlobalId\": \"0Window000000000000006\", \"OwnerHistory__step\": 5, \"id\": \"m:27\", \"ifc_class\": \"IfcRelAggregates\", \"model_id\": \"m\", \"step_id\": 27}, \"references\": [[\"RELATED_OBJECTS\", 0, 22], [\"RELATING_OBJECT\", 0, 20]], \"step\": 27}",
+  "{\"props\": {\"GlobalId\": \"0Window000000000000007\", \"OwnerHistory__step\": 5, \"id\": \"m:28\", \"ifc_class\": \"IfcRelAggregates\", \"model_id\": \"m\", \"step_id\": 28}, \"references\": [[\"RELATED_OBJECTS\", 0, 24], [\"RELATING_OBJECT\", 0, 22]], \"step\": 28}",
+  "{\"props\": {\"GlobalId\": \"0Window000000000000010\", \"Name\": \"Window\", \"OverallHeight\": 1.2, \"OverallWidth\": 1.0, \"OwnerHistory__step\": 5, \"id\": \"m:30\", \"ifc_class\": \"IfcWindow\", \"model_id\": \"m\", \"step_id\": 30}, \"references\": [[\"OBJECT_PLACEMENT\", 0, 31]], \"step\": 30}",
+  "{\"props\": {\"id\": \"m:31\", \"ifc_class\": \"IfcLocalPlacement\", \"model_id\": \"m\", \"step_id\": 31}, \"references\": [[\"PLACEMENT_REL_TO\", 0, 25], [\"RELATIVE_PLACEMENT\", 0, 9]], \"step\": 31}",
+  "{\"props\": {\"ConstructionType\": \"ALUMINIUM\", \"GlobalId\": \"0Window000000000000011\", \"Name\": \"Casement\", \"OperationType\": \"SINGLE_PANEL\", \"OwnerHistory__step\": 5, \"ParameterTakesPrecedence\": false, \"Sizeable\": false, \"id\": \"m:32\", \"ifc_class\": \"IfcWindowStyle\", \"model_id\": \"m\", \"step_id\": 32}, \"references\": [], \"step\": 32}",
+  "{\"props\": {\"GlobalId\": \"0Window000000000000012\", \"OwnerHistory__step\": 5, \"id\": \"m:33\", \"ifc_class\": \"IfcRelDefinesByType\", \"model_id\": \"m\", \"step_id\": 33}, \"references\": [[\"RELATED_OBJECTS\", 0, 30], [\"RELATING_TYPE\", 0, 32]], \"step\": 33}",
+  "{\"props\": {\"GlobalId\": \"0Window000000000000013\", \"OwnerHistory__step\": 5, \"id\": \"m:34\", \"ifc_class\": \"IfcRelContainedInSpatialStructure\", \"model_id\": \"m\", \"step_id\": 34}, \"references\": [[\"RELATED_ELEMENTS\", 0, 30], [\"RELATING_STRUCTURE\", 0, 24]], \"step\": 34}",
+  "{\"props\": {\"CompositionType\": \"ELEMENT\", \"GlobalId\": \"0Window000000000000020\", \"InteriorOrExteriorSpace\": \"INTERNAL\", \"Name\": \"Room\", \"OwnerHistory__step\": 5, \"id\": \"m:40\", \"ifc_class\": \"IfcSpace\", \"model_id\": \"m\", \"step_id\": 40}, \"references\": [[\"OBJECT_PLACEMENT\", 0, 42]], \"step\": 40}",
+  "{\"props\": {\"GlobalId\": \"0Window000000000000021\", \"OwnerHistory__step\": 5, \"id\": \"m:41\", \"ifc_class\": \"IfcRelAggregates\", \"model_id\": \"m\", \"step_id\": 41}, \"references\": [[\"RELATED_OBJECTS\", 0, 40], [\"RELATING_OBJECT\", 0, 24]], \"step\": 41}",
+  "{\"props\": {\"id\": \"m:42\", \"ifc_class\": \"IfcLocalPlacement\", \"model_id\": \"m\", \"step_id\": 42}, \"references\": [[\"PLACEMENT_REL_TO\", 0, 25], [\"RELATIVE_PLACEMENT\", 0, 9]], \"step\": 42}",
+  "{\"props\": {\"GlobalId\": \"0Window000000000000022\", \"InternalOrExternalBoundary\": \"INTERNAL\", \"Name\": \"2ndLevel\", \"OwnerHistory__step\": 5, \"PhysicalOrVirtualBoundary\": \"VIRTUAL\", \"id\": \"m:43\", \"ifc_class\": \"IfcRelSpaceBoundary\", \"model_id\": \"m\", \"step_id\": 43}, \"references\": [[\"RELATING_SPACE\", 0, 40]], \"step\": 43}"
+ ],
+ "unreachable": []
+}

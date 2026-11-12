@@ -1,0 +1,415 @@
+{
+ "graph": {
+  "nodes": {
+   "Entity m:1": {
+    "labels": [
+     "Entity",
+     "IfcContext",
+     "IfcObjectDefinition",
+     "IfcProject",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0StyledMesh00000000001",
+     "Name": "Styled mesh",
+     "RepresentationContexts__step": [
+      10
+     ],
+     "id": "m:1",
+     "ifc_class": "IfcProject",
+     "model_id": "m",
+     "step_id": 1
+    }
+   },
+   "Entity m:2": {
+    "labels": [
+     "Entity",
+     "IfcNamedUnit",
+     "IfcSIUnit"
+    ],
+    "properties": {
+     "Name": "METRE",
+     "UnitType": "LENGTHUNIT",
+     "id": "m:2",
+     "ifc_class": "IfcSIUnit",
+     "model_id": "m",
+     "step_id": 2
+    }
+   },
+   "Entity m:20": {
+    "labels": [
+     "Entity",
+     "IfcBuildingElement",
+     "IfcBuildingElementProxy",
+     "IfcElement",
+     "IfcObject",
+     "IfcObjectDefinition",
+     "IfcProduct",
+     "IfcRoot"
+    ],
+    "properties": {
+     "GlobalId": "0StyledMesh00000000002",
+     "Name": "Mesh",
+     "ObjectPlacement__step": 21,
+     "PredefinedType": "ELEMENT",
+     "Representation__step": 22,
+     "id": "m:20",
+     "ifc_class": "IfcBuildingElementProxy",
+     "model_id": "m",
+     "step_id": 20
+    }
+   },
+   "Entity m:3": {
+    "labels": [
+     "Entity",
+     "IfcUnitAssignment"
+    ],
+    "properties": {
+     "id": "m:3",
+     "ifc_class": "IfcUnitAssignment",
+     "model_id": "m",
+     "step_id": 3
+    }
+   },
+   "Model m": {
+    "labels": [
+     "Model"
+    ],
+    "properties": {
+     "entities": 4,
+     "file_name": "styled_mesh.ifc",
+     "form_version": 2,
+     "format": "step",
+     "geometry": "blocks",
+     "id": "m",
+     "ifc_header": "[[\"FILE_DESCRIPTION\", [[\"ViewDefinition [ReferenceView]\"], \"2;1\"]], [\"FILE_NAME\", [\"styled_mesh.ifc\", \"2026-11-10T00:00:00\", [\"\"], [\"\"], \"IFC-LPG tests\", \"IFC-LPG tests\", \"\"]], [\"FILE_SCHEMA\", [[\"IFC4\"]]]]",
+     "ifc_project_guid": "0StyledMesh00000000001",
+     "lossless": true,
+     "relationships": 2,
+     "schema": "IFC4",
+     "skipped": 24,
+     "state": "done"
+    }
+   },
+   "StepBlock m:4": {
+    "labels": [
+     "StepBlock"
+    ],
+    "properties": {
+     "first_step": 4,
+     "id": "m:4",
+     "instances": 24,
+     "text": "eJx9U9uK2zAQfe9XFByQU1RjXdzdUPqg2IpXIFtGlvfyVELjh0LYQJOX/fuOJHsvTVIsYeM5M+fMGSnhP9SmLIV1slei7YxqXZrmGQ5rufz+KSk8QjyqnnZalLKRrWNVmnC8wAsfJ7kH1NI00llVWtlZ2QNIOGXa0rROPrp0gVFz2I17hBkmmfyaFzgppnzyn/x+WM8l0Pqwe0Gvdb5MD/CDkqwxldQ/75V8yGJZGspqUwr9qhtkJEUIUh/srKmG0lVyo1oV2O5EJwG0wGlCWeieMo8MgY/KUhCOZ01uPB7H/X57+n14Rj6Zx+TgLnQl2nrQwslqA0p66QBR4MCTEkwxUE2ii/NxaNV7w99NBafk7RPeJM4qFPgW5LonLSvlZOOleD03M8FNiA82CPGwFNX77fGIcLY27i7z4NtY6vZfKLhQqbYGxAoIo5GrINhoM1hbr8G7PCM+CHvlASyPTr8Zp8WTtKLvVd2GmSC9fRn/fBYo2s4npYxc7ITRJUb9+OvwvEMBRs8baran0/iuIRZHydjVhhj3DnoMP++Hz9sDeH7pwhQZDivwcHLlxuTzleH08tnkJETZeT71+XzKvn5nI388RMqWYAZUg/MBv/8CTUnxCw=="
+    }
+   }
+  },
+  "relationships": [
+   "[\"Entity m:1\", \"UNITS_IN_CONTEXT\", {\"position\": 0}, \"Entity m:3\"]",
+   "[\"Entity m:3\", \"UNITS\", {\"position\": 0}, \"Entity m:2\"]",
+   "[\"Model m\", \"HAS_PROJECT\", {}, \"Entity m:1\"]",
+   "[\"Model m\", \"HAS_STEP_BLOCK\", {}, \"StepBlock m:4\"]"
+  ]
+ },
+ "paths": {
+  "1": {
+   "global_id": "0StyledMesh00000000001",
+   "path": ""
+  },
+  "10": {
+   "global_id": "0StyledMesh00000000001",
+   "path": "RepresentationContexts"
+  },
+  "11": null,
+  "2": {
+   "global_id": "0StyledMesh00000000001",
+   "path": "UnitsInContext.Units"
+  },
+  "20": {
+   "global_id": "0StyledMesh00000000002",
+   "path": ""
+  },
+  "21": {
+   "global_id": "0StyledMesh00000000002",
+   "path": "ObjectPlacement"
+  },
+  "22": {
+   "global_id": "0StyledMesh00000000002",
+   "path": "Representation"
+  },
+  "23": null,
+  "24": null,
+  "25": null,
+  "26": null,
+  "27": null,
+  "28": null,
+  "29": null,
+  "3": {
+   "global_id": "0StyledMesh00000000001",
+   "path": "UnitsInContext"
+  },
+  "30": null,
+  "31": null,
+  "32": null,
+  "33": null,
+  "34": null,
+  "4": null,
+  "40": null,
+  "41": null,
+  "42": null,
+  "43": null,
+  "44": null,
+  "45": null,
+  "5": null
+ },
+ "property_values": {},
+ "queries": {
+  "[\"areas\", {}]": {
+   "columns": [
+    "storey",
+    "elevation",
+    "elevation_m",
+    "elevation_source",
+    "spaces",
+    "net_floor_area"
+   ],
+   "name": "areas",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"element-classes\", {}]": {
+   "columns": [
+    "class",
+    "count"
+   ],
+   "name": "element-classes",
+   "rows": [
+    [
+     "IfcBuildingElementProxy",
+     1
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcProduct\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [
+    [
+     "0StyledMesh00000000002",
+     "IfcBuildingElementProxy",
+     "Mesh",
+     null
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcSpace\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"elements\", {\"class\": \"IfcWall\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "container"
+   ],
+   "name": "elements",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0StyledMesh00000000001\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0StyledMesh00000000001",
+     "IfcProject",
+     1,
+     {
+      "GlobalId": "0StyledMesh00000000001",
+      "Name": "Styled mesh",
+      "RepresentationContexts__step": [
+       10
+      ],
+      "id": "m:1",
+      "ifc_class": "IfcProject",
+      "model_id": "m",
+      "step_id": 1
+     },
+     [
+      {
+       "attribute": "UNITS_IN_CONTEXT",
+       "class": "IfcUnitAssignment",
+       "global_id": null,
+       "step_id": 3
+      }
+     ],
+     []
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"entity\", {\"global_id\": \"0StyledMesh00000000002\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "step_id",
+    "attributes",
+    "references",
+    "referenced_by"
+   ],
+   "name": "entity",
+   "rows": [
+    [
+     "0StyledMesh00000000002",
+     "IfcBuildingElementProxy",
+     20,
+     {
+      "GlobalId": "0StyledMesh00000000002",
+      "Name": "Mesh",
+      "ObjectPlacement__step": 21,
+      "PredefinedType": "ELEMENT",
+      "Representation__step": 22,
+      "id": "m:20",
+      "ifc_class": "IfcBuildingElementProxy",
+      "model_id": "m",
+      "step_id": 20
+     },
+     [],
+     []
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"materials\", {\"class\": \"IfcWall\"}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "materials"
+   ],
+   "name": "materials",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"materials\", {}]": {
+   "columns": [
+    "global_id",
+    "class",
+    "name",
+    "materials"
+   ],
+   "name": "materials",
+   "rows": [
+    [
+     "0StyledMesh00000000002",
+     "IfcBuildingElementProxy",
+     "Mesh",
+     []
+    ]
+   ],
+   "truncated": false
+  },
+  "[\"site\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "ref_latitude",
+    "ref_longitude",
+    "ref_elevation",
+    "latitude",
+    "longitude",
+    "crs",
+    "vertical_datum",
+    "eastings",
+    "northings",
+    "orthogonal_height",
+    "x_axis_abscissa",
+    "x_axis_ordinate",
+    "scale"
+   ],
+   "name": "site",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"spaces\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "long_name",
+    "storey",
+    "net_floor_area",
+    "gross_floor_area"
+   ],
+   "name": "spaces",
+   "rows": [],
+   "truncated": false
+  },
+  "[\"storeys\", {}]": {
+   "columns": [
+    "global_id",
+    "name",
+    "elevation",
+    "elevation_m",
+    "elevation_source",
+    "elements",
+    "spaces"
+   ],
+   "name": "storeys",
+   "rows": [],
+   "truncated": false
+  }
+ },
+ "records": [
+  "{\"ifc_header\": \"[[\\\"FILE_DESCRIPTION\\\", [[\\\"ViewDefinition [ReferenceView]\\\"], \\\"2;1\\\"]], [\\\"FILE_NAME\\\", [\\\"styled_mesh.ifc\\\", \\\"2026-11-10T00:00:00\\\", [\\\"\\\"], [\\\"\\\"], \\\"IFC-LPG tests\\\", \\\"IFC-LPG tests\\\", \\\"\\\"]], [\\\"FILE_SCHEMA\\\", [[\\\"IFC4\\\"]]]]\", \"schema\": \"IFC4\"}",
+  "{\"props\": {\"GlobalId\": \"0StyledMesh00000000001\", \"Name\": \"Styled mesh\", \"RepresentationContexts__step\": [10], \"id\": \"m:1\", \"ifc_class\": \"IfcProject\", \"model_id\": \"m\", \"step_id\": 1}, \"references\": [[\"UNITS_IN_CONTEXT\", 0, 3]], \"step\": 1}",
+  "{\"props\": {\"Name\": \"METRE\", \"UnitType\": \"LENGTHUNIT\", \"id\": \"m:2\", \"ifc_class\": \"IfcSIUnit\", \"model_id\": \"m\", \"step_id\": 2}, \"references\": [], \"step\": 2}",
+  "{\"props\": {\"id\": \"m:3\", \"ifc_class\": \"IfcUnitAssignment\", \"model_id\": \"m\", \"step_id\": 3}, \"references\": [[\"UNITS\", 0, 2]], \"step\": 3}",
+  "{\"line\": \"#4=IFCCARTESIANPOINT((0.,0.,0.));\", \"step\": 4}",
+  "{\"line\": \"#5=IFCAXIS2PLACEMENT3D(#4,$,$);\", \"step\": 5}",
+  "{\"line\": \"#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#5,$);\", \"step\": 10}",
+  "{\"line\": \"#11=IFCGEOMETRICREPRESENTATIONSUBCONTEXT('Body','Model',*,*,*,*,#10,$,.MODEL_VIEW.,$);\", \"step\": 11}",
+  "{\"props\": {\"GlobalId\": \"0StyledMesh00000000002\", \"Name\": \"Mesh\", \"ObjectPlacement__step\": 21, \"PredefinedType\": \"ELEMENT\", \"Representation__step\": 22, \"id\": \"m:20\", \"ifc_class\": \"IfcBuildingElementProxy\", \"model_id\": \"m\", \"step_id\": 20}, \"references\": [], \"step\": 20}",
+  "{\"line\": \"#21=IFCLOCALPLACEMENT($,#5);\", \"step\": 21}",
+  "{\"line\": \"#22=IFCPRODUCTDEFINITIONSHAPE($,$,(#23));\", \"step\": 22}",
+  "{\"line\": \"#23=IFCSHAPEREPRESENTATION(#11,'Body','Tessellation',(#24));\", \"step\": 23}",
+  "{\"line\": \"#24=IFCTRIANGULATEDFACESET(#25,$,$,((1,2,3)),$);\", \"step\": 24}",
+  "{\"line\": \"#25=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(1.,0.,0.),(0.,1.,0.)));\", \"step\": 25}",
+  "{\"line\": \"#26=IFCSTYLEDITEM(#24,(#27),$);\", \"step\": 26}",
+  "{\"line\": \"#27=IFCSURFACESTYLE('Glass',.BOTH.,(#28));\", \"step\": 27}",
+  "{\"line\": \"#28=IFCSURFACESTYLESHADING(#29,0.5);\", \"step\": 28}",
+  "{\"line\": \"#29=IFCCOLOURRGB($,0.1,0.5,0.9);\", \"step\": 29}",
+  "{\"line\": \"#30=IFCPRESENTATIONLAYERASSIGNMENT('Layer A',$,(#24),$);\", \"step\": 30}",
+  "{\"line\": \"#31=IFCSTYLEDITEM(#24,(#32),'Second');\", \"step\": 31}",
+  "{\"line\": \"#32=IFCSURFACESTYLE('Matte',.BOTH.,(#33));\", \"step\": 32}",
+  "{\"line\": \"#33=IFCSURFACESTYLESHADING(#34,0.);\", \"step\": 33}",
+  "{\"line\": \"#34=IFCCOLOURRGB($,0.4,0.4,0.4);\", \"step\": 34}",
+  "{\"line\": \"#40=IFCCARTESIANPOINT((5.,5.,5.));\", \"step\": 40}",
+  "{\"line\": \"#41=IFCAXIS2PLACEMENT3D(#40,$,$);\", \"step\": 41}",
+  "{\"line\": \"#42=IFCLOCALPLACEMENT($,#41);\", \"step\": 42}",
+  "{\"line\": \"#43=IFCAXIS2PLACEMENT2D(#44,$);\", \"step\": 43}",
+  "{\"line\": \"#44=IFCCARTESIANPOINT((0.,0.));\", \"step\": 44}",
+  "{\"line\": \"#45=IFCCIRCLE(#43,1.);\", \"step\": 45}"
+ ],
+ "unreachable": []
+}
