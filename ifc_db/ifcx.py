@@ -39,8 +39,8 @@ from typing import Any
 from ifc_db.exporter import PAGE
 from ifc_db.files import DEFAULT_LIMITS, Limits, _now, run_worker
 from ifc_db.graph import FORM_VERSION, Graph, is_whole
-from ifc_db.importer import BATCH, MAX_BATCH_BYTES
 from ifc_db.lossless import NATIVE
+from ifc_db.records import BATCH, MAX_BATCH_BYTES
 
 MAX_BYTES = 256 * 1024 * 1024
 MAX_DEPTH = 32

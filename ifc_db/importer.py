@@ -3,18 +3,14 @@
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from ifc_db.graph import FORM_VERSION, Graph, is_whole
-from ifc_db.lossless import POINTS
-from ifc_db.schema import relationship_type
+from ifc_db.records import BATCH, Block, NewEntity, Reference, read_records
 from ifc_db.schema import safe_identifier as _safe
 
-BATCH = 2_000
-MAX_BATCH_BYTES = 16 * 1024 * 1024  # a coordinate list can be megabytes, and a transaction's memory has a limit
 BLOCK_BATCH = 100
 # A row of a list of points, built in Cypher, since the records are JSON and the package needs no driver of its own.
 _POINT = "CASE size(p) WHEN 2 THEN point({x: p[0], y: p[1]}) ELSE point({x: p[0], y: p[1], z: p[2]}) END"
@@ -52,91 +48,12 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
     )
     header: dict[str, Any] = {}
     nodes = relationships = 0
-    block_rows: list[dict[str, Any]] = []
-    node_groups: dict[tuple[tuple[str, ...], tuple[str, ...]], list[dict[str, Any]]] = {}
-    edge_groups: dict[tuple[str, bool], list[dict[str, Any]]] = {}
-
-    async def flush_nodes() -> None:
-        nonlocal nodes
-        for (labels, point_keys), rows in node_groups.items():
-            label_clause = ":".join(["Entity", *labels])
-            points = "".join(
-                f", n.{_safe(key)} = [p IN row.points.{_safe(key)} | " + _POINT + "]" for key in point_keys
-            )
-            # The node is new, so adding the properties gives what replacing them would, and no database then has
-            # to take the rest of the clause in a given order: one that replaced last left the node without its id.
-            await graph.run(
-                f"UNWIND $rows AS row CREATE (n:{label_clause}) SET n += row.props, n.id = row.id, "
-                f"n.step_id = row.step, n.model_id = $model_id{points}",
-                rows=rows,
-                model_id=model_id,
-            )
-            nodes += len(rows)
-        node_groups.clear()
-        if block_rows:
-            await graph.run(
-                """
-                MATCH (m:Model {id: $model_id})
-                UNWIND $rows AS row
-                CREATE (m)-[:HAS_STEP_BLOCK]->(:StepBlock {
-                    id: $model_id + ':' + toString(row.first), first_step: row.first, instances: row.instances,
-                    text: row.text
-                })
-                """,
-                model_id=model_id,
-                rows=block_rows,
-            )
-            block_rows.clear()
-
-    async def flush_edges() -> None:
-        nonlocal relationships
-        for (rel_type, positioned), rows in edge_groups.items():
-            relationship = f"{rel_type} {{position: row.position}}" if positioned else rel_type
-            await graph.run(
-                f"UNWIND $rows AS row MATCH (a:Entity {{id: row.a}}), (b:Entity {{id: row.b}}) "
-                f"CREATE (a)-[:{relationship}]->(b)",
-                rows=rows,
-            )
-            relationships += len(rows)
-        edge_groups.clear()
-
-    pending = pending_bytes = 0
-    with records_path.open(encoding="utf-8") as handle:
-        for line in handle:
-            record = json.loads(line)
-            kind = record["t"]
-            if kind == "n":
-                labels = tuple(_safe(label) for label in record["labels"])
-                props = record["props"]
-                points = {
-                    key: value[POINTS] for key, value in props.items() if isinstance(value, dict) and POINTS in value
-                }
-                if points:
-                    props = {key: value for key, value in props.items() if key not in points}
-                node_groups.setdefault((labels, tuple(sorted(points))), []).append(
-                    {"id": f"{model_id}:{record['step']}", "step": record["step"], "props": props, "points": points}
-                )
-            elif kind == "g":
-                block_rows.append({key: record[key] for key in ("first", "instances", "text")})
-            elif kind == "e":
-                position = record.get("position")
-                row = {"a": f"{model_id}:{record['a']}", "b": f"{model_id}:{record['b']}"}
-                if position is not None:
-                    row["position"] = position
-                edge_groups.setdefault((relationship_type(record["type"]), position is not None), []).append(row)
-            else:
-                if kind == "h":
-                    header = record
-                await flush_nodes()  # the header separates nodes from edges
-                continue
-            pending += 1
-            pending_bytes += len(line)
-            if pending >= BATCH or pending_bytes >= MAX_BATCH_BYTES:
-                await flush_nodes()
-                await flush_edges()
-                pending = pending_bytes = 0
-    await flush_nodes()
-    await flush_edges()
+    for batch in read_records(records_path):
+        nodes += await _add_entities(graph, model_id, batch.entities)
+        await _add_blocks(graph, model_id, batch.blocks)
+        relationships += await _add_references(graph, model_id, batch.references)
+        if batch.header is not None:
+            header = batch.header
     await graph.run(
         """
         MATCH (m:Model {id: $model_id}), (p:Entity:IfcProject {model_id: $model_id})
@@ -159,6 +76,62 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
     }
     await graph.run("MATCH (m:Model {id: $model_id}) SET m += $facts", model_id=model_id, facts=facts)
     return {"nodes": nodes, "relationships": relationships, **facts}
+
+
+async def _add_entities(graph: Graph, model_id: str, entities: list[NewEntity]) -> int:
+    """One statement for each set of labels and of properties that are lists of points."""
+    groups: dict[tuple[tuple[str, ...], tuple[str, ...]], list[dict[str, Any]]] = {}
+    for entity in entities:
+        labels = tuple(_safe(label) for label in entity.labels)
+        groups.setdefault((labels, tuple(sorted(entity.points))), []).append(
+            {"id": f"{model_id}:{entity.step}", "step": entity.step, "props": entity.props, "points": entity.points}
+        )
+    for (labels, point_keys), rows in groups.items():
+        label_clause = ":".join(["Entity", *labels])
+        points = "".join(f", n.{_safe(key)} = [p IN row.points.{_safe(key)} | " + _POINT + "]" for key in point_keys)
+        # The node is new, so adding the properties gives what replacing them would, and no database then has to take
+        # the rest of the clause in a given order: one that replaced last left the node without its id.
+        await graph.run(
+            f"UNWIND $rows AS row CREATE (n:{label_clause}) SET n += row.props, n.id = row.id, "
+            f"n.step_id = row.step, n.model_id = $model_id{points}",
+            rows=rows,
+            model_id=model_id,
+        )
+    return len(entities)
+
+
+async def _add_blocks(graph: Graph, model_id: str, blocks: list[Block]) -> None:
+    if blocks:
+        await graph.run(
+            """
+            MATCH (m:Model {id: $model_id})
+            UNWIND $rows AS row
+            CREATE (m)-[:HAS_STEP_BLOCK]->(:StepBlock {
+                id: $model_id + ':' + toString(row.first), first_step: row.first, instances: row.instances,
+                text: row.text
+            })
+            """,
+            model_id=model_id,
+            rows=[{"first": block.first, "instances": block.instances, "text": block.text} for block in blocks],
+        )
+
+
+async def _add_references(graph: Graph, model_id: str, references: list[Reference]) -> int:
+    """One statement for each type of relationship, with its position or, for an inverse one, without."""
+    groups: dict[tuple[str, bool], list[dict[str, Any]]] = {}
+    for reference in references:
+        row: dict[str, Any] = {"a": f"{model_id}:{reference.a}", "b": f"{model_id}:{reference.b}"}
+        if reference.position is not None:
+            row["position"] = reference.position
+        groups.setdefault((reference.type, reference.position is not None), []).append(row)
+    for (rel_type, positioned), rows in groups.items():
+        relationship = f"{rel_type} {{position: row.position}}" if positioned else rel_type
+        await graph.run(
+            f"UNWIND $rows AS row MATCH (a:Entity {{id: row.a}}), (b:Entity {{id: row.b}}) "
+            f"CREATE (a)-[:{relationship}]->(b)",
+            rows=rows,
+        )
+    return len(references)
 
 
 async def model_facts(graph: Graph, model_id: str) -> dict[str, Any] | None:
