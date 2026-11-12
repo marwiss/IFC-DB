@@ -1,20 +1,37 @@
 # This file was generated with the assistance of an AI coding tool.
-"""Grafeo: a model in GQL (ISO/IEC 39075), over Bolt with Neo4j's driver.
+"""Grafeo: a model in GQL (ISO/IEC 39075), over Grafeo's HTTP API with Python's standard library.
 
-Grafeo's server reads every statement that comes over Bolt as GQL, so the official driver (the ``neo4j`` extra) is all
-it takes. The graph has Neo4j's shape: ``Entity`` nodes with the class and its supertypes as labels, references as
-relationships with their ``position``, blocks as ``StepBlock`` nodes, and the record as a ``Model``. Grafeo has no
-points, so a row of points is a list of lists of numbers, which is what an export gives for Neo4j's points too.
+Each statement is a ``POST /query`` on one connection that stays open between statements. Grafeo's Bolt server waits
+about 45 ms on every statement, since it does not set TCP_NODELAY; Bolt, with Neo4j's driver, comes back when that is
+mended. HTTPS is the rule: an ``https://`` address always has its certificate checked, against the system's
+authorities or a given CA file, and credentials (Grafeo's token, or a user and a password) go only over HTTPS, or over
+HTTP to this machine.
 
-Every value goes as a parameter, numbers above all: a literal with a decimal point is an exact DECIMAL in GQL. Labels
-and relationship types are checked as identifiers and quoted. The schema is constraints and indexes in the default
-graph, with no graph type: a graph type that names a node type takes the type out of the default graph (Grafeo's #730
-and #764).
+The graph has Neo4j's shape: ``Entity`` nodes with the class and its supertypes as labels, references as relationships
+with their ``position``, blocks as ``StepBlock`` nodes, and the record as a ``Model``. Grafeo has no points, so a row of
+points is a list of lists of numbers, which is what an export gives for Neo4j's points too. Every value is a parameter,
+in the tagged form of Grafeo's values (``{"Float64": 1.0}``), so that a number keeps its type: a literal with a decimal
+point is an exact DECIMAL in GQL. An answer's DECIMAL is a :class:`decimal.Decimal`, and any other value JSON has no
+form for a :class:`Native`. Labels and relationship types are checked as identifiers and quoted. The schema is
+constraints and indexes in the default graph, with no graph type: a graph type that names a node type takes the type
+out of the default graph (Grafeo's #730 and #764).
 """
 
 from __future__ import annotations
 
+import asyncio
+import base64
+import decimal
+import http.client
+import ipaddress
+import json
+import re
+import ssl
+import time
+import urllib.parse
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, ClassVar
 
 from ifc_db.backends.base import Backend
@@ -22,7 +39,202 @@ from ifc_db.graph import INDEXED, UNIQUE
 from ifc_db.records import BATCH, Block, NewEntity, Reference
 from ifc_db.schema import safe_identifier
 
+MAX_BODY = 2 * 1024 * 1024  # the largest request Grafeo takes unless it is started with a larger --max-body-size
+IDLE_SECONDS = 15.0  # a connection that has stood idle longer is opened anew, before the server closes it
 BLOCK_BATCH = 100  # blocks are deleted a few at a time, for each holds a lot of text
+_CODE = re.compile(r"GRAFEO-[A-Z]+[0-9]+")
+
+
+class GrafeoError(RuntimeError):
+    """Grafeo refused a statement, or gave no answer. ``status`` is the HTTP status, None without an answer, and
+    ``code`` Grafeo's own code, such as ``GRAFEO-Q001``, when it gave one."""
+
+    def __init__(self, message: str, *, status: int | None = None, code: str | None = None) -> None:
+        super().__init__(message)
+        self.status = status
+        self.code = code
+
+
+class ConstraintViolation(GrafeoError):
+    """A constraint of the schema refused the change: a value that must be unique or given, or of a type."""
+
+
+@dataclass(frozen=True)
+class Native:
+    """A value of Grafeo's that JSON has no form for, as an answer gives it (``{"$kind": value}``)."""
+
+    kind: str
+    value: Any
+
+
+def tagged(value: Any) -> Any:
+    """A Python value as Grafeo's HTTP API reads a parameter."""
+    if value is None:
+        return "Null"
+    if isinstance(value, bool):
+        return {"Bool": value}
+    if isinstance(value, int):
+        return {"Int64": value}
+    if isinstance(value, float):
+        return {"Float64": value}
+    if isinstance(value, str):
+        return {"String": value}
+    if isinstance(value, list | tuple):
+        return {"List": [tagged(item) for item in value]}
+    if isinstance(value, Mapping):
+        return {"Map": {key: tagged(item) for key, item in value.items()}}
+    raise TypeError(f"Grafeo has no parameter for a {type(value).__name__}")
+
+
+def plain(value: Any) -> Any:
+    """A value of an answer as Python has it."""
+    if isinstance(value, list):
+        return [plain(item) for item in value]
+    if isinstance(value, dict):
+        if len(value) == 1:
+            ((key, item),) = value.items()
+            if key == "$decimal":
+                return decimal.Decimal(item)
+            if key.startswith("$"):
+                return Native(key[1:], item)
+        return {key: plain(item) for key, item in value.items()}
+    return value
+
+
+def rows_of(status: int, answer: bytes) -> list[dict[str, Any]]:
+    """The rows of an answer as dicts, or the refusal as an error."""
+    if status != 200:
+        text = answer.decode("utf-8", "replace")
+        try:
+            refusal = json.loads(text)
+            text = str(refusal.get("detail") or refusal.get("error"))
+        except (ValueError, AttributeError):
+            pass
+        if status == 413:
+            text += "; Grafeo takes larger statements when it is started with a larger --max-body-size"
+        code = _CODE.search(text)
+        kind = ConstraintViolation if "constraint violation" in text.lower() else GrafeoError
+        raise kind(f"Grafeo answered {status}: {text[:500]}", status=status, code=code.group() if code else None)
+    result = json.loads(answer)
+    columns = result["columns"]
+    return [dict(zip(columns, map(plain, row), strict=True)) for row in result["rows"]]
+
+
+def _loopback(host: str) -> bool:
+    try:
+        return host == "localhost" or ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def _json(value: Any) -> bytes:
+    return json.dumps(value, ensure_ascii=False, allow_nan=False).encode("utf-8")
+
+
+class _Http:
+    """One connection to Grafeo's HTTP API, opened anew when it has stood idle or broken."""
+
+    def __init__(
+        self,
+        url: str,
+        *,
+        token: str | None,
+        user: str | None,
+        password: str | None,
+        ca_file: str | Path | None,
+        timeout: float,
+        max_body: int,
+    ) -> None:
+        parts = urllib.parse.urlsplit(url)
+        if parts.username is not None or parts.password is not None:
+            raise ValueError("credentials go as a token or a user and a password, not in the address")
+        if parts.scheme not in ("http", "https") or not parts.hostname:
+            raise ValueError(f"not an http:// or https:// address: {parts.scheme}://{parts.netloc}")
+        if token is not None and user is not None:
+            raise ValueError("a token, or a user and a password, not both")
+        if (user is None) != (password is None):
+            raise ValueError("a user needs a password, and a password a user")
+        secure = parts.scheme == "https"
+        if not secure and (token is not None or user is not None) and not _loopback(parts.hostname):
+            raise ValueError("credentials go only over HTTPS, or over HTTP to this machine")
+        if not secure and ca_file is not None:
+            raise ValueError("a CA file is for an https:// address")
+        self.address = f"{parts.scheme}://{parts.netloc}"
+        self._host, self._port, self._path = parts.hostname, parts.port, parts.path.rstrip("/") + "/query"
+        self._context = ssl.create_default_context(cafile=ca_file) if secure else None
+        self._headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        if token is not None:
+            self._headers["Authorization"] = f"Bearer {token}"
+        elif user is not None:
+            pair = base64.b64encode(f"{user}:{password}".encode()).decode("ascii")
+            self._headers["Authorization"] = f"Basic {pair}"
+        self._timeout, self.max_body = timeout, max_body
+        self._connection: http.client.HTTPConnection | None = None
+        self._used = 0.0
+        self._lock = asyncio.Lock()
+
+    async def query(
+        self, statement: str, params: Mapping[str, Any], rows: Sequence[Any] | None = None
+    ) -> list[dict[str, Any]]:
+        """The rows of a statement. ``rows``, the parameter ``$rows``, may be sent in parts, each a statement of its
+        own, so that no request is larger than ``max_body``; a single row that is larger goes alone."""
+        values = {key: tagged(value) for key, value in params.items()}
+        if rows is None:
+            return await self._send(self._body(statement, values))
+        head, _, tail = self._body(statement, {**values, "rows": {"List": []}}).rpartition(b"[]")
+        found: list[dict[str, Any]] = []
+        part: list[bytes] = []
+        size = len(head) + len(tail) + 2
+        for row in rows:
+            piece = _json(tagged(row))
+            if part and size + len(piece) + 1 > self.max_body:
+                found += await self._send(head + b"[" + b",".join(part) + b"]" + tail)
+                part, size = [], len(head) + len(tail) + 2
+            part.append(piece)
+            size += len(piece) + 1
+        if part:
+            found += await self._send(head + b"[" + b",".join(part) + b"]" + tail)
+        return found
+
+    def _body(self, statement: str, values: Mapping[str, Any]) -> bytes:
+        timeout_ms = int(self._timeout * 1000)
+        return _json({"query": statement, "language": "gql", "timeout_ms": timeout_ms, "params": values})
+
+    async def _send(self, body: bytes) -> list[dict[str, Any]]:
+        async with self._lock:
+            status, answer = await asyncio.to_thread(self._post, body)
+        return rows_of(status, answer)
+
+    def _post(self, body: bytes) -> tuple[int, bytes]:
+        if self._connection is not None and time.monotonic() - self._used > IDLE_SECONDS:
+            self.close()
+        if self._connection is None:
+            if self._context is None:
+                self._connection = http.client.HTTPConnection(self._host, self._port, timeout=self._timeout)
+            else:
+                self._connection = http.client.HTTPSConnection(
+                    self._host, self._port, timeout=self._timeout, context=self._context
+                )
+        try:
+            self._connection.request("POST", self._path, body=body, headers=self._headers)
+            response = self._connection.getresponse()
+            answer = response.read()
+        except ssl.SSLCertVerificationError as exc:
+            self.close()
+            raise GrafeoError(f"the certificate of {self.address} is not trusted: {exc.verify_message}") from exc
+        except (OSError, http.client.HTTPException) as exc:
+            self.close()
+            message = f"no answer from {self.address}, so the statement may not have been carried out: {exc}"
+            raise GrafeoError(message) from exc
+        self._used = time.monotonic()
+        if response.will_close:
+            self.close()
+        return response.status, answer
+
+    def close(self) -> None:
+        if self._connection is not None:
+            self._connection.close()
+            self._connection = None
 
 
 def _name(name: str) -> str:
@@ -44,20 +256,43 @@ def schema_statements() -> list[str]:
 
 
 class GrafeoBackend(Backend):
-    """A Grafeo server, through the official async driver (``neo4j.AsyncGraphDatabase.driver``)."""
+    """A Grafeo server at ``url``, ``https://…`` or ``http://…``, with Grafeo's ``token`` or a ``user`` and
+    ``password`` if it asks for them. ``ca_file`` holds the authorities that an HTTPS server's certificate is checked
+    against, in place of the system's. ``max_body`` is the largest request the server takes."""
 
     name: ClassVar[str] = "grafeo"
 
-    def __init__(self, driver: Any, database: str | None = None) -> None:
-        self.driver = driver
-        self.database = database
+    def __init__(
+        self,
+        url: str,
+        *,
+        token: str | None = None,
+        user: str | None = None,
+        password: str | None = None,
+        ca_file: str | Path | None = None,
+        timeout: float = 300.0,
+        max_body: int = MAX_BODY,
+    ) -> None:
+        self._http = _Http(
+            url, token=token, user=user, password=password, ca_file=ca_file, timeout=timeout, max_body=max_body
+        )
+
+    async def close(self) -> None:
+        self._http.close()
+
+    async def __aenter__(self) -> GrafeoBackend:
+        return self
+
+    async def __aexit__(self, *_exc: object) -> None:
+        await self.close()
 
     async def run(self, statement: str, /, **params: Any) -> list[dict[str, Any]]:
-        """A GQL statement in a transaction of its own, with its values as parameters. Returns the rows as dicts."""
-        records, _summary, _keys = await self.driver.execute_query(
-            statement, parameters_=params, database_=self.database
-        )
-        return [record.data() for record in records]
+        """A GQL statement with its values as parameters, committed on its own. Returns the rows as dicts."""
+        return await self._http.query(statement, params)
+
+    async def _each(self, statement: str, rows: Sequence[Any], **params: Any) -> None:
+        """A statement over ``$rows``, sent in as many parts as the server's limit asks for."""
+        await self._http.query(statement, params, rows)
 
     async def ensure_schema(self) -> None:
         """Make the constraints and indexes that are not there yet."""
@@ -101,8 +336,7 @@ class GrafeoBackend(Backend):
         await self._update(model_id, facts, ())
 
     async def _update(self, model_id: str, facts: Mapping[str, Any], remove: Iterable[str]) -> None:
-        """Set ``facts`` on the record and take ``remove`` away. A fact that is None is taken away too, as Neo4j
-        does with ``SET m += $facts``, so that the record has the same keys in both."""
+        """Set ``facts`` on the record, and take ``remove`` away and every fact that is None."""
         gone = sorted({*remove, *(key for key, value in facts.items() if value is None)})
         kept = {key: value for key, value in facts.items() if value is not None}
         removal = f" REMOVE {', '.join(f'm.{_name(key)}' for key in gone)}" if gone else ""
@@ -118,29 +352,32 @@ class GrafeoBackend(Backend):
             groups.setdefault(entity.labels, []).append({**entity.props, **entity.points, **keys})
         for labels, rows in groups.items():
             label_set = "&".join(_name(label) for label in ("Entity", *labels))
-            await self.run(f"FOR row IN $rows INSERT (n:{label_set}) SET n += row", rows=rows)
+            await self._each(f"FOR row IN $rows INSERT (n:{label_set}) SET n += row", rows)
 
     async def add_blocks(self, model_id: str, blocks: Sequence[Block]) -> None:
-        if blocks:
-            await self.run(
-                """
-                MATCH (m:Model {id: $model_id})
-                FOR row IN $rows
-                INSERT (m)-[:HAS_STEP_BLOCK]->(:StepBlock {
-                    id: row.id, first_step: row.first, instances: row.instances, text: row.text
-                })
-                """,
-                model_id=model_id,
-                rows=[
-                    {
-                        "id": f"{model_id}:{block.first}",
-                        "first": block.first,
-                        "instances": block.instances,
-                        "text": block.text,
-                    }
-                    for block in blocks
-                ],
-            )
+        """A text too long for one request goes in pieces, each added to what the block holds."""
+        piece = self._http.max_body // 2
+        await self._each(
+            """
+            MATCH (m:Model {id: $model_id})
+            FOR row IN $rows
+            INSERT (m)-[:HAS_STEP_BLOCK]->(:StepBlock {
+                id: row.id, first_step: row.first, instances: row.instances, text: row.text
+            })
+            """,
+            [
+                {"id": f"{model_id}:{b.first}", "first": b.first, "instances": b.instances, "text": b.text[:piece]}
+                for b in blocks
+            ],
+            model_id=model_id,
+        )
+        for block in blocks:
+            for start in range(piece, len(block.text), piece):
+                await self.run(
+                    "MATCH (b:StepBlock {id: $id}) SET b.text = b.text || $piece",
+                    id=f"{model_id}:{block.first}",
+                    piece=block.text[start : start + piece],
+                )
 
     async def add_references(self, model_id: str, references: Sequence[Reference]) -> None:
         """One statement for each type of relationship, with its position or, for an inverse one, without."""
@@ -150,10 +387,10 @@ class GrafeoBackend(Backend):
             groups.setdefault((reference.type, reference.position is not None), []).append(row)
         for (kind, positioned), rows in groups.items():
             position = " {position: row.position}" if positioned else ""
-            await self.run(
+            await self._each(
                 "FOR row IN $rows MATCH (a:Entity {id: row.a}), (b:Entity {id: row.b}) "
                 f"INSERT (a)-[:{_name(kind)}{position}]->(b)",
-                rows=rows,
+                rows,
             )
 
     async def link_project(self, model_id: str) -> None:
