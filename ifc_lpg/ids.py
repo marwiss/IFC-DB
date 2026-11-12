@@ -15,6 +15,7 @@ answer is JSON on stdout in the shape of ``validation.py``'s report, with a summ
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import sys
 from collections.abc import Iterator
@@ -60,16 +61,25 @@ def read_ids(data: bytes) -> Any:
         raise InvalidIds(f"larger than {MAX_IDS_BYTES // (1024 * 1024)} MB")
     try:
         root = SafeElementTree.fromstring(data, forbid_dtd=True)
+        # An element keeps no prefixes, but an IDS has them in its values too (base="xs:string"), so the check is
+        # given the document's own declarations.
+        declared = {
+            prefix: uri
+            for _event, (prefix, uri) in SafeElementTree.iterparse(
+                io.BytesIO(data), events=("start-ns",), forbid_dtd=True
+            )
+        }
     except DefusedXmlException as exc:
         raise InvalidIds(f"it has a DTD or an entity, which an IDS has no use for ({type(exc).__name__})") from None
     except SafeElementTree.ParseError as exc:
         raise InvalidIds(f"not XML: {exc}"[:MAX_MESSAGE]) from None
     schema = ids_schema()
-    error = next(iter(schema.iter_errors(root)), None)
+    namespaces = {**declared, "": IDS_NAMESPACE}
+    error = next(iter(schema.iter_errors(root, namespaces=namespaces)), None)
     if error is not None:
         raise InvalidIds(f"not valid against IDS 1.0: {getattr(error, 'reason', None) or error}"[:MAX_MESSAGE])
     try:
-        decoded = schema.decode(root, strip_namespaces=True, namespaces={"": IDS_NAMESPACE})
+        decoded = schema.decode(root, strip_namespaces=True, namespaces=namespaces)
         requirements = ifctester_ids.Ids().parse(decoded)
         # IfcTester 0.9.0 leaves out the identifier IDS 1.0 gives a specification; it is read here, in the same order.
         listed = decoded["specifications"]["specification"]

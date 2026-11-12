@@ -55,6 +55,25 @@ def test_a_file_against_an_ids() -> None:
     assert not report["truncated"] and report["rules_not_run"] == []
 
 
+def test_an_ids_with_a_restriction_is_read_and_run(tmp_path: Path) -> None:
+    """A value may be an XML Schema restriction, whose base is a name with the document's prefix for XML Schema."""
+    restricted = tmp_path / "restricted.ids"
+    restricted.write_text(
+        WALLS.read_text(encoding="utf-8").replace(
+            "<baseName><simpleValue>GTIN</simpleValue></baseName>",
+            '<baseName><simpleValue>GTIN</simpleValue></baseName><value><xs:restriction base="xs:string">'
+            '<xs:pattern value="[0-9]+"/></xs:restriction></value>',
+        ),
+        encoding="utf-8",
+    )
+    assert "xs:restriction" in restricted.read_text(encoding="utf-8")
+    read_ids(restricted.read_bytes())
+    report = report_of(MODEL, [restricted])
+    assert report["rules_not_run"] == []
+    gtin = next(spec for spec in report["specifications"] if spec["name"] == "Walls carry a GTIN")
+    assert (gtin["status"], gtin["applicable"]) == ("passed", 3), "the walls' GTINs 1, 2 and 3 are digits"
+
+
 def test_every_issue_says_what_failed_and_where() -> None:
     issues = report_of(MODEL, [WALLS])["issues"]
     fire = [issue for issue in issues if issue["rule"] == "Walls have a fire rating"]
