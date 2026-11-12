@@ -1,5 +1,5 @@
 # This file was generated with the assistance of an AI coding tool.
-"""Load converted records into the graph in batches (``UNWIND … CREATE``, no APOC)."""
+"""Load converted records into a database in batches, through its backend."""
 
 from __future__ import annotations
 
@@ -7,13 +7,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from ifc_db.backends import Backend, as_backend
 from ifc_db.graph import FORM_VERSION, Graph, is_whole
-from ifc_db.records import BATCH, Block, NewEntity, Reference, read_records
-from ifc_db.schema import safe_identifier as _safe
+from ifc_db.records import read_records
 
-BLOCK_BATCH = 100
-# A row of a list of points, built in Cypher, since the records are JSON and the package needs no driver of its own.
-_POINT = "CASE size(p) WHEN 2 THEN point({x: p[0], y: p[1]}) ELSE point({x: p[0], y: p[1], z: p[2]}) END"
 # What an import says of its model, on the Model node. The spatial pass, a preparation and a merge add their own.
 MODEL_FACTS = (
     "format",
@@ -35,32 +32,25 @@ def _now() -> str:
     return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
-async def import_records(graph: Graph, model_id: str, records_path: Path) -> dict[str, Any]:
+async def import_records(graph: Graph | Backend, model_id: str, records_path: Path) -> dict[str, Any]:
     """Create the ``Entity`` nodes and their relationships for one model, and its ``Model`` if it is not there.
 
     The ``Model`` gets what the records say of it (:data:`MODEL_FACTS`), and ``imported_at`` when the last record is
     in. Until then it has none, also when an import starts anew, so that a model with ``imported_at`` is all in the
     graph. Returns those facts, and the counts as ``nodes`` and ``relationships`` too."""
-    await graph.run(
-        "MERGE (m:Model {id: $model_id}) SET m.format = 'step', m.form_version = $form REMOVE m.imported_at",
-        model_id=model_id,
-        form=FORM_VERSION,
-    )
+    backend = as_backend(graph)
+    await backend.start_import(model_id, FORM_VERSION)
     header: dict[str, Any] = {}
     nodes = relationships = 0
     for batch in read_records(records_path):
-        nodes += await _add_entities(graph, model_id, batch.entities)
-        await _add_blocks(graph, model_id, batch.blocks)
-        relationships += await _add_references(graph, model_id, batch.references)
+        await backend.add_entities(model_id, batch.entities)
+        await backend.add_blocks(model_id, batch.blocks)
+        await backend.add_references(model_id, batch.references)
+        nodes += len(batch.entities)
+        relationships += len(batch.references)
         if batch.header is not None:
             header = batch.header
-    await graph.run(
-        """
-        MATCH (m:Model {id: $model_id}), (p:Entity:IfcProject {model_id: $model_id})
-        MERGE (m)-[:HAS_PROJECT]->(p)
-        """,
-        model_id=model_id,
-    )
+    await backend.link_project(model_id)
     facts = {
         "format": "step",
         "form_version": FORM_VERSION,
@@ -74,123 +64,38 @@ async def import_records(graph: Graph, model_id: str, records_path: Path) -> dic
         "ifc_header": header.get("ifc_header"),
         "imported_at": _now(),
     }
-    await graph.run("MATCH (m:Model {id: $model_id}) SET m += $facts", model_id=model_id, facts=facts)
+    await backend.set_facts(model_id, facts)
     return {"nodes": nodes, "relationships": relationships, **facts}
 
 
-async def _add_entities(graph: Graph, model_id: str, entities: list[NewEntity]) -> int:
-    """One statement for each set of labels and of properties that are lists of points."""
-    groups: dict[tuple[tuple[str, ...], tuple[str, ...]], list[dict[str, Any]]] = {}
-    for entity in entities:
-        labels = tuple(_safe(label) for label in entity.labels)
-        groups.setdefault((labels, tuple(sorted(entity.points))), []).append(
-            {"id": f"{model_id}:{entity.step}", "step": entity.step, "props": entity.props, "points": entity.points}
-        )
-    for (labels, point_keys), rows in groups.items():
-        label_clause = ":".join(["Entity", *labels])
-        points = "".join(f", n.{_safe(key)} = [p IN row.points.{_safe(key)} | " + _POINT + "]" for key in point_keys)
-        # The node is new, so adding the properties gives what replacing them would, and no database then has to take
-        # the rest of the clause in a given order: one that replaced last left the node without its id.
-        await graph.run(
-            f"UNWIND $rows AS row CREATE (n:{label_clause}) SET n += row.props, n.id = row.id, "
-            f"n.step_id = row.step, n.model_id = $model_id{points}",
-            rows=rows,
-            model_id=model_id,
-        )
-    return len(entities)
-
-
-async def _add_blocks(graph: Graph, model_id: str, blocks: list[Block]) -> None:
-    if blocks:
-        await graph.run(
-            """
-            MATCH (m:Model {id: $model_id})
-            UNWIND $rows AS row
-            CREATE (m)-[:HAS_STEP_BLOCK]->(:StepBlock {
-                id: $model_id + ':' + toString(row.first), first_step: row.first, instances: row.instances,
-                text: row.text
-            })
-            """,
-            model_id=model_id,
-            rows=[{"first": block.first, "instances": block.instances, "text": block.text} for block in blocks],
-        )
-
-
-async def _add_references(graph: Graph, model_id: str, references: list[Reference]) -> int:
-    """One statement for each type of relationship, with its position or, for an inverse one, without."""
-    groups: dict[tuple[str, bool], list[dict[str, Any]]] = {}
-    for reference in references:
-        row: dict[str, Any] = {"a": f"{model_id}:{reference.a}", "b": f"{model_id}:{reference.b}"}
-        if reference.position is not None:
-            row["position"] = reference.position
-        groups.setdefault((reference.type, reference.position is not None), []).append(row)
-    for (rel_type, positioned), rows in groups.items():
-        relationship = f"{rel_type} {{position: row.position}}" if positioned else rel_type
-        await graph.run(
-            f"UNWIND $rows AS row MATCH (a:Entity {{id: row.a}}), (b:Entity {{id: row.b}}) "
-            f"CREATE (a)-[:{relationship}]->(b)",
-            rows=rows,
-        )
-    return len(references)
-
-
-async def model_facts(graph: Graph, model_id: str) -> dict[str, Any] | None:
+async def model_facts(graph: Graph | Backend, model_id: str) -> dict[str, Any] | None:
     """What this package keeps on a model's ``Model`` node, or None when there is no such model: its ``id``, the facts
     of its import (:data:`MODEL_FACTS`), what the spatial pass, a preparation and a merge have set (``spatial_…``,
     ``prepared_…``, ``merge_…``), and ``whole``, which says that the model is all in the graph. What others keep on
     the node is left out."""
-    rows = await graph.run("MATCH (m:Model {id: $id}) RETURN properties(m) AS properties", id=model_id)
-    if not rows:
+    properties = await as_backend(graph).model(model_id)
+    if properties is None:
         return None
-    properties = rows[0]["properties"]
     own = {key: value for key, value in sorted(properties.items()) if key in MODEL_FACTS or key.startswith(_OWN)}
     return {"id": model_id, "whole": is_whole(properties), **own}
 
 
-async def models(graph: Graph) -> list[dict[str, Any]]:
+async def models(graph: Graph | Backend) -> list[dict[str, Any]]:
     """The models in the graph, in the order of their ids: ``{"id", "whole"}`` for each, where ``whole`` says that the
     model is all in the graph."""
-    rows = await graph.run(
-        "MATCH (m:Model) RETURN m.id AS id, m.imported_at AS imported_at, m.state AS state ORDER BY id"
-    )
-    return [{"id": row["id"], "whole": is_whole(row)} for row in rows]
+    return [{"id": row["id"], "whole": is_whole(row)} for row in await as_backend(graph).models()]
 
 
-async def delete_blocks(graph: Graph, model_id: str) -> None:
+async def delete_blocks(graph: Graph | Backend, model_id: str) -> None:
     """Remove a model's blocks, a few at a time, for each holds a lot of text."""
-    while True:
-        rows = await graph.run(
-            """
-            MATCH (:Model {id: $model_id})-[:HAS_STEP_BLOCK]->(b:StepBlock)
-            WITH b LIMIT $batch DETACH DELETE b RETURN count(*) AS n
-            """,
-            model_id=model_id,
-            batch=BLOCK_BATCH,
-        )
-        if not rows or int(rows[0]["n"]) < BLOCK_BATCH:
-            return
+    await as_backend(graph).delete_blocks(model_id)
 
 
-async def delete_model(graph: Graph, model_id: str, *, keep_model: bool = False) -> int:
+async def delete_model(graph: Graph | Backend, model_id: str, *, keep_model: bool = False) -> int:
     """Remove a model's entities and blocks in batches, and the ``Model`` itself unless ``keep_model``. A ``Model``
     that is kept loses its ``imported_at``, since the model is no longer in the graph."""
-    deleted = 0
-    await delete_blocks(graph, model_id)
-    while True:
-        rows = await graph.run(
-            "MATCH (n:Entity {model_id: $model_id}) WITH n LIMIT $batch DETACH DELETE n RETURN count(*) AS n",
-            model_id=model_id,
-            batch=BATCH,
-        )
-        count = int(rows[0]["n"]) if rows else 0
-        deleted += count
-        if count < BATCH:
-            break
-    if keep_model:
-        await graph.run("MATCH (m:Model {id: $model_id}) REMOVE m.imported_at", model_id=model_id)
-    else:
-        await graph.run(
-            "MATCH (m:Model {id: $model_id}) WHERE coalesce(m.format, 'step') = 'step' DETACH DELETE m",
-            model_id=model_id,
-        )
+    backend = as_backend(graph)
+    await backend.delete_blocks(model_id)
+    deleted = await backend.delete_entities(model_id)
+    await backend.delete_record(model_id, keep=keep_model)
     return deleted

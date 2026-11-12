@@ -13,10 +13,10 @@ import re
 from typing import Any
 
 from ifc_db.graph import Graph
-from ifc_db.importer import BATCH
 from ifc_db.inverses import inverses
 from ifc_db.lossless import decode_block
 from ifc_db.paths import attribute_name
+from ifc_db.records import BATCH
 from ifc_db.schema import relationship_type
 from ifc_db.step import statements_of
 

@@ -34,14 +34,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from ifc_db.backends.cypher import BLOCK_BATCH
 from ifc_db.convert import BLOCK_BYTES
 from ifc_db.editing import refresh_inverses
 from ifc_db.exporter import export_records
 from ifc_db.files import DEFAULT_LIMITS, Limits, _now, export_file, import_file, run_worker, write_file
 from ifc_db.graph import FORM_VERSION, Graph, is_whole
-from ifc_db.importer import BATCH, BLOCK_BATCH, delete_model
+from ifc_db.importer import delete_model
 from ifc_db.lossless import ALL_ARGUMENTS, STEP_SUFFIX, TAGGED, TYPE_SUFFIX, decode_block, encode_block
 from ifc_db.prepare import RESOLUTIONS as RESOLUTIONS
+from ifc_db.records import BATCH
 from ifc_db.schema import relationship_type, safe_identifier
 from ifc_db.step import parse_statement, statement_text, statements_of, string_of_atom
 

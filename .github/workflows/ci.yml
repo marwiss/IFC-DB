@@ -48,7 +48,7 @@ jobs:
           python-version: ${{ matrix.python }}
       # The graph side imports with none of the extras, as a server's own process uses it.
       - run: uv sync --no-dev
-      - run: uv run --no-sync python -c "import ifc_db.editing, ifc_db.exporter, ifc_db.files, ifc_db.graph, ifc_db.ids, ifc_db.ifcx, ifc_db.ifcx_check, ifc_db.importer, ifc_db.lossless, ifc_db.merge, ifc_db.paths, ifc_db.prepare, ifc_db.queries, ifc_db.spatial, ifc_db.step, ifc_db.validation"
+      - run: uv run --no-sync python -c "import ifc_db.backends, ifc_db.backends.base, ifc_db.backends.cypher, ifc_db.editing, ifc_db.exporter, ifc_db.files, ifc_db.graph, ifc_db.ids, ifc_db.ifcx, ifc_db.ifcx_check, ifc_db.importer, ifc_db.lossless, ifc_db.merge, ifc_db.paths, ifc_db.prepare, ifc_db.queries, ifc_db.records, ifc_db.spatial, ifc_db.step, ifc_db.validation"
       - run: uv sync --all-extras
       - run: uv run pytest -m "not integration"
 

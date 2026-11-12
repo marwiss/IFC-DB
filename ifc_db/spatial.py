@@ -31,7 +31,7 @@ from typing import Any
 
 from ifc_db.files import DEFAULT_LIMITS, Limits, _now, run_worker
 from ifc_db.graph import Dialect, Graph, Neo4jGraph, is_whole, rebuild_point_indexes
-from ifc_db.importer import BATCH
+from ifc_db.records import BATCH
 
 FORMAT = "ifc-lpg-geometry"  # a file format's name, kept from the library's first name since others read it
 VERSION = 1
