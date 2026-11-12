@@ -35,6 +35,7 @@ rules and IDS.
   [changing the graph](#changing-the-graph),
   [a building into another project](#a-building-into-another-project),
   [Neo4j and Memgraph](#neo4j-and-memgraph),
+  [Grafeo](#grafeo-experimental),
   [IFC5](#ifc5-experimental)
 - [Measurements](#measurements)
 - [Reference](#reference): the functions and the command lines
@@ -90,7 +91,9 @@ browser, and never install it themselves.
 | Graph database | A database of nodes (things) and relationships (links between them) |
 | LPG | Labelled property graph: the kind of graph Neo4j and Memgraph keep, where each node has labels that say what kind of thing it is, and both nodes and relationships hold their values as named properties. The library was first named IFC-LPG, for turning IFC into such a graph, and is now IFC-DB, since it is to keep models in more kinds of database |
 | Neo4j, Memgraph | Two graph databases; IFC-DB works the same on both |
-| Cypher | The question language of both databases |
+| Cypher | The question language of Neo4j and Memgraph |
+| Grafeo | A graph database written in Rust, which IFC-DB can keep a model in too |
+| GQL | The standard question language for graph databases, ISO/IEC 39075, close to Cypher; Grafeo takes it |
 | IFC5 | The next version of IFC, still a draft, written as JSON |
 
 ## How Dataregium and Dataspatium use it
@@ -776,6 +779,38 @@ differ, IFC-DB keeps to what both do alike:
   index was made is not found through it. Given `dialect="memgraph"`,
   `add_spatial` and `import_spatial` make the index anew when the boxes are in
   place; Neo4j needs nothing.
+
+## Grafeo (experimental)
+
+**In short:** a model can also be kept in Grafeo and comes back from it as the
+same file. So far that is reading a model in, its record, writing it out and
+taking it away; the named queries, the paths, a merge and the boxes do not work
+on Grafeo yet.
+
+**In detail:**
+
+`GrafeoBackend(url, token=None, ca_file=None)` from `ifc_db.backends.grafeo`
+speaks GQL to Grafeo's HTTP API with Python's standard library, so it needs no
+extra. It goes where a graph goes in `import_records`, `export_records`,
+`model_facts`, `models` and `delete_model`. On Grafeo 0.6.2 every test file, in
+each of the three forms, gives the same records as Neo4j and an identical file.
+
+- The graph has the labels, relationship types and properties it has on Neo4j.
+  Grafeo has no points, so a row of points is a list of lists of numbers, as an
+  export gives it from Neo4j too.
+- Every value goes as a parameter, since a number written into GQL with a
+  decimal point is an exact DECIMAL, not a float.
+- An `https://` address always has its certificate checked, against the
+  system's authorities or `ca_file`. Grafeo's token, or a user and a password,
+  go only over HTTPS, or over HTTP to this machine.
+- A statement takes 2 to 3 ms over HTTP on the same machine. Grafeo's Bolt
+  server waits about 45 ms on every statement, so Bolt is not used.
+- Grafeo takes requests of up to 2 MiB unless it is started with a larger
+  `--max-body-size`. Rows go in parts below the limit, but a single node larger
+  than it is refused.
+- `ensure_schema()` on the backend makes the unique keys and the indexes. There
+  is no graph type, since a graph type that names a node type takes that type's
+  rules out of the default graph.
 
 ## IFC5 (experimental)
 
