@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from ifc_lpg.worker import main as worker_main
+from ifc_db.worker import main as worker_main
 from tests.conftest import FIXTURES_DIR
 
-pytest.importorskip("ifcopenshell", reason="the ifc-lpg extra is not installed")
+pytest.importorskip("ifcopenshell", reason="the ifc-db extra is not installed")
 
-from ifc_lpg.convert import convert
+from ifc_db.convert import convert
 
 MODEL = FIXTURES_DIR / "three_walls_gtin.ifc"
 WALLS = ("1Xezbq735AdBO_4DerG66G", "3eT96F_cnDsOufCEsotwtp", "3k3LbXmTfDWODxdSuyCGYE")
@@ -76,9 +76,9 @@ def test_geometry_can_be_included_and_limits_are_enforced(tmp_path: Path) -> Non
 
 
 def _heights(data: str) -> dict[int, dict[str, object]]:
-    from ifc_lpg.convert import storey_heights
-    from ifc_lpg.schema import Schema
-    from ifc_lpg.step import StepFile
+    from ifc_db.convert import storey_heights
+    from ifc_db.schema import Schema
+    from ifc_db.step import StepFile
 
     text = (
         "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\n"

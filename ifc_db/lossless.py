@@ -34,8 +34,8 @@ import zlib
 from collections.abc import Container, Iterable, Mapping, Sequence
 from typing import Any
 
-from ifc_lpg.schema import Attribute, Schema
-from ifc_lpg.step import string_atom, string_of_atom
+from ifc_db.schema import Attribute, Schema
+from ifc_db.step import string_atom, string_of_atom
 
 TYPE_SUFFIX = "__type"
 STEP_SUFFIX = "__step"

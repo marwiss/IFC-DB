@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.ifcx import (
+from ifc_db.ifcx import (
     MAX_DEPTH,
     IfcxError,
     compose,

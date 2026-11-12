@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.files import import_file
-from ifc_lpg.paths import PathError, canonical_path, resolve, unreachable
+from ifc_db.files import import_file
+from ifc_db.paths import PathError, canonical_path, resolve, unreachable
 from tests.conftest import FIXTURES_DIR
 
 pytestmark = pytest.mark.integration

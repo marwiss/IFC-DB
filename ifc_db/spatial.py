@@ -1,7 +1,7 @@
 # This file was generated with the assistance of an AI coding tool.
 """Where the products are: a box per product in project coordinates, from one pass of IfcOpenShell's geometry.
 
-The worker, ``python -m ifc_lpg.spatial IFC OUT [--memory-mb N] [--threads T] [--max-entities N]``, needs the extra
+The worker, ``python -m ifc_db.spatial IFC OUT [--memory-mb N] [--threads T] [--max-entities N]``, needs the extra
 ``ifcopenshell`` and runs in a process of its own. It runs the iterator once, in each shape's own coordinates, and writes
 JSON Lines: a header (``h``); each mesh once (``m``), before the first product that uses it; each product (``p``) with
 its storey, its mesh, the matrix from the mesh to project coordinates, column by column as glTF has it, and its box;
@@ -29,11 +29,11 @@ import time
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.files import DEFAULT_LIMITS, Limits, _now, run_worker
-from ifc_lpg.graph import Dialect, Graph, Neo4jGraph, is_whole, rebuild_point_indexes
-from ifc_lpg.importer import BATCH
+from ifc_db.files import DEFAULT_LIMITS, Limits, _now, run_worker
+from ifc_db.graph import Dialect, Graph, Neo4jGraph, is_whole, rebuild_point_indexes
+from ifc_db.importer import BATCH
 
-FORMAT = "ifc-lpg-geometry"
+FORMAT = "ifc-lpg-geometry"  # a file format's name, kept from the library's first name since others read it
 VERSION = 1
 _BODY = {"body", "facetation"}
 # How a product reaches the storey above it: (inverse attribute, the attribute of the relationship that points up).
@@ -117,7 +117,7 @@ def write_geometry(source: Path, out: Path, *, threads: int = 1, max_entities: i
     import ifcopenshell
     import ifcopenshell.geom
 
-    from ifc_lpg.step import StepError, StepFile
+    from ifc_db.step import StepError, StepFile
 
     started = time.monotonic()
     data = source.read_bytes()
@@ -236,7 +236,7 @@ def write_geometry(source: Path, out: Path, *, threads: int = 1, max_entities: i
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="ifc-lpg-spatial")
+    parser = argparse.ArgumentParser(prog="ifc-db-spatial")
     parser.add_argument("ifc", type=Path)
     parser.add_argument("out", type=Path)
     parser.add_argument("--memory-mb", type=int, default=0)
@@ -244,7 +244,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-entities", type=int, default=5_000_000)
     args = parser.parse_args(argv)
 
-    from ifc_lpg.worker import keep_stdout_for_the_answer, limit_memory
+    from ifc_db.worker import keep_stdout_for_the_answer, limit_memory
 
     if args.memory_mb:
         limit_memory(args.memory_mb)
@@ -532,7 +532,7 @@ async def spatial_file(
     source: Path, target: Path, *, threads: int = 2, limits: Limits = DEFAULT_LIMITS
 ) -> dict[str, Any]:
     """Write the geometry records of ``source`` to ``target`` in the worker. Returns the end record."""
-    command = [sys.executable, "-m", "ifc_lpg.spatial", str(source), str(target)]
+    command = [sys.executable, "-m", "ifc_db.spatial", str(source), str(target)]
     command += [
         "--memory-mb",
         str(limits.memory_mb),
@@ -557,7 +557,7 @@ async def add_spatial(
 ) -> dict[str, Any]:
     """Work out the boxes of ``source`` and set them on the model ``model_id``, which was imported from it; with
     ``meshes``, the meshes as well."""
-    with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="ifc-db-") as tmp:
         records = Path(tmp) / "geometry.jsonl"
         await spatial_file(source, records, threads=threads, limits=limits)
         return await import_spatial(graph, model_id, records, dialect=dialect, meshes=meshes)

@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from ifc_lpg.files import check_ids
-from ifc_lpg.ids import MAX_IDS_BYTES, CannotCheck, InvalidIds, ids_schema, read_ids, report_of
+from ifc_db.files import check_ids
+from ifc_db.ids import MAX_IDS_BYTES, CannotCheck, InvalidIds, ids_schema, read_ids, report_of
 from tests.conftest import FIXTURES_DIR
 
 MODEL = FIXTURES_DIR / "three_walls_gtin.ifc"
@@ -146,13 +146,13 @@ def test_a_file_that_cannot_be_opened_is_not_checked(tmp_path: Path) -> None:
 
 
 def test_the_command_line_answers_in_json(tmp_path: Path) -> None:
-    command = [sys.executable, "-m", "ifc_lpg.ids", str(MODEL), str(WALLS)]
+    command = [sys.executable, "-m", "ifc_db.ids", str(MODEL), str(WALLS)]
     done = subprocess.run(command, capture_output=True, text=True, timeout=300, check=False)  # noqa: S603  # nosec B603
     assert done.returncode == 1, done.stderr
     assert json.loads(done.stdout)["issue_count"] == 4
     broken = _write(tmp_path, "broken.ifc", b"not a file")
     done = subprocess.run(  # noqa: S603  # nosec B603 - this package's own command
-        [sys.executable, "-m", "ifc_lpg.ids", str(broken), str(WALLS)], capture_output=True, text=True, timeout=300
+        [sys.executable, "-m", "ifc_db.ids", str(broken), str(WALLS)], capture_output=True, text=True, timeout=300
     )
     assert done.returncode == 2 and "error" in json.loads(done.stderr.strip().splitlines()[-1])
 

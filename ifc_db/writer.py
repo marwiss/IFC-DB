@@ -1,5 +1,5 @@
 # This file was generated with the assistance of an AI coding tool.
-"""Write a file back from what the graph holds: ``python -m ifc_lpg.writer RECORDS OUT [--memory-mb N]``.
+"""Write a file back from what the graph holds: ``python -m ifc_db.writer RECORDS OUT [--memory-mb N]``.
 
 ``RECORDS`` holds one JSON object per line: first ``{"schema", "ifc_header"}``, then one per instance, in the order the
 file should have. That is ``{"step", "props", "references"}`` for a node, with ``references`` as ``[relationship type,
@@ -16,10 +16,10 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.lossless import decode_header, decode_instance
-from ifc_lpg.schema import Schema
-from ifc_lpg.step import StepError, statement_text, write_exchange
-from ifc_lpg.worker import limit_memory
+from ifc_db.lossless import decode_header, decode_instance
+from ifc_db.schema import Schema
+from ifc_db.step import StepError, statement_text, write_exchange
+from ifc_db.worker import limit_memory
 
 
 def _instance_lines(lines: Iterator[str], schema: Schema) -> Iterator[bytes]:
@@ -46,7 +46,7 @@ def write_records(records: Path, out: Path) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="ifc-lpg-writer")
+    parser = argparse.ArgumentParser(prog="ifc-db-writer")
     parser.add_argument("records", type=Path)
     parser.add_argument("out", type=Path)
     parser.add_argument("--memory-mb", type=int, default=0)

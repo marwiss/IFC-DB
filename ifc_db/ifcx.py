@@ -20,7 +20,7 @@ relationship. The graph is the same on Neo4j and Memgraph:
 
 A path that is a child or inherited but has no entry is a node with ``#stub``. The model is a ``Model`` node with
 ``format`` ``ifcx``, the header, the imports, the schemas, the warnings and the conflicts. The file is read and written in a process of its
-own: ``python -m ifc_lpg.ifcx read FILE... OUT`` and ``python -m ifc_lpg.ifcx write RECORDS OUT``, with ``--memory-mb N``.
+own: ``python -m ifc_db.ifcx read FILE... OUT`` and ``python -m ifc_db.ifcx write RECORDS OUT``, with ``--memory-mb N``.
 """
 
 from __future__ import annotations
@@ -36,11 +36,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.exporter import PAGE
-from ifc_lpg.files import DEFAULT_LIMITS, Limits, _now, run_worker
-from ifc_lpg.graph import FORM_VERSION, Graph, is_whole
-from ifc_lpg.importer import BATCH, MAX_BATCH_BYTES
-from ifc_lpg.lossless import NATIVE
+from ifc_db.exporter import PAGE
+from ifc_db.files import DEFAULT_LIMITS, Limits, _now, run_worker
+from ifc_db.graph import FORM_VERSION, Graph, is_whole
+from ifc_db.importer import BATCH, MAX_BATCH_BYTES
+from ifc_db.lossless import NATIVE
 
 MAX_BYTES = 256 * 1024 * 1024
 MAX_DEPTH = 32
@@ -538,9 +538,9 @@ async def import_ifcx(
     if not rows or not rows[0]["new"]:
         raise ValueError(f"the model {model_id!r} exists already")
     try:
-        with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="ifc-db-") as tmp:
             out = Path(tmp) / "records.jsonl"
-            command = [sys.executable, "-m", "ifc_lpg.ifcx", "read", *map(str, sources), str(out)]
+            command = [sys.executable, "-m", "ifc_db.ifcx", "read", *map(str, sources), str(out)]
             command += ["--memory-mb", str(limits.memory_mb), "--max-entries", str(limits.max_entities)]
             header = json.loads((await run_worker(command, "reading IFCX", limits.timeout_seconds)).splitlines()[-1])
             counts = await import_records(graph, model_id, out)
@@ -564,10 +564,10 @@ async def import_ifcx(
 
 async def export_ifcx(graph: Graph, model_id: str, target: Path, *, limits: Limits = DEFAULT_LIMITS) -> int:
     """Write the model ``model_id`` as an IFCX file at ``target``. Returns the number of entries' nodes read."""
-    with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="ifc-db-") as tmp:
         records_path = Path(tmp) / "records.jsonl"
         count = await export_records(graph, model_id, records_path)
-        command = [sys.executable, "-m", "ifc_lpg.ifcx", "write", str(records_path), str(target)]
+        command = [sys.executable, "-m", "ifc_db.ifcx", "write", str(records_path), str(target)]
         await run_worker([*command, "--memory-mb", str(limits.memory_mb)], "writing IFCX", limits.timeout_seconds)
     return count
 
@@ -583,18 +583,18 @@ async def export_ifcx_overlay(
 ) -> int:
     """Write what ``model_id`` changes against ``base_model_id`` as an IFCX layer at ``target``, which imports the files
     the base was composed of. Returns the number of entries in the layer."""
-    with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="ifc-db-") as tmp:
         base_path, records_path = Path(tmp) / "base.jsonl", Path(tmp) / "records.jsonl"
         await export_records(graph, base_model_id, base_path)
         await export_records(graph, model_id, records_path)
-        command = [sys.executable, "-m", "ifc_lpg.ifcx", "overlay", str(base_path), str(records_path), str(target)]
+        command = [sys.executable, "-m", "ifc_db.ifcx", "overlay", str(base_path), str(records_path), str(target)]
         command += ["--layer-id", layer_id or target.name, "--memory-mb", str(limits.memory_mb)]
         answer = await run_worker(command, "writing the IFCX layer", limits.timeout_seconds)
     return int(json.loads(answer.strip().splitlines()[-1])["entries"])
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="ifc-lpg-ifcx")
+    parser = argparse.ArgumentParser(prog="ifc-db-ifcx")
     modes = parser.add_subparsers(dest="mode", required=True)
     read = modes.add_parser("read", help="compose IFCX files into records")
     read.add_argument("paths", type=Path, nargs="+", help="the files, then where the records go")
@@ -607,7 +607,7 @@ def main(argv: list[str] | None = None) -> int:
     for mode in (read, write, overlay):
         mode.add_argument("--memory-mb", type=int, default=0)
     args = parser.parse_args(argv)
-    from ifc_lpg.worker import limit_memory
+    from ifc_db.worker import limit_memory
 
     if args.memory_mb:
         limit_memory(args.memory_mb)

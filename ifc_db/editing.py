@@ -12,13 +12,13 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from ifc_lpg.graph import Graph
-from ifc_lpg.importer import BATCH
-from ifc_lpg.inverses import inverses
-from ifc_lpg.lossless import decode_block
-from ifc_lpg.paths import attribute_name
-from ifc_lpg.schema import relationship_type
-from ifc_lpg.step import statements_of
+from ifc_db.graph import Graph
+from ifc_db.importer import BATCH
+from ifc_db.inverses import inverses
+from ifc_db.lossless import decode_block
+from ifc_db.paths import attribute_name
+from ifc_db.schema import relationship_type
+from ifc_db.step import statements_of
 
 _REFERENCE = re.compile(rb"#(\d+)")
 

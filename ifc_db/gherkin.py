@@ -1,5 +1,5 @@
 # This file was generated with the assistance of an AI coding tool.
-"""buildingSMART's ifc-gherkin-rules on one file: ``python -m ifc_lpg.gherkin FILE --env DIR``.
+"""buildingSMART's ifc-gherkin-rules on one file: ``python -m ifc_db.gherkin FILE --env DIR``.
 
 ADR 0012. Runs behave in the environment ``gherkin_install.py`` made, with every rule that is not disabled, as the rule
 set's own tests run a file, and reads the outcomes from its JSON report. An outcome with the severity error or warning
@@ -22,9 +22,9 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.gherkin_install import MANIFEST, python_of
-from ifc_lpg.validation import MAX_MESSAGE, MAX_REPORTED
-from ifc_lpg.worker import keep_stdout_for_the_answer, limit_memory
+from ifc_db.gherkin_install import MANIFEST, python_of
+from ifc_db.validation import MAX_MESSAGE, MAX_REPORTED
+from ifc_db.worker import keep_stdout_for_the_answer, limit_memory
 
 # A step that fails because the rule found something is recorded with no exception type; only real ones are listed.
 _NO_EXCEPTION = ("NoneType", "", None)
@@ -100,8 +100,8 @@ def _message(outcome: dict[str, Any]) -> str:
 
 def global_ids(path: Path, step_ids: set[int]) -> dict[int, str]:
     """The GlobalId of every rooted instance among ``step_ids``, read with this package's own STEP reader."""
-    from ifc_lpg.schema import Schema
-    from ifc_lpg.step import StepError, StepFile, string_of_atom
+    from ifc_db.schema import Schema
+    from ifc_db.step import StepError, StepFile, string_of_atom
 
     try:
         step = StepFile(path.read_bytes())
@@ -154,7 +154,7 @@ def report_of(path: Path, env: Path, timeout: float) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     """Exit 0 for a file with no issues, 1 for one with, 2 when the rules could not be run. The answer is JSON on stdout."""
-    parser = argparse.ArgumentParser(prog="ifc-lpg-gherkin")
+    parser = argparse.ArgumentParser(prog="ifc-db-gherkin")
     parser.add_argument("file", type=Path)
     parser.add_argument("--env", type=Path, required=True, help="the folder gherkin_install made")
     parser.add_argument("--memory-mb", type=int, default=0)

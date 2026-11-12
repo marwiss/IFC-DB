@@ -11,9 +11,9 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.files import ConversionFailed
-from ifc_lpg.graph import schema_statements
-from ifc_lpg.spatial import (
+from ifc_db.files import ConversionFailed
+from ifc_db.graph import schema_statements
+from ifc_db.spatial import (
     FORMAT,
     SpatialError,
     _read,
@@ -35,7 +35,7 @@ def _strict(name: str) -> Any:
 
 def geometry_of(tmp_path: Path) -> tuple[list[dict[str, Any]], Path]:
     pytest.importorskip("ifcopenshell", reason="IfcOpenShell is not installed")
-    from ifc_lpg.spatial import write_geometry
+    from ifc_db.spatial import write_geometry
 
     out = tmp_path / "geometry.jsonl"
     write_geometry(SPATIAL, out)
@@ -225,7 +225,7 @@ class _Busy:
 async def test_making_the_point_index_anew_waits_for_sole_access(monkeypatch: pytest.MonkeyPatch) -> None:
     import asyncio
 
-    from ifc_lpg.graph import DDL_ATTEMPTS, Neo4jGraph, rebuild_point_indexes
+    from ifc_db.graph import DDL_ATTEMPTS, Neo4jGraph, rebuild_point_indexes
 
     waits: list[float] = []
 

@@ -8,9 +8,9 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.equivalence import compare_files
-from ifc_lpg.files import export_file, import_file
-from ifc_lpg.spatial import SpatialError, add_spatial, overlapping_boxes
+from ifc_db.equivalence import compare_files
+from ifc_db.files import export_file, import_file
+from ifc_db.spatial import SpatialError, add_spatial, overlapping_boxes
 from tests.conftest import FIXTURES_DIR, Target
 
 pytestmark = pytest.mark.integration

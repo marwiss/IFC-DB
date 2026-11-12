@@ -29,7 +29,7 @@ jobs:
       - run: uv sync --all-extras
       - run: uv run ruff format --check .
       - run: uv run ruff check .
-      - run: uv run ty check ifc_lpg
+      - run: uv run ty check ifc_db
 
   test:
     name: Tests (Python ${{ matrix.python }})
@@ -48,7 +48,7 @@ jobs:
           python-version: ${{ matrix.python }}
       # The graph side imports with none of the extras, as a server's own process uses it.
       - run: uv sync --no-dev
-      - run: uv run --no-sync python -c "import ifc_lpg.editing, ifc_lpg.exporter, ifc_lpg.files, ifc_lpg.graph, ifc_lpg.ids, ifc_lpg.ifcx, ifc_lpg.ifcx_check, ifc_lpg.importer, ifc_lpg.lossless, ifc_lpg.merge, ifc_lpg.paths, ifc_lpg.prepare, ifc_lpg.queries, ifc_lpg.spatial, ifc_lpg.step, ifc_lpg.validation"
+      - run: uv run --no-sync python -c "import ifc_db.editing, ifc_db.exporter, ifc_db.files, ifc_db.graph, ifc_db.ids, ifc_db.ifcx, ifc_db.ifcx_check, ifc_db.importer, ifc_db.lossless, ifc_db.merge, ifc_db.paths, ifc_db.prepare, ifc_db.queries, ifc_db.spatial, ifc_db.step, ifc_db.validation"
       - run: uv sync --all-extras
       - run: uv run pytest -m "not integration"
 
@@ -65,6 +65,6 @@ jobs:
       - run: uv sync --all-extras
       - run: uv run pytest -q -m integration
         env:
-          IFC_LPG_TEST_MEMGRAPH: "1"
+          IFC_DB_TEST_MEMGRAPH: "1"
       # IfcOpenShell's EXPRESS rules import pytest at run time; the extra has it without the dev group.
-      - run: uv run --no-dev --extra ifcopenshell python -m ifc_lpg.validation tests/fixtures/three_walls_gtin.ifc
+      - run: uv run --no-dev --extra ifcopenshell python -m ifc_db.validation tests/fixtures/three_walls_gtin.ifc

@@ -22,7 +22,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from ifc_lpg.graph import WHOLE, Graph
+from ifc_db.graph import WHOLE, Graph
 
 MAX_ROWS = 10_000  # at most this many rows in an answer, unless the caller asks for fewer
 TIMEOUT_SECONDS = 10.0  # at most this long for a query to run, unless the caller says otherwise

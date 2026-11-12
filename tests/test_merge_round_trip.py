@@ -9,9 +9,9 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.equivalence import compare_files
-from ifc_lpg.files import export_file, import_file
-from ifc_lpg.merge import (
+from ifc_db.equivalence import compare_files
+from ifc_db.files import export_file, import_file
+from ifc_db.merge import (
     MergeConflict,
     MergeError,
     PrepareConflict,
@@ -19,8 +19,8 @@ from ifc_lpg.merge import (
     merge_report,
     prepare_other,
 )
-from ifc_lpg.paths import unreachable
-from ifc_lpg.prepare import prepare_file
+from ifc_db.paths import unreachable
+from ifc_db.prepare import prepare_file
 from tests.conftest import FIXTURES_DIR
 
 pytestmark = pytest.mark.integration

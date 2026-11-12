@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from ifc_lpg import validation
-from ifc_lpg.validation import compare_issues, main, pack_report, report_of, unpack_report
+from ifc_db import validation
+from ifc_db.validation import compare_issues, main, pack_report, report_of, unpack_report
 from tests.conftest import FIXTURES_DIR
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,7 +48,7 @@ def issues(tmp_path: Path, statements: tuple[str, ...]) -> dict:
 
 
 def run(path: Path, against: Path | None = None) -> dict:
-    arguments = [sys.executable, "-m", "ifc_lpg.validation", str(path)]
+    arguments = [sys.executable, "-m", "ifc_db.validation", str(path)]
     if against is not None:
         arguments += ["--against", str(against)]
     done = subprocess.run(arguments, capture_output=True, text=True, timeout=300, check=False)  # noqa: S603 - this very interpreter
@@ -107,11 +107,11 @@ def test_a_report_packs_into_one_property_and_back() -> None:
     assert unpack_report(None) == [] and unpack_report("") == []
 
 
-pytest.importorskip("ifcopenshell", reason="the ifc-lpg extra is not installed")
+pytest.importorskip("ifcopenshell", reason="the ifc-db extra is not installed")
 
 
 def report(path: Path) -> dict:
-    arguments = [sys.executable, "-m", "ifc_lpg.validation", str(path), "--report"]
+    arguments = [sys.executable, "-m", "ifc_db.validation", str(path), "--report"]
     done = subprocess.run(arguments, capture_output=True, text=True, timeout=300, check=False)  # noqa: S603 - this very interpreter
     assert done.returncode in (0, 1), done.stderr
     answer = json.loads(done.stdout)

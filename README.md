@@ -1,6 +1,6 @@
-# IFC–LPG
+# IFC–DB
 
-IFC–LPG puts a building model into a graph database and gets it back out again,
+IFC–DB puts a building model into a graph database and gets it back out again,
 without losing anything. An IFC file goes in, and the same file comes out. A change
 made in the database shows up in the file.
 
@@ -56,7 +56,7 @@ as "which external walls are taller than three metres?" or "what lies within
 1.2 metres of this door?", and keep the building next to issues, documents and
 other data.
 
-**What IFC–LPG does:**
+**What IFC–DB does:**
 
 - It **puts an IFC file into the database**, one record at a time, with every
   link kept.
@@ -88,21 +88,21 @@ browser, and never install it themselves.
 | STEP | The text format IFC files are written in; each record has a number, its STEP id, as `#123` |
 | GlobalId | The lasting id IFC gives the main parts of a model, such as walls and storeys |
 | Graph database | A database of nodes (things) and relationships (links between them) |
-| LPG | Labelled property graph: the kind of graph Neo4j and Memgraph keep, where each node has labels that say what kind of thing it is, and both nodes and relationships hold their values as named properties. IFC–LPG is named for turning IFC into such a graph |
-| Neo4j, Memgraph | Two graph databases; IFC–LPG works the same on both |
+| LPG | Labelled property graph: the kind of graph Neo4j and Memgraph keep, where each node has labels that say what kind of thing it is, and both nodes and relationships hold their values as named properties. The library was first named IFC–LPG, for turning IFC into such a graph, and is now IFC–DB, since it is to keep models in more kinds of database |
+| Neo4j, Memgraph | Two graph databases; IFC–DB works the same on both |
 | Cypher | The question language of both databases |
 | IFC5 | The next version of IFC, still a draft, written as JSON |
 
 ## How Dataregium and Dataspatium use it
 
-**In short:** IFC–LPG is the part that turns building models into a graph and
+**In short:** IFC–DB is the part that turns building models into a graph and
 back again in two other projects by the same author. People use those two; they
-seldom see IFC–LPG itself.
+seldom see IFC–DB itself.
 
 - **[Dataregium](https://github.com/marwiss/Dataregium)** is a server where a
   project keeps its building models, documents and issues. It follows OpenCDE,
   buildingSMART's open rules for such servers, so that other programs can use it
-  too. When someone uploads an IFC model, Dataregium uses IFC–LPG to check the
+  too. When someone uploads an IFC model, Dataregium uses IFC–DB to check the
   file and to put it into its graph database. From there it links the issues to
   the walls and doors they are about, answers questions about the model, keeps
   every version of it, writes any version back as a file, and makes the 3D view.
@@ -110,16 +110,16 @@ seldom see IFC–LPG itself.
   browser. It connects to Dataregium, shows the models in 3D, asks questions of
   the graph, such as which parts lie near a given part, compares two versions,
   and proposes changes that Dataregium tries and a project manager approves.
-  Dataspatium does not run IFC–LPG itself; it reads the graphs that IFC–LPG made
+  Dataspatium does not run IFC–DB itself; it reads the graphs that IFC–DB made
   on the server.
 
 **In detail:**
 
-- **Dataregium** installs IFC–LPG from this repository at a fixed commit and moves
+- **Dataregium** installs IFC–DB from this repository at a fixed commit and moves
   it when a new one is needed. The server's own process uses the graph side,
   which needs no IfcOpenShell; worker processes with the extra `ifcopenshell` read,
   convert, write and check files. Its
-  [IFC-LPG page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-lpg.md)
+  [IFC-DB page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-lpg.md)
   describes how. On upload it checks the file against the IFC schema,
   buildingSMART's rules and IDS (`validation`, `gherkin`, `check_ids`), converts it
   in a worker and imports the records (`convert_file`, `import_records`), with one
@@ -130,10 +130,10 @@ seldom see IFC–LPG itself.
   changes by GlobalId and path; Dataregium resolves it with `resolve` against the
   version it was made on, keys it with `canonical_path`, and compares two changes
   by the nodes they resolve to. After a conversion it runs the geometry worker
-  (`python -m ifc_lpg.spatial`), puts the boxes into its graph (`import_spatial`)
+  (`python -m ifc_db.spatial`), puts the boxes into its graph (`import_spatial`)
   and builds its glTF from the worker's file. In its local mode it keeps a
   working copy in Memgraph beside the Neo4j archive, in the same form.
-- **Dataspatium** uses IFC–LPG only through Dataregium. It reads the graph's form
+- **Dataspatium** uses IFC–DB only through Dataregium. It reads the graph's form
   directly with the server's graph queries: the labels, `position`, `__type`,
   `__step`, `StepBlock`, and `form_version` in its list of models. Its query of
   the parts near a part uses `bbox_centre`, and a change it proposes names its
@@ -146,7 +146,7 @@ seldom see IFC–LPG itself.
 
 ## Quick start
 
-**In short:** this part is for developers who want IFC–LPG in a program of their
+**In short:** this part is for developers who want IFC–DB in a program of their
 own. Whoever uses Dataregium or Dataspatium needs none of it.
 
 You need Python 3.11 or later and a Neo4j 5.26 or Memgraph 3.14. For a first try,
@@ -157,11 +157,11 @@ docker run --rm -p 7687:7687 -e NEO4J_AUTH=neo4j/change-this-password neo4j:5.26
 docker run --rm -p 7687:7687 memgraph/memgraph:3.14.0    # or this one; no user, empty credentials
 ```
 
-Install IFC–LPG from this repository. The extra `ifcopenshell` is needed to
+Install IFC–DB from this repository. The extra `ifcopenshell` is needed to
 convert, write and check files, and the extra `neo4j` brings the official driver:
 
 ```sh
-pip install "ifc-lpg[ifcopenshell,neo4j] @ git+https://github.com/marwiss/IFC-LPG@v1.0.0"
+pip install "ifc-db[ifcopenshell,neo4j] @ git+https://github.com/marwiss/IFC-DB@v1.0.0"
 ```
 
 Put a file in, ask a question, and write it back:
@@ -173,8 +173,8 @@ from pathlib import Path
 
 from neo4j import AsyncGraphDatabase
 
-from ifc_lpg.files import export_file, import_file
-from ifc_lpg.graph import Neo4jGraph, ensure_schema
+from ifc_db.files import export_file, import_file
+from ifc_db.graph import Neo4jGraph, ensure_schema
 
 
 async def main() -> None:
@@ -199,7 +199,7 @@ driver, not the database.
 To know where the parts are, add the boxes inside `main()`, once the model is in:
 
 ```python
-from ifc_lpg.spatial import add_spatial
+from ifc_db.spatial import add_spatial
 
 await add_spatial(graph, Path("house.ifc"), "house", dialect="neo4j")
 near = await graph.run(
@@ -212,10 +212,10 @@ Three tools work on files alone, without a database. Each answers in JSON and
 exits with 0 when all is well:
 
 ```sh
-python -m ifc_lpg.equivalence first.ifc second.ifc          # do the two files hold the same model?
-python -m ifc_lpg.validation model.ifc                      # issues against the IFC schema
-python -m ifc_lpg.validation copy.ifc --against model.ifc   # only those the original does not have
-python -m ifc_lpg.ids model.ifc requirements.ids            # what fails an IDS, and each specification's verdict
+python -m ifc_db.equivalence first.ifc second.ifc          # do the two files hold the same model?
+python -m ifc_db.validation model.ifc                      # issues against the IFC schema
+python -m ifc_db.validation copy.ifc --against model.ifc   # only those the original does not have
+python -m ifc_db.ids model.ifc requirements.ids            # what fails an IDS, and each specification's verdict
 ```
 
 buildingSMART's rules need an environment of their own, with IfcOpenShell 0.8.6.
@@ -223,20 +223,20 @@ The installer makes one in an empty folder on Linux or Windows, from downloads i
 checks against pinned digests:
 
 ```sh
-python -m ifc_lpg.gherkin_install rules          # the rules and their IfcOpenShell, in the folder rules
-python -m ifc_lpg.gherkin model.ifc --env rules  # their verdict on a file, in JSON
+python -m ifc_db.gherkin_install rules          # the rules and their IfcOpenShell, in the folder rules
+python -m ifc_db.gherkin model.ifc --env rules  # their verdict on a file, in JSON
 ```
 
 The [reference](#reference) lists every function and command line.
 
 ## How a model is imported
 
-**In short:** IFC–LPG reads the file itself, checks that it is whole, and copies every
+**In short:** IFC–DB reads the file itself, checks that it is whole, and copies every
 record into the database. A damaged file is refused, not loaded in part.
 
 **In detail:**
 
-1. **The file is read by IFC–LPG's own STEP reader.** IfcOpenShell supplies the
+1. **The file is read by IFC–DB's own STEP reader.** IfcOpenShell supplies the
    schema's tables and nothing else. Its own parser changes some values on
    reading, such as `.NULLENUM.` to `$` and `($,$)` to `()`, which files from
    Tekla and Archicad contain, so a round trip through it could not give the
@@ -273,7 +273,7 @@ and `whole`. A model from before `imported_at` is whole when its state is `done`
 ## The graph
 
 **In short:** every record of the file becomes a node, named after its kind, such as a wall
-or a door, and every link between records becomes a relationship. IFC–LPG's own
+or a door, and every link between records becomes a relationship. IFC–DB's own
 bookkeeping has names that do not begin with `Ifc`, so the two are not mixed up.
 
 **In detail:**
@@ -285,7 +285,7 @@ supertypes as labels:
 (:Entity:IfcWallStandardCase:IfcWall:IfcBuildingElement:IfcElement:IfcProduct:IfcObject:IfcObjectDefinition:IfcRoot)
 ```
 
-The labels that begin with `Ifc` are IFC's classes. IFC–LPG's own labels never
+The labels that begin with `Ifc` are IFC's classes. IFC–DB's own labels never
 do:
 
 | Label | What it is |
@@ -334,7 +334,7 @@ How the values of the file are kept:
 
 An `IfcOwnerHistory` is linked from its `IfcProject` only. Linked from every
 instance that shares it, it would become the centre of the graph. Names of
-IFC–LPG's own properties, such as `ifc_class` or `bbox_min`, are in lower case
+IFC–DB's own properties, such as `ifc_class` or `bbox_min`, are in lower case
 with underscores, so they cannot be mistaken for IFC's attributes.
 
 ## How STEP ids are kept
@@ -355,7 +355,7 @@ and with the same values. Native IFC tools that merge by id, such as
 
 ## How geometry is stored
 
-**In short:** the shapes are most of a file. By default IFC–LPG makes nodes of what is
+**In short:** the shapes are most of a file. By default IFC–DB makes nodes of what is
 useful to ask about and to change, such as the kind of shape, its depth, its
 colour and its layer, and packs the many small parts, such as points, triangles
 and curves, as text.
@@ -403,7 +403,7 @@ blocks is what it costs to store and import, not what it costs to ask.
 
 ## Where the products are
 
-**In short:** a file only says where things are relative to each other. IFC–LPG works out
+**In short:** a file only says where things are relative to each other. IFC–DB works out
 a box in metres around every part of the building, so that you can ask what lies
 near what and which parts may collide, and it prepares the shapes for a 3D view.
 
@@ -461,7 +461,7 @@ builds its 3D view from that file.
 ## How a model is exported
 
 **In short:** the file is written from the database, so a change made there is in the
-file, and what IFC–LPG added for its own use stays out.
+file, and what IFC–DB added for its own use stays out.
 
 **In detail:**
 
@@ -481,7 +481,7 @@ could not be told from a right one.
 
 ## When two files hold the same model
 
-**In short:** IFC–LPG can tell whether two files describe exactly the same model, even
+**In short:** IFC–DB can tell whether two files describe exactly the same model, even
 when their records are numbered or ordered differently.
 
 **In detail:**
@@ -497,7 +497,7 @@ There is no tolerance. A REAL is compared by its bits, since a double survives
 text, JSON and Bolt exactly when it is written in its shortest form. *Identical*
 asks for the same ids, the same order in SETs and the same header too.
 
-The comparison reads the files with IFC–LPG's own reader, and checks a pairing it
+The comparison reads the files with IFC–DB's own reader, and checks a pairing it
 has built against the files alone, so a defect can give a wrong "not the same"
 but not a wrong "the same". With `--geometry` it also builds every product's mesh
 with IfcOpenShell and compares the meshes bit for bit, and it names the
@@ -547,7 +547,7 @@ validated, not the graph:
 
 ## Pointing at an instance
 
-**In short:** to change one part of a model you have to say which part. IFC–LPG names it
+**In short:** to change one part of a model you have to say which part. IFC–DB names it
 from the nearest part with a lasting id, its GlobalId, and the way from there.
 
 **In detail:**
@@ -567,7 +567,7 @@ which instance it changes, in a way that still holds after other changes.
 - **A change to a shared instance** applies to every instance that shares it.
   Only an explicit copy changes one alone.
 
-`resolve(graph, model_id, global_id, path)` in `ifc_lpg.paths` follows a path to
+`resolve(graph, model_id, global_id, path)` in `ifc_db.paths` follows a path to
 its node. `canonical_path(graph, model_id, step)` gives a node the one path it is
 named by when several reach it: the shortest, forward steps before inverse ones,
 then the names in alphabetical order, the lowest position and the lowest
@@ -594,7 +594,7 @@ and gets rows back, without writing Cypher and without knowing the graph's form.
 
 **In detail:**
 
-`ifc_lpg.queries` holds nine named queries on a model:
+`ifc_db.queries` holds nine named queries on a model:
 
 | Name | Answers | Parameters |
 |---|---|---|
@@ -636,7 +636,7 @@ queries use it when it is there.
 ## Changing the graph
 
 **In short:** a model can be changed in the database before it is written back.
-IFC–LPG helps a program that does so to keep the graph right: it says what
+IFC–DB helps a program that does so to keep the graph right: it says what
 refers to a part, it deletes a part only when nothing else refers to it, it puts
 the links that run backwards right after a change, and it lists what nothing
 reaches.
@@ -646,7 +646,7 @@ reaches.
 The writer reads the forward relationships, so a change made to one of them
 reaches the file. The inverse relationships are there for queries, and a change
 to a forward relationship leaves them as they were. `refresh_inverses(graph,
-model_id, steps)` in `ifc_lpg.editing` makes them anew for the nodes whose forward
+model_id, steps)` in `ifc_db.editing` makes them anew for the nodes whose forward
 relationships changed, exactly as the import makes them, from a table of the
 inverse attributes of IFC2X3, IFC4 and IFC4X3 that needs no IfcOpenShell.
 
@@ -656,7 +656,7 @@ references the database does not know. A node with referrers should not be
 deleted on its own, since the written file would then refer to nothing, so
 `delete_nodes(graph, model_id, steps)` deletes nodes only when nothing outside them
 refers to them, and otherwise raises `StillReferred` with what does and deletes
-nothing. `unreachable(graph, model_id)` in `ifc_lpg.paths` lists the nodes that no
+nothing. `unreachable(graph, model_id)` in `ifc_db.paths` lists the nodes that no
 GlobalId reaches, which a change can remove. Dataregium uses these in its change
 sets, which are checked and approved before they become a new version.
 
@@ -665,13 +665,13 @@ sets, which are checked and approved before they become a new version.
 **In short:** a building from one model can be put into the project of another,
 for example an annex drawn on its own into the model of the whole site. The result
 is a third model, and the two it came from do not change. Where both models have
-the same part, the same lasting id, IFC–LPG says so, and the person merging
+the same part, the same lasting id, IFC–DB says so, and the person merging
 chooses which version to keep. The new model is checked against the IFC standard
 before it is ready.
 
 **In detail:**
 
-`merge_report(graph, base_id, other_id, building)` in `ifc_lpg.merge` says what
+`merge_report(graph, base_id, other_id, building)` in `ifc_db.merge` says what
 bringing the building `building`, a GlobalId, of the model B into the project of
 the model A would do, and `merge_building(graph, base_id, other_id, building,
 model_id)` does it, as the new model C. Both work in the graph and need no
@@ -737,7 +737,7 @@ they mean, their kind, SI unit and scale, so Revit's `DEGREE` and Bonsai's
   history its date of change, `assignment` puts the styles of a styled item in the
   style assignment IFC2X3 needs, `context` gives a project without a
   representation context a 3D model context at the origin, and `owner` gives what
-  IFC2X3 needs an owner history on one made by IFC–LPG. A problem without options, such as the meshes of IFC4 in
+  IFC2X3 needs an owner history on one made by IFC–DB. A problem without options, such as the meshes of IFC4 in
   IFC2X3, cannot be solved here. The report lists the problems of every step at
   once.
 - **The check:** B and the converted model are both validated, B's issues are
@@ -754,7 +754,7 @@ run again for C.
 
 ## Neo4j and Memgraph
 
-**In short:** the two databases differ in small ways. IFC–LPG uses only what both do
+**In short:** the two databases differ in small ways. IFC–DB uses only what both do
 alike, so either can be chosen, and the same questions work on both.
 
 **In detail:**
@@ -766,7 +766,7 @@ on Python 3.11, 3.13 and 3.14.
 
 `ensure_schema(graph, dialect)` makes the unique keys, the indexes and the point
 index in either database's words, and leaves those that exist. Where the two
-differ, IFC–LPG keeps to what both do alike:
+differ, IFC–DB keeps to what both do alike:
 
 - Neo4j stores no maps, nested lists, mixed lists or nulls in lists, so such
   values are JSON text.
@@ -778,14 +778,14 @@ differ, IFC–LPG keeps to what both do alike:
 
 ## IFC5 (experimental)
 
-**In short:** IFC5, the next version of IFC, is still a draft. IFC–LPG can already read
+**In short:** IFC5, the next version of IFC, is still a draft. IFC–DB can already read
 and write its files, and check that their values are of the kinds their schemas
 say, on trial.
 
 **In detail:**
 
 IFC5 is a draft. Its files, IFCX, are JSON in the format `ifcx_alpha`, which
-can still change, and so can this part of IFC–LPG. A file is a list of entries,
+can still change, and so can this part of IFC–DB. A file is a list of entries,
 each about a path: its children and what it inherits, by name, and its
 attributes under namespaced keys.
 
@@ -821,13 +821,13 @@ files, the layer gives the changed model. IFCX has no way to take away a path, s
 a path that is gone keeps an entry with all its parts set to `null`.
 
 An IFCX file says what its attributes are in `schemas`, and imports more schemas
-by their URI. `python -m ifc_lpg.ifcx_check FILE... --schemas DIR`, or
-`check_ifcx([paths], schemas=DIR)` in `ifc_lpg.ifcx_check`, composes the files and
+by their URI. `python -m ifc_db.ifcx_check FILE... --schemas DIR`, or
+`check_ifcx([paths], schemas=DIR)` in `ifc_db.ifcx_check`, composes the files and
 checks every attribute against the schema for its key: its data type, the options
 of an enumeration, every member of an array, and the members of an object, of
 which only those marked optional may be missing. The issues come in the form of a
 validation report. The imported schemas are not fetched while a file is checked:
-`python -m ifc_lpg.ifcx_check --fetch DIR` fetches the ones IFC–LPG has pinned,
+`python -m ifc_db.ifcx_check --fetch DIR` fetches the ones IFC–DB has pinned,
 those that buildingSMART's examples import, each checked against its SHA-256. An
 import that is not pinned is a warning, and so is an attribute without a schema
 while such an import is there. buildingSMART's examples "Hello Wall" and the
@@ -894,53 +894,53 @@ reader and writer, the lossless form, importing and exporting records, deleting 
 model, the boxes' import, the paths, the named queries, the support for changes,
 the merge and IFC5's graph side. A server can run that in its own process and leave
 IfcOpenShell to the workers, which need the extra `ifcopenshell`. Everything that reads, converts, writes or checks a file runs in a
-process of its own, within `ifc_lpg.files.Limits`: 900 s, 4,096 MB of memory on
+process of its own, within `ifc_db.files.Limits`: 900 s, 4,096 MB of memory on
 POSIX and 5 million instances, unless others are given.
 
 | To | Use |
 |---|---|
-| Make the keys and indexes | `ensure_schema(graph, "neo4j" or "memgraph")` in `ifc_lpg.graph` |
-| Put a file in | `import_file(graph, path, model_id)` in `ifc_lpg.files`; `geometry_in_blocks=True` or `include_geometry=True` for the other forms, `lossless=False` for the ordinary form |
-| Write it back | `export_file(graph, model_id, path)` in `ifc_lpg.files` |
-| Take a model out | `delete_model(graph, model_id)` in `ifc_lpg.importer` |
-| Read a model's record | `model_facts(graph, model_id)` in `ifc_lpg.importer` |
-| List the models | `models(graph)` in `ifc_lpg.importer`: each model's id and whether it is all in the graph |
-| Convert or write in steps of your own | `convert_file` and `write_file` in `ifc_lpg.files`, `import_records` in `ifc_lpg.importer`, `export_records` in `ifc_lpg.exporter` |
-| Add the boxes | `add_spatial(graph, path, model_id, dialect=…, meshes=False)` in `ifc_lpg.spatial`; `spatial_file` writes the geometry's file alone, and `import_spatial` reads one in |
-| Report the shapes that cannot be built | `geometry_issues(records)` in `ifc_lpg.spatial` |
-| Find the parts that may collide | `overlapping_boxes(graph, model_id, other_model_id=None, clearance=0.0, exclude=())` in `ifc_lpg.spatial` |
-| Follow or give a path | `resolve` and `canonical_path` in `ifc_lpg.paths` |
-| List what no path reaches | `unreachable(graph, model_id)` in `ifc_lpg.paths` |
-| Ask a model a named query | `run_query(graph, model_id, name, parameters)` and `catalogue()` in `ifc_lpg.queries` |
-| Look a property up for a list of GlobalIds | `property_values(graph, model_id, pset=…, property=…, global_ids=[…])` in `ifc_lpg.queries` |
-| See what refers to an instance | `referrers(graph, model_id, step)` in `ifc_lpg.editing` |
-| Delete nodes that nothing else refers to | `delete_nodes(graph, model_id, steps)` in `ifc_lpg.editing` |
-| Put the inverse relationships right after a change | `refresh_inverses(graph, model_id, steps)` in `ifc_lpg.editing` |
-| Make a model ready to be merged | `prepare_other(graph, other_id, prepared_id, base_id=…, resolutions=…)` in `ifc_lpg.merge` |
-| Bring a building into another project | `merge_report(graph, base_id, other_id, building)` and `merge_building(graph, base_id, other_id, building, model_id, choices=…)` in `ifc_lpg.merge` |
-| Put IFC5 files in, and write them back | `import_ifcx(graph, [paths], model_id)` and `export_ifcx(graph, model_id, path)` in `ifc_lpg.ifcx` |
-| Check IFC5 files against their schemas | `check_ifcx([paths], schemas=dir)` in `ifc_lpg.ifcx_check` |
-| Write a change as an IFC5 layer | `export_ifcx_overlay(graph, base_model_id, model_id, path)` in `ifc_lpg.ifcx` |
-| Compare two files | `compare_files(first, second)` in `ifc_lpg.equivalence` |
-| Check against IDS | `check_ids(path, [ids_paths])` in `ifc_lpg.files` |
+| Make the keys and indexes | `ensure_schema(graph, "neo4j" or "memgraph")` in `ifc_db.graph` |
+| Put a file in | `import_file(graph, path, model_id)` in `ifc_db.files`; `geometry_in_blocks=True` or `include_geometry=True` for the other forms, `lossless=False` for the ordinary form |
+| Write it back | `export_file(graph, model_id, path)` in `ifc_db.files` |
+| Take a model out | `delete_model(graph, model_id)` in `ifc_db.importer` |
+| Read a model's record | `model_facts(graph, model_id)` in `ifc_db.importer` |
+| List the models | `models(graph)` in `ifc_db.importer`: each model's id and whether it is all in the graph |
+| Convert or write in steps of your own | `convert_file` and `write_file` in `ifc_db.files`, `import_records` in `ifc_db.importer`, `export_records` in `ifc_db.exporter` |
+| Add the boxes | `add_spatial(graph, path, model_id, dialect=…, meshes=False)` in `ifc_db.spatial`; `spatial_file` writes the geometry's file alone, and `import_spatial` reads one in |
+| Report the shapes that cannot be built | `geometry_issues(records)` in `ifc_db.spatial` |
+| Find the parts that may collide | `overlapping_boxes(graph, model_id, other_model_id=None, clearance=0.0, exclude=())` in `ifc_db.spatial` |
+| Follow or give a path | `resolve` and `canonical_path` in `ifc_db.paths` |
+| List what no path reaches | `unreachable(graph, model_id)` in `ifc_db.paths` |
+| Ask a model a named query | `run_query(graph, model_id, name, parameters)` and `catalogue()` in `ifc_db.queries` |
+| Look a property up for a list of GlobalIds | `property_values(graph, model_id, pset=…, property=…, global_ids=[…])` in `ifc_db.queries` |
+| See what refers to an instance | `referrers(graph, model_id, step)` in `ifc_db.editing` |
+| Delete nodes that nothing else refers to | `delete_nodes(graph, model_id, steps)` in `ifc_db.editing` |
+| Put the inverse relationships right after a change | `refresh_inverses(graph, model_id, steps)` in `ifc_db.editing` |
+| Make a model ready to be merged | `prepare_other(graph, other_id, prepared_id, base_id=…, resolutions=…)` in `ifc_db.merge` |
+| Bring a building into another project | `merge_report(graph, base_id, other_id, building)` and `merge_building(graph, base_id, other_id, building, model_id, choices=…)` in `ifc_db.merge` |
+| Put IFC5 files in, and write them back | `import_ifcx(graph, [paths], model_id)` and `export_ifcx(graph, model_id, path)` in `ifc_db.ifcx` |
+| Check IFC5 files against their schemas | `check_ifcx([paths], schemas=dir)` in `ifc_db.ifcx_check` |
+| Write a change as an IFC5 layer | `export_ifcx_overlay(graph, base_model_id, model_id, path)` in `ifc_db.ifcx` |
+| Compare two files | `compare_files(first, second)` in `ifc_db.equivalence` |
+| Check against IDS | `check_ids(path, [ids_paths])` in `ifc_db.files` |
 
 The command lines, each in a process of its own:
 
 | Command | Does |
 |---|---|
-| `python -m ifc_lpg.worker IFC OUT [--lossless] [--include-geometry \| --geometry-in-blocks]` | converts a file to records |
-| `python -m ifc_lpg.writer RECORDS OUT` | writes records as a file |
-| `python -m ifc_lpg.spatial IFC OUT [--threads T]` | writes the geometry's file: meshes, matrices and boxes |
-| `python -m ifc_lpg.ifcx read FILE... OUT`, `write RECORDS OUT` and `overlay BASE RECORDS OUT --layer-id ID` | reads and writes IFC5 files and layers |
-| `python -m ifc_lpg.equivalence A B [--geometry]` | compares two files |
-| `python -m ifc_lpg.validation FILE [--against SRC...]` | checks a file against the IFC schema |
-| `python -m ifc_lpg.ifcx_check FILE... [--schemas DIR]` and `--fetch DIR` | checks IFC5 files against their schemas, and fetches the pinned ones |
-| `python -m ifc_lpg.prepare IFC OUT [--schema S] [--length-unit U] [--resolve KEY=OPTION...]` | migrates a file, turns its lengths into another unit, and checks the result |
-| `python -m ifc_lpg.ids FILE IDS...` | checks a file against IDS |
-| `python -m ifc_lpg.gherkin_install DIR` and `python -m ifc_lpg.gherkin FILE --env DIR` | buildingSMART's rules |
+| `python -m ifc_db.worker IFC OUT [--lossless] [--include-geometry \| --geometry-in-blocks]` | converts a file to records |
+| `python -m ifc_db.writer RECORDS OUT` | writes records as a file |
+| `python -m ifc_db.spatial IFC OUT [--threads T]` | writes the geometry's file: meshes, matrices and boxes |
+| `python -m ifc_db.ifcx read FILE... OUT`, `write RECORDS OUT` and `overlay BASE RECORDS OUT --layer-id ID` | reads and writes IFC5 files and layers |
+| `python -m ifc_db.equivalence A B [--geometry]` | compares two files |
+| `python -m ifc_db.validation FILE [--against SRC...]` | checks a file against the IFC schema |
+| `python -m ifc_db.ifcx_check FILE... [--schemas DIR]` and `--fetch DIR` | checks IFC5 files against their schemas, and fetches the pinned ones |
+| `python -m ifc_db.prepare IFC OUT [--schema S] [--length-unit U] [--resolve KEY=OPTION...]` | migrates a file, turns its lengths into another unit, and checks the result |
+| `python -m ifc_db.ids FILE IDS...` | checks a file against IDS |
+| `python -m ifc_db.gherkin_install DIR` and `python -m ifc_db.gherkin FILE --env DIR` | buildingSMART's rules |
 
 Every command but the installer also takes `--memory-mb N`. Dataregium's
-[IFC-LPG page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-lpg.md)
+[IFC-DB page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-lpg.md)
 describes how a server uses the parts.
 
 ## Background
@@ -966,12 +966,13 @@ it joins the components of BCF viewpoints to the building elements they point at
 There it gained what a round trip needs: list positions, typed values, the
 header, geometry kept as text, a STEP reader and writer of its own, validation,
 and a comparison that says whether two files hold the same model. This
-repository now carries that work under a new name, IFC–LPG: IFC as a labelled
-property graph.
+repository carried that work on under the name IFC–LPG, IFC as a labelled
+property graph, and in 2026 it was renamed IFC–DB, since it is to keep models
+in more kinds of database.
 
 ## Licence
 
-IFC–LPG is free software under the GNU Affero General Public License, version 3
+IFC–DB is free software under the GNU Affero General Public License, version 3
 or later, in [LICENSE](LICENSE). It is the licence of Dataregium, where the code
 was written.
 

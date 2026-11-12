@@ -1,5 +1,5 @@
 # This file was generated with the assistance of an AI coding tool.
-"""Install the environment buildingSMART's ifc-gherkin-rules run in: ``python -m ifc_lpg.gherkin_install TARGET``.
+"""Install the environment buildingSMART's ifc-gherkin-rules run in: ``python -m ifc_db.gherkin_install TARGET``.
 
 ADR 0012. The rule set is run as its own tests run it, with behave 1.2.6 and IfcOpenShell 0.8.6, which is what its CI
 uses; the rest of this package uses IfcOpenShell 0.9, which one of the rule set's helpers does not work with. So the rules get a
@@ -189,7 +189,7 @@ def install(target: Path) -> dict[str, str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="ifc-lpg-gherkin-install", description=__doc__.split("\n", 1)[0])
+    parser = argparse.ArgumentParser(prog="ifc-db-gherkin-install", description=__doc__.split("\n", 1)[0])
     parser.add_argument("target", type=Path, help="an empty or missing folder")
     args = parser.parse_args(argv)
     try:

@@ -30,9 +30,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.lossless import as_points, encode_block, encode_header, encode_instance
-from ifc_lpg.schema import Schema, point_size
-from ifc_lpg.step import StepError, StepFile, statement_text
+from ifc_db.lossless import as_points, encode_block, encode_header, encode_instance
+from ifc_db.schema import Schema, point_size
+from ifc_db.step import StepError, StepFile, statement_text
 
 GEOMETRY_ROOTS = (
     "IfcRepresentationItem",
@@ -232,7 +232,7 @@ def convert(
     try:
         import ifcopenshell
     except ImportError as exc:  # pragma: no cover - depends on the optional extra
-        raise ConversionError("IfcOpenShell is not installed; install the 'ifc-lpg' extra") from exc
+        raise ConversionError("IfcOpenShell is not installed; install ifc-db with the extra 'ifcopenshell'") from exc
 
     model = ifcopenshell.open(str(path))
     schema = ifcopenshell.schema_by_name(model.schema)

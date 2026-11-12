@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from ifc_lpg.step import StepError
+from ifc_db.step import StepError
 
 _IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _CAMEL_BOUNDARY = re.compile(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
@@ -88,7 +88,7 @@ class Schema:
         try:
             from ifcopenshell import ifcopenshell_wrapper
         except ImportError as exc:  # pragma: no cover - depends on the optional extra
-            raise StepError("IfcOpenShell is not installed; install the 'ifc-lpg' extra") from exc
+            raise StepError("IfcOpenShell is not installed; install ifc-db with the extra 'ifcopenshell'") from exc
         try:
             self._schema: Any = ifcopenshell_wrapper.schema_by_name(name)
         except RuntimeError as exc:

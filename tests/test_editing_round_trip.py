@@ -8,10 +8,10 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.editing import StillReferred, delete_nodes, referrers, refresh_inverses
-from ifc_lpg.files import export_file, import_file
-from ifc_lpg.paths import resolve, unreachable
-from ifc_lpg.validation import compare_issues, issues_of
+from ifc_db.editing import StillReferred, delete_nodes, referrers, refresh_inverses
+from ifc_db.files import export_file, import_file
+from ifc_db.paths import resolve, unreachable
+from ifc_db.validation import compare_issues, issues_of
 from tests.conftest import FIXTURES_DIR
 
 pytestmark = pytest.mark.integration

@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.files import import_file
-from ifc_lpg.queries import QUERIES, property_values, run_query
+from ifc_db.files import import_file
+from ifc_db.queries import QUERIES, property_values, run_query
 from tests.conftest import FIXTURES_DIR
 
 pytestmark = pytest.mark.integration
@@ -110,8 +110,8 @@ async def test_where_a_model_stands(graph: Any) -> None:
 
 
 async def test_a_storey_without_elevation_is_placed_by_its_placement(graph: Any, tmp_path: Any) -> None:
-    from ifc_lpg.equivalence import compare_files
-    from ifc_lpg.files import export_file
+    from ifc_db.equivalence import compare_files
+    from ifc_db.files import export_file
 
     source = FIXTURES_DIR / "storey_placement.ifc"
     await import_file(graph, source, "storeys")

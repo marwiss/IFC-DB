@@ -1,12 +1,12 @@
 # This file was generated with the assistance of an AI coding tool.
-"""Whether the attributes of IFC5 files keep to their schemas: ``python -m ifc_lpg.ifcx_check FILE... [--schemas DIR]``.
+"""Whether the attributes of IFC5 files keep to their schemas: ``python -m ifc_db.ifcx_check FILE... [--schemas DIR]``.
 
 Experimental, as IFC5 is. An IFCX file says what its attributes are in ``schemas``, and imports more schemas by URI. The
 files are composed as for the graph, and every attribute is checked against the schema for its key, the files' own over
 the imported ones: its data type (``String``, ``Real``, ``Integer``, ``Boolean``, ``DateTime``, ``Enum``, ``Array``,
 ``Object``, ``Reference``), the options of an enumeration, the type of each member of an array, and the members of an
 object, of which only those marked ``optional`` may be missing. The imported schemas are not fetched while a file is
-checked: ``python -m ifc_lpg.ifcx_check --fetch DIR`` fetches the ones pinned here, each checked against its SHA-256,
+checked: ``python -m ifc_db.ifcx_check --fetch DIR`` fetches the ones pinned here, each checked against its SHA-256,
 into a directory that the check then reads. An import that is not pinned is a warning, and so is an attribute without a
 schema while such an import is there to say what it is. The answer is JSON on stdout, with issues in the form of a
 validation report, ``kind`` ``ifcx-schema``.
@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.files import DEFAULT_LIMITS, Limits, run_worker
+from ifc_db.files import DEFAULT_LIMITS, Limits, run_worker
 
 MAX_REPORTED = 10_000
 MANIFEST = "manifest.json"
@@ -43,8 +43,8 @@ PINNED = {
 
 def fetch_schemas(target: Path) -> list[str]:
     """Fetch the pinned schemas into ``target``, each refused unless its SHA-256 is the pinned one. Returns the URIs."""
-    from ifc_lpg.gherkin_install import fetch
-    from ifc_lpg.ifcx import read_layer
+    from ifc_db.gherkin_install import fetch
+    from ifc_db.ifcx import read_layer
 
     target.mkdir(parents=True, exist_ok=True)
     manifest = {}
@@ -59,7 +59,7 @@ def fetch_schemas(target: Path) -> list[str]:
 
 def read_schemas(folder: Path) -> dict[str, dict[str, Any]]:
     """The schemas of each pinned URI fetched into ``folder``, read again and checked against their pins."""
-    from ifc_lpg.ifcx import read_layer
+    from ifc_db.ifcx import read_layer
 
     found = {}
     for uri, name in json.loads((folder / MANIFEST).read_text(encoding="utf-8")).items():
@@ -162,7 +162,7 @@ def _issue(severity: str, message: str, path: str | None, attribute: str | None)
 
 def report(sources: list[Path], schemas: Path | None) -> dict[str, Any]:
     """The check of the files ``sources``, composed, with the schemas fetched into ``schemas``."""
-    from ifc_lpg.ifcx import MAX_BYTES, IfcxError, compose, read_layer
+    from ifc_db.ifcx import MAX_BYTES, IfcxError, compose, read_layer
 
     layers = []
     for source in sources:
@@ -171,7 +171,7 @@ def report(sources: list[Path], schemas: Path | None) -> dict[str, Any]:
         layers.append((source.name, read_layer(source.read_bytes())))
     issues = check(compose(layers), read_schemas(schemas) if schemas else {})
     return {
-        "ruleset": "IFC-LPG's check of IFCX attributes against their schemas",
+        "ruleset": "IFC-DB's check of IFCX attributes against their schemas",
         "issue_count": len(issues),
         "error_count": sum(1 for issue in issues if issue["severity"] == "error"),
         "truncated": len(issues) > MAX_REPORTED,
@@ -183,7 +183,7 @@ async def check_ifcx(
     paths: list[Path], *, schemas: Path | None = None, limits: Limits = DEFAULT_LIMITS
 ) -> dict[str, Any]:
     """The check of IFCX files, composed, in the worker; ``schemas`` is where :func:`fetch_schemas` put the imports."""
-    command = [sys.executable, "-m", "ifc_lpg.ifcx_check", "--memory-mb", str(limits.memory_mb)]
+    command = [sys.executable, "-m", "ifc_db.ifcx_check", "--memory-mb", str(limits.memory_mb)]
     command += ["--schemas", str(schemas)] if schemas else []
     answer = await run_worker(
         [*command, "--", *map(str, paths)], "the IFCX check", limits.timeout_seconds, answers=(0, 1)
@@ -193,13 +193,13 @@ async def check_ifcx(
 
 def main(argv: list[str] | None = None) -> int:
     """Exit 0 when nothing is wrong, 1 when something is, and 3 for what could not be checked."""
-    parser = argparse.ArgumentParser(prog="ifc-lpg-ifcx-check")
+    parser = argparse.ArgumentParser(prog="ifc-db-ifcx-check")
     parser.add_argument("files", type=Path, nargs="*")
     parser.add_argument("--schemas", type=Path, help="where --fetch put the pinned schemas")
     parser.add_argument("--fetch", type=Path, help="fetch the pinned schemas into this directory, and check nothing")
     parser.add_argument("--memory-mb", type=int, default=0)
     args = parser.parse_args(argv)
-    from ifc_lpg.worker import limit_memory
+    from ifc_db.worker import limit_memory
 
     if args.memory_mb:
         limit_memory(args.memory_mb)

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pytest
 
-from ifc_lpg.inverses import inverses
+from ifc_db.inverses import inverses
 
 
 @pytest.mark.parametrize("schema_name", ["IFC2X3", "IFC4", "IFC4X3_ADD2"])

@@ -5,9 +5,9 @@ from __future__ import annotations
 
 import pytest
 
-from ifc_lpg.convert import BULK_GEOMETRY
-from ifc_lpg.paths import _FROM_BLOCK, MAX_STEPS, PathError, Step, attribute_name, parse
-from ifc_lpg.schema import relationship_type
+from ifc_db.convert import BULK_GEOMETRY
+from ifc_db.paths import _FROM_BLOCK, MAX_STEPS, PathError, Step, attribute_name, parse
+from ifc_db.schema import relationship_type
 
 
 def test_a_path_is_attribute_names_with_positions() -> None:

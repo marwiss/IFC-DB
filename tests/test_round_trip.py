@@ -9,11 +9,11 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.equivalence import compare_files
-from ifc_lpg.exporter import NotExportable
-from ifc_lpg.files import convert_file, export_file, import_file
-from ifc_lpg.importer import MODEL_FACTS, delete_model, import_records, model_facts, models
-from ifc_lpg.step import StepFile
+from ifc_db.equivalence import compare_files
+from ifc_db.exporter import NotExportable
+from ifc_db.files import convert_file, export_file, import_file
+from ifc_db.importer import MODEL_FACTS, delete_model, import_records, model_facts, models
+from ifc_db.step import StepFile
 from tests.conftest import FIXTURES_DIR
 
 pytestmark = pytest.mark.integration

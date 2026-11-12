@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ifc_lpg.prepare import prepare_file
-from ifc_lpg.step import StepFile
+from ifc_db.prepare import prepare_file
+from ifc_db.step import StepFile
 from tests.conftest import FIXTURES_DIR
 
 
@@ -73,7 +73,7 @@ def test_the_choices_are_made_and_the_conversion_is_checked(tmp_path: Path) -> N
 
 def test_an_issue_the_file_did_not_have_stops_the_conversion(tmp_path: Path) -> None:
     pytest.importorskip("ifcopenshell", reason="IfcOpenShell is not installed")
-    from ifc_lpg.prepare import _check
+    from ifc_db.prepare import _check
 
     broken = tmp_path / "broken.ifc"
     broken.write_bytes(WINDOW_STYLE.read_bytes().replace(b"$,$,1.2,1.);", b"$,$,-1.2,1.);"))
@@ -90,7 +90,7 @@ def test_an_issue_the_file_did_not_have_stops_the_conversion(tmp_path: Path) -> 
 def test_whatever_goes_wrong_in_the_worker_is_a_failure_and_no_answer(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from ifc_lpg import prepare
+    from ifc_db import prepare
 
     def broken(*_args: object, **_kwargs: object) -> dict[str, object]:
         raise KeyError("unexpected")
@@ -105,7 +105,7 @@ def test_whatever_goes_wrong_in_the_worker_is_a_failure_and_no_answer(
 BARE = b"""ISO-10303-21;
 HEADER;
 FILE_DESCRIPTION(('ViewDefinition [DesignTransferView]'),'2;1');
-FILE_NAME('bare.ifc','2026-11-11T00:00:00',(''),(''),'IFC-LPG tests','IFC-LPG tests','');
+FILE_NAME('bare.ifc','2026-11-11T00:00:00',(''),(''),'IFC-DB tests','IFC-DB tests','');
 FILE_SCHEMA(('IFC4'));
 ENDSEC;
 DATA;

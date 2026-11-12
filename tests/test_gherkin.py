@@ -14,8 +14,8 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg import gherkin, gherkin_install
-from ifc_lpg.gherkin_install import InstallError, _inside, fetch, unpack_rules
+from ifc_db import gherkin, gherkin_install
+from ifc_db.gherkin_install import InstallError, _inside, fetch, unpack_rules
 from tests.conftest import FIXTURES_DIR
 
 MODEL = FIXTURES_DIR / "three_walls_gtin.ifc"
@@ -188,6 +188,6 @@ def test_the_rules_see_none_of_the_callers_settings(monkeypatch: pytest.MonkeyPa
 
 
 def test_the_global_id_of_a_rooted_instance_is_read_from_the_file() -> None:
-    pytest.importorskip("ifcopenshell", reason="the ifc-lpg extra is not installed")
+    pytest.importorskip("ifcopenshell", reason="the ifc-db extra is not installed")
     names = gherkin.global_ids(MODEL, {242, 32, 999_999})
     assert names == {242: "1Xezbq735AdBO_4DerG66G"}, "#32 is an owner history, #999999 is no instance"

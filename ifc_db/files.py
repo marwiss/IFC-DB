@@ -4,8 +4,8 @@
 :func:`import_file` converts a file in a process of its own, with a time limit and a memory limit (POSIX), loads the
 records into the graph and marks the model ``done``. :func:`export_file` writes a model back from what the graph holds,
 in a process of its own too. Programs with their own idea of a model, such as Dataregium, which ties a model to a
-project and a document version, use the parts directly: :func:`convert_file`, :func:`~ifc_lpg.importer.import_records`,
-:func:`~ifc_lpg.exporter.export_records` and :func:`write_file`. :func:`check_ids` checks a file against IDS files, in a
+project and a document version, use the parts directly: :func:`convert_file`, :func:`~ifc_db.importer.import_records`,
+:func:`~ifc_db.exporter.export_records` and :func:`write_file`. :func:`check_ids` checks a file against IDS files, in a
 process of its own as well.
 """
 
@@ -20,9 +20,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.exporter import export_records
-from ifc_lpg.graph import FORM_VERSION, Graph
-from ifc_lpg.importer import _now, delete_model, import_records
+from ifc_db.exporter import export_records
+from ifc_db.graph import FORM_VERSION, Graph
+from ifc_db.importer import _now, delete_model, import_records
 
 
 @dataclass(frozen=True)
@@ -79,7 +79,7 @@ async def convert_file(
     command = [
         sys.executable,
         "-m",
-        "ifc_lpg.worker",
+        "ifc_db.worker",
         str(source),
         str(records),
         "--memory-mb",
@@ -99,15 +99,15 @@ async def convert_file(
 
 async def write_file(records: Path, target: Path, *, limits: Limits = DEFAULT_LIMITS) -> None:
     """Write the records of an exported model as an IFC file at ``target``."""
-    command = [sys.executable, "-m", "ifc_lpg.writer", str(records), str(target), "--memory-mb", str(limits.memory_mb)]
+    command = [sys.executable, "-m", "ifc_db.writer", str(records), str(target), "--memory-mb", str(limits.memory_mb)]
     await run_worker(command, "writing the file", limits.timeout_seconds)
 
 
 async def check_ids(source: Path, ids_files: list[Path], *, limits: Limits = DEFAULT_LIMITS) -> dict[str, Any]:
-    """Check ``source`` against the IDS files ``ids_files``. Returns the report of :func:`ifc_lpg.ids.report_of`: the
+    """Check ``source`` against the IDS files ``ids_files``. Returns the report of :func:`ifc_db.ids.report_of`: the
     issues, each with the index of its IDS, the IDS files that could not be read, and a summary of every specification."""
     paths = [str(source), *(str(path) for path in ids_files)]
-    command = [sys.executable, "-m", "ifc_lpg.ids", "--memory-mb", str(limits.memory_mb), "--", *paths]
+    command = [sys.executable, "-m", "ifc_db.ids", "--memory-mb", str(limits.memory_mb), "--", *paths]
     # The check exits with 1 when something failed, which is an answer like any other.
     answer = await run_worker(command, "the IDS check", limits.timeout_seconds, answers=(0, 1))
     return json.loads(answer.strip().splitlines()[-1])
@@ -139,7 +139,7 @@ async def import_file(
     if not rows or not rows[0]["new"]:
         raise ValueError(f"the model {model_id!r} exists already")
     try:
-        with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="ifc-db-") as tmp:
             records = Path(tmp) / "records.jsonl"
             header = await convert_file(
                 source,
@@ -178,7 +178,7 @@ async def import_file(
 
 async def export_file(graph: Graph, model_id: str, target: Path, *, limits: Limits = DEFAULT_LIMITS) -> int:
     """Write the model ``model_id`` back as an IFC file at ``target``. Returns the number of instances written."""
-    with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="ifc-db-") as tmp:
         records = Path(tmp) / "records.jsonl"
         instances = await export_records(graph, model_id, records)
         await write_file(records, target, limits=limits)

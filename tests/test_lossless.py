@@ -13,19 +13,19 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.step import StepFile, parse_statement, statement_text, statements_of, value_text
-from ifc_lpg.worker import main as worker_main
+from ifc_db.step import StepFile, parse_statement, statement_text, statements_of, value_text
+from ifc_db.worker import main as worker_main
 from tests.conftest import FIXTURES_DIR
 
-pytest.importorskip("ifcopenshell", reason="the ifc-lpg extra is not installed")
+pytest.importorskip("ifcopenshell", reason="the ifc-db extra is not installed")
 
 import ifcopenshell
 
-from ifc_lpg import lossless
-from ifc_lpg.convert import BULK_GEOMETRY, ConversionError, convert, convert_lossless
-from ifc_lpg.equivalence import compare
-from ifc_lpg.exporter import block_lines, node_line, write_merged
-from ifc_lpg.lossless import (
+from ifc_db import lossless
+from ifc_db.convert import BULK_GEOMETRY, ConversionError, convert, convert_lossless
+from ifc_db.equivalence import compare
+from ifc_db.exporter import block_lines, node_line, write_merged
+from ifc_db.lossless import (
     ALL_ARGUMENTS,
     POINTS,
     TAGGED,
@@ -34,9 +34,9 @@ from ifc_lpg.lossless import (
     encode_block,
     encode_instance,
 )
-from ifc_lpg.schema import Schema, relationship_type
-from ifc_lpg.writer import main as writer_main
-from ifc_lpg.writer import write_records
+from ifc_db.schema import Schema, relationship_type
+from ifc_db.writer import main as writer_main
+from ifc_db.writer import write_records
 
 MODEL = FIXTURES_DIR / "three_walls_gtin.ifc"
 
@@ -225,7 +225,7 @@ def test_all_of_them_together_come_back_and_stay_as_they_are(form: str, tmp_path
 
 @EVERY_FORM
 def test_the_same_goes_for_a_real_model_and_its_geometry(form: str, tmp_path: Path) -> None:
-    from ifc_lpg.equivalence import compare_files
+    from ifc_db.equivalence import compare_files
 
     written = tmp_path / "out.ifc"
     written.write_bytes(there_and_back(MODEL.read_bytes(), tmp_path, **FORMS[form]))
@@ -403,7 +403,7 @@ def test_an_owner_history_is_linked_from_its_project_alone(form: str, tmp_path: 
 
 
 def test_many_instances_make_many_blocks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("ifc_lpg.convert.BLOCK_BYTES", 2000)
+    monkeypatch.setattr("ifc_db.convert.BLOCK_BYTES", 2000)
     statements = [f"#{step}=IFCCARTESIANPOINT(({step}.5,0.,-0.));" for step in range(1, 1001)]
     data = exchange(*reversed(statements))
     records = records_of(data, tmp_path, include_geometry=False)

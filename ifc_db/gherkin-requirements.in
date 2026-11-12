@@ -2,8 +2,8 @@
 # The environment buildingSMART's ifc-gherkin-rules run in (ADR 0012): the versions the rule set's requirements.txt pins
 # for what its steps import when they run, and what IfcOpenShell 0.8.6 needs. Not Django, SQLAlchemy, pandas, pydantic,
 # pyspellchecker or pytest, which only its service, its authoring checks and its own tests use. Compiled with hashes:
-#   uv pip compile ifc_lpg/gherkin-requirements.in --universal --generate-hashes --python-version 3.13 \
-#     -o ifc_lpg/gherkin-requirements.txt
+#   uv pip compile ifc_db/gherkin-requirements.in --universal --generate-hashes --python-version 3.13 \
+#     -o ifc_db/gherkin-requirements.txt
 behave==1.2.6
 numpy==2.2.6
 mpmath==1.3.0

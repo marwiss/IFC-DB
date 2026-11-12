@@ -8,10 +8,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.graph import FORM_VERSION, Graph, is_whole
-from ifc_lpg.lossless import POINTS
-from ifc_lpg.schema import relationship_type
-from ifc_lpg.schema import safe_identifier as _safe
+from ifc_db.graph import FORM_VERSION, Graph, is_whole
+from ifc_db.lossless import POINTS
+from ifc_db.schema import relationship_type
+from ifc_db.schema import safe_identifier as _safe
 
 BATCH = 2_000
 MAX_BATCH_BYTES = 16 * 1024 * 1024  # a coordinate list can be megabytes, and a transaction's memory has a limit

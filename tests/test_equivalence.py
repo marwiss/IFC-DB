@@ -20,15 +20,15 @@ import pytest
 
 from tests.conftest import FIXTURES_DIR
 
-pytest.importorskip("ifcopenshell", reason="the ifc-lpg extra is not installed")
+pytest.importorskip("ifcopenshell", reason="the ifc-db extra is not installed")
 
 import ifcopenshell
 from ifcopenshell import ifcopenshell_wrapper
 
-from ifc_lpg import equivalence
-from ifc_lpg.equivalence import compare, compare_files, main
-from ifc_lpg.schema import Schema, relationship_type
-from ifc_lpg.step import StepFile
+from ifc_db import equivalence
+from ifc_db.equivalence import compare, compare_files, main
+from ifc_db.schema import Schema, relationship_type
+from ifc_db.step import StepFile
 
 MODEL = FIXTURES_DIR / "three_walls_gtin.ifc"
 ORIGINAL = MODEL.read_bytes()
@@ -835,7 +835,7 @@ def test_the_answer_stands_alone_on_stdout_whatever_the_kernel_writes() -> None:
     """The geometry kernel writes to stdout from C++, which is what a write to the file descriptor stands in for."""
     script = (
         "import os, sys\n"
-        "from ifc_lpg.worker import keep_stdout_for_the_answer\n"
+        "from ifc_db.worker import keep_stdout_for_the_answer\n"
         "keep_stdout_for_the_answer()\n"
         "os.write(1, b'noise from the kernel\\n')\n"
         "sys.stdout.write('the answer\\n')\n"
@@ -851,7 +851,7 @@ def test_the_module_answers_in_a_process_of_its_own(tmp_path: Path) -> None:
     written = tmp_path / "written.ifc"
     written.write_bytes(renumbered_and_shuffled(ORIGINAL))
     done = subprocess.run(  # noqa: S603 - this very interpreter, on files the test wrote
-        [sys.executable, "-m", "ifc_lpg.equivalence", str(MODEL), str(written), "--geometry"],
+        [sys.executable, "-m", "ifc_db.equivalence", str(MODEL), str(written), "--geometry"],
         capture_output=True,
         text=True,
         timeout=300,

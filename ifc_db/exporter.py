@@ -10,9 +10,9 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Any, TextIO
 
-from ifc_lpg.graph import Graph, is_whole
-from ifc_lpg.lossless import NATIVE, decode_block
-from ifc_lpg.step import statements_of
+from ifc_db.graph import Graph, is_whole
+from ifc_db.lossless import NATIVE, decode_block
+from ifc_db.step import statements_of
 
 PAGE = 1_000
 _ID_WIDTH = 20  # a STEP id, zero-padded, so that lines sort by it as text

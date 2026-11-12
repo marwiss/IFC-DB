@@ -1,5 +1,5 @@
 # This file was generated with the assistance of an AI coding tool.
-"""Whether two IFC files hold the same model: ``python -m ifc_lpg.equivalence A B [--geometry]``.
+"""Whether two IFC files hold the same model: ``python -m ifc_db.equivalence A B [--geometry]``.
 
 "The same model" means there is a pairing of the instances of the two files in which paired instances have the same
 class and the same values, their references lead to paired instances, every LIST has its order, and every SET and BAG
@@ -31,9 +31,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.schema import Schema
-from ifc_lpg.step import StepError, StepFile, exact_text
-from ifc_lpg.worker import keep_stdout_for_the_answer, limit_memory
+from ifc_db.schema import Schema
+from ifc_db.step import StepError, StepFile, exact_text
+from ifc_db.worker import keep_stdout_for_the_answer, limit_memory
 
 MAX_FAILED_PAIRINGS = 10_000
 MAX_EXPANDED_VALUES = 1_000_000
@@ -634,7 +634,7 @@ def compare_files(first: Path, second: Path, *, geometry: bool = False) -> Compa
 
 def main(argv: list[str] | None = None) -> int:
     """Exit 0 for the same model, 1 for not the same or not shown, 2 for no file, with the answer as JSON on stdout."""
-    parser = argparse.ArgumentParser(prog="ifc-lpg-equivalence")
+    parser = argparse.ArgumentParser(prog="ifc-db-equivalence")
     parser.add_argument("first", type=Path)
     parser.add_argument("second", type=Path)
     parser.add_argument("--geometry", action="store_true", help="also build every product's mesh, and compare those")

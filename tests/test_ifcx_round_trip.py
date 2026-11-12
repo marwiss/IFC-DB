@@ -8,11 +8,11 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.exporter import NotExportable
-from ifc_lpg.files import export_file, import_file
-from ifc_lpg.graph import FORM_VERSION
-from ifc_lpg.ifcx import compose, export_ifcx, export_ifcx_overlay, import_ifcx, read_layer, same
-from ifc_lpg.importer import delete_model
+from ifc_db.exporter import NotExportable
+from ifc_db.files import export_file, import_file
+from ifc_db.graph import FORM_VERSION
+from ifc_db.ifcx import compose, export_ifcx, export_ifcx_overlay, import_ifcx, read_layer, same
+from ifc_db.importer import delete_model
 from tests.conftest import FIXTURES_DIR
 from tests.test_ifcx import BASE, BODY, OVERLAY, SPACE, WALL, write
 

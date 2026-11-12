@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from ifc_lpg.ifcx import compose
-from ifc_lpg.ifcx_check import MANIFEST, PINNED, check, check_ifcx, problems, read_schemas
+from ifc_db.ifcx import compose
+from ifc_db.ifcx_check import MANIFEST, PINNED, check, check_ifcx, problems, read_schemas
 
 PINNED_URI = "https://ifcx.dev/@standards.buildingsmart.org/ifc/core/prop@v5a.ifcx"
 SCHEMAS = {

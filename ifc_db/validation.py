@@ -1,5 +1,5 @@
 # This file was generated with the assistance of an AI coding tool.
-"""Whether a file keeps to the IFC standard: ``python -m ifc_lpg.validation FILE [--against OTHER... | --report]``.
+"""Whether a file keeps to the IFC standard: ``python -m ifc_db.validation FILE [--against OTHER... | --report]``.
 
 A graph database has no schema to hold a change to, so a property or a relationship changed in the graph can make a file
 that breaks the standard. IfcOpenShell's validator checks a file against the schema compiled from IFC's EXPRESS: the type
@@ -28,7 +28,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.worker import keep_stdout_for_the_answer, limit_memory
+from ifc_db.worker import keep_stdout_for_the_answer, limit_memory
 
 MAX_LISTED = 50
 MAX_REPORTED = 10_000
@@ -157,7 +157,7 @@ def compare_issues(ours: list[dict[str, Any]], theirs: list[dict[str, Any]]) -> 
 def main(argv: list[str] | None = None) -> int:
     """Exit 0 for a file with no issues, or none the other file lacks, 1 for one with, 2 for what could not be validated.
     The answer is JSON on stdout."""
-    parser = argparse.ArgumentParser(prog="ifc-lpg-validation")
+    parser = argparse.ArgumentParser(prog="ifc-db-validation")
     parser.add_argument("file", type=Path)
     which = parser.add_mutually_exclusive_group()
     which.add_argument("--against", type=Path, nargs="+", help="the files it came from; their issues do not count")

@@ -24,10 +24,10 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from ifc_lpg.graph import Graph
-from ifc_lpg.lossless import STEP_SUFFIX, decode_block
-from ifc_lpg.schema import relationship_type
-from ifc_lpg.step import statements_of
+from ifc_db.graph import Graph
+from ifc_db.lossless import STEP_SUFFIX, decode_block
+from ifc_db.schema import relationship_type
+from ifc_db.step import statements_of
 
 MAX_STEPS = 32  # a path longer than this is refused; the longest canonical path measured was 11 steps
 _STEP = re.compile(r"^([A-Za-z][A-Za-z0-9_]*)((?:\[\d+\])*)$")

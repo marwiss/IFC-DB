@@ -1,5 +1,5 @@
 # This file was generated with the assistance of an AI coding tool.
-"""The conversion worker: ``python -m ifc_lpg.worker IFC OUT [--memory-mb N] [--max-entities N]
+"""The conversion worker: ``python -m ifc_db.worker IFC OUT [--memory-mb N] [--max-entities N]
 [--include-geometry | --geometry-in-blocks] [--lossless]``.
 
 IfcOpenShell parses untrusted files, so it runs here, in its own process:
@@ -40,7 +40,7 @@ def keep_stdout_for_the_answer() -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="ifc-lpg-worker")
+    parser = argparse.ArgumentParser(prog="ifc-db-worker")
     parser.add_argument("ifc", type=Path)
     parser.add_argument("out", type=Path)
     parser.add_argument("--memory-mb", type=int, default=0)
@@ -52,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.memory_mb:
         limit_memory(args.memory_mb)
 
-    from ifc_lpg.convert import ConversionError, write_jsonl
+    from ifc_db.convert import ConversionError, write_jsonl
 
     try:
         header = write_jsonl(

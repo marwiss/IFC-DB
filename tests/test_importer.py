@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.graph import FORM_VERSION, is_whole
-from ifc_lpg.importer import MODEL_FACTS, import_records, model_facts, models, relationship_type
+from ifc_db.graph import FORM_VERSION, is_whole
+from ifc_db.importer import MODEL_FACTS, import_records, model_facts, models, relationship_type
 
 
 class Asked:

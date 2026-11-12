@@ -1,5 +1,5 @@
 # This file was generated with the assistance of an AI coding tool.
-"""A file against Information Delivery Specifications: ``python -m ifc_lpg.ids FILE IDS [IDS ...]``.
+"""A file against Information Delivery Specifications: ``python -m ifc_db.ids FILE IDS [IDS ...]``.
 
 ADR 0013. IfcOpenShell's IfcTester checks the file against each IDS, with its own defaults, so that a server and
 Dataspatium, which runs IfcTester in the browser, give the same verdicts. An IDS comes from a person, so it is read here
@@ -23,8 +23,8 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.validation import MAX_MESSAGE, MAX_REPORTED
-from ifc_lpg.worker import keep_stdout_for_the_answer, limit_memory
+from ifc_db.validation import MAX_MESSAGE, MAX_REPORTED
+from ifc_db.worker import keep_stdout_for_the_answer, limit_memory
 
 IDS_NAMESPACE = "http://standards.buildingsmart.org/IDS"
 MAX_IDS_BYTES = 20 * 1024 * 1024
@@ -200,7 +200,7 @@ def report_of(path: Path, sources: list[Path]) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     """Exit 0 when nothing failed, 1 when a specification failed or an IDS could not be read, 2 for a file that could
     not be checked. The answer is JSON on stdout."""
-    parser = argparse.ArgumentParser(prog="ifc-lpg-ids")
+    parser = argparse.ArgumentParser(prog="ifc-db-ids")
     parser.add_argument("file", type=Path)
     parser.add_argument("ids", type=Path, nargs="+")
     parser.add_argument("--memory-mb", type=int, default=0)

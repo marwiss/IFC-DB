@@ -1,7 +1,7 @@
 # This file was generated with the assistance of an AI coding tool.
 """Make a model ready to be merged into another: its schema migrated, its lengths in the other's unit, and checked.
 
-``python -m ifc_lpg.prepare IFC OUT [--schema SCHEMA] [--length-unit UNIT] [--resolve KEY=OPTION...] [--memory-mb N]``
+``python -m ifc_db.prepare IFC OUT [--schema SCHEMA] [--length-unit UNIT] [--resolve KEY=OPTION...] [--memory-mb N]``
 needs the extra ``ifcopenshell`` and runs in a process of its own. It migrates the file to ``SCHEMA`` with IfcOpenShell's
 ``Migrator``, through IFC4 between IFC2X3 and IFC4X3, and turns every length into ``UNIT`` (``METER``, ``MILLIMETER``,
 ``FOOT`` and so on) with ``convert_file_length_units``; other units are not converted.
@@ -11,7 +11,7 @@ no equivalent of, with the options there are, and the user chooses. ``--resolve`
 ``owner_history``: ``type`` makes an IfcWindowStyle or IfcDoorStyle an IfcWindowType or IfcDoorType, ``proxy`` makes an
 element or a type a proxy, ``leave_out`` takes the objects out with their relationships, ``polyline`` makes an
 IfcIndexedPolyCurve of straight segments an IfcPolyline, ``owner`` gives what IFC2X3 needs an owner history for, and
-has none, one made by IFC-LPG, and ``virtual`` gives a space boundary without a building element, which IFC4 needs one
+has none, one made by IFC-DB, and ``virtual`` gives a space boundary without a building element, which IFC4 needs one
 on, an IfcVirtualElement, as IFC4 means virtual boundaries to have, ``dated`` gives an owner history that says
 what changed, and IFC4 needs a date of change on, its date of creation, and ``assignment`` puts the styles of a styled
 item in an IfcPresentationStyleAssignment, which IFC2X3 needs them in, and ``context`` gives a project without a
@@ -36,8 +36,8 @@ import time
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.step import StepFile
-from ifc_lpg.worker import keep_stdout_for_the_answer, limit_memory
+from ifc_db.step import StepFile
+from ifc_db.worker import keep_stdout_for_the_answer, limit_memory
 
 RESOLUTIONS = ("type", "proxy", "leave_out", "polyline", "owner", "virtual", "dated", "assignment", "context")
 OWNER = "owner_history"
@@ -246,12 +246,12 @@ def _to_polyline(model: Any, curve: Any) -> None:
 
 
 def _owner(model: Any) -> Any:
-    """An owner history made by IFC-LPG, for what IFC2X3 needs one on and has none: added now, which both IFC2X3 and
+    """An owner history made by IFC-DB, for what IFC2X3 needs one on and has none: added now, which both IFC2X3 and
     IFC4 take with its date of change."""
-    organisation = model.createIfcOrganization(None, "IFC-LPG", None, None, None)
-    person = model.createIfcPerson(None, "IFC-LPG", None, None, None, None, None, None)
+    organisation = model.createIfcOrganization(None, "IFC-DB", None, None, None)
+    person = model.createIfcPerson(None, "IFC-DB", None, None, None, None, None, None)
     user = model.createIfcPersonAndOrganization(person, organisation, None)
-    application = model.createIfcApplication(organisation, "1.0.0", "IFC-LPG", "IFC-LPG")
+    application = model.createIfcApplication(organisation, "1.0.0", "IFC-DB", "IFC-DB")
     now = int(time.time())
     return model.createIfcOwnerHistory(user, application, None, "ADDED", now, None, None, now)
 
@@ -391,7 +391,7 @@ def _migrate(model: Any, migrator: Any, migrated: Any, moved: dict[int, int | No
 
 def _check(source: Path, target: Path, moved: dict[int, int | None]) -> list[dict[str, Any]]:
     """The issues of the result that the file did not have, the file's carried over by ``moved``."""
-    from ifc_lpg.validation import issues_of
+    from ifc_db.validation import issues_of
 
     def key(issue: dict[str, Any], instance: Any) -> tuple[Any, ...]:
         if instance is None:
@@ -480,7 +480,7 @@ def prepare_file(
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="ifc-lpg-prepare")
+    parser = argparse.ArgumentParser(prog="ifc-db-prepare")
     parser.add_argument("source", type=Path)
     parser.add_argument("target", type=Path)
     parser.add_argument("--schema")

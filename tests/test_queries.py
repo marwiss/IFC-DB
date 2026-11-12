@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from ifc_lpg.queries import (
+from ifc_db.queries import (
     KINDS,
     MAX_GLOBAL_IDS,
     QUERIES,

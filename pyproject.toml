@@ -1,5 +1,5 @@
 [project]
-name = "ifc-lpg"
+name = "ifc-db"
 version = "1.0.0"
 description = "Lossless round-tripping between IFC STEP files and labelled property graphs in Neo4j and Memgraph"
 readme = "README.md"
@@ -20,12 +20,12 @@ ifcopenshell = [
     # IfcOpenShell's EXPRESS rules import _pytest when they run, which it does not declare (ADR 0011).
     "pytest>=9.0",
 ]
-# The official driver, for ifc_lpg.graph.Neo4jGraph; it speaks to Neo4j and to Memgraph.
+# The official driver, for ifc_db.graph.Neo4jGraph; it speaks to Neo4j and to Memgraph.
 neo4j = ["neo4j>=5.26"]
 
 [project.urls]
-Source = "https://github.com/marwiss/IFC-LPG"
-Issues = "https://github.com/marwiss/IFC-LPG/issues"
+Source = "https://github.com/marwiss/IFC-DB"
+Issues = "https://github.com/marwiss/IFC-DB/issues"
 
 [dependency-groups]
 dev = [
@@ -41,7 +41,7 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["ifc_lpg"]
+packages = ["ifc_db"]
 
 # Dependency cooldown: never resolve to a version published less than a week ago.
 [tool.uv]
@@ -50,17 +50,17 @@ exclude-newer = "7 days"
 [tool.ruff]
 line-length = 120
 target-version = "py311"
-src = ["ifc_lpg", "tests"]
+src = ["ifc_db", "tests"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I", "UP", "B", "S", "ASYNC", "T20", "RUF"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S106", "S108", "T20"] # asserts, test secrets, tmp paths, prints
-"ifc_lpg/worker.py" = ["T20"]                     # the worker process reports through stdout and stderr
+"ifc_db/worker.py" = ["T20"]                     # the worker process reports through stdout and stderr
 
 [tool.ruff.lint.isort]
-known-first-party = ["ifc_lpg"]
+known-first-party = ["ifc_db"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

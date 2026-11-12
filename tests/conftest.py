@@ -1,7 +1,7 @@
 # This file was generated with the assistance of an AI coding tool.
 """Shared test data, and the graph databases the round trip is tried against.
 
-Neo4j always; Memgraph too when ``IFC_LPG_TEST_MEMGRAPH=1``. One container per test session, emptied before each test.
+Neo4j always; Memgraph too when ``IFC_DB_TEST_MEMGRAPH=1``. One container per test session, emptied before each test.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ class Target:
 
 
 def _targets() -> list[str]:
-    return ["neo4j", "memgraph"] if os.environ.get("IFC_LPG_TEST_MEMGRAPH") == "1" else ["neo4j"]
+    return ["neo4j", "memgraph"] if os.environ.get("IFC_DB_TEST_MEMGRAPH") == "1" else ["neo4j"]
 
 
 @pytest.fixture(scope="session", params=_targets())
@@ -65,7 +65,7 @@ async def graph(target: Target) -> AsyncIterator[object]:
     from neo4j import AsyncGraphDatabase
     from neo4j.exceptions import ServiceUnavailable
 
-    from ifc_lpg.graph import Neo4jGraph, ensure_schema
+    from ifc_db.graph import Neo4jGraph, ensure_schema
 
     driver = AsyncGraphDatabase.driver(target.uri, auth=target.auth)
     try:

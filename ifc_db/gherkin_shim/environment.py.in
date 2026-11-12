@@ -1,5 +1,5 @@
 # This file was generated with the assistance of an AI coding tool.
-# IFC-LPG runs buildingSMART's ifc-gherkin-rules without Django (ADR 0012). The installer writes this file over the
+# IFC-DB runs buildingSMART's ifc-gherkin-rules without Django (ADR 0012). The installer writes this file over the
 # rule set's features/environment.py.
 #
 # The hooks of the rule set's features/environment.py (MIT, buildingSMART International), as they run in its own tests

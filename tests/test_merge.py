@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from ifc_lpg.merge import _edges_after, _Instance, _map_parameters, _map_tagged, list_attributes, new_global_id
+from ifc_db.merge import _edges_after, _Instance, _map_parameters, _map_tagged, list_attributes, new_global_id
 
 
 def test_a_new_global_id_is_ifcs_form_of_128_bits() -> None:

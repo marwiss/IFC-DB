@@ -267,7 +267,7 @@ wheels = [
 ]
 
 [[package]]
-name = "ifc-lpg"
+name = "ifc-db"
 version = "1.0.0"
 source = { editable = "." }
 

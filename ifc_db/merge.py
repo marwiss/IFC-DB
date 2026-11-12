@@ -34,16 +34,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ifc_lpg.convert import BLOCK_BYTES
-from ifc_lpg.editing import refresh_inverses
-from ifc_lpg.exporter import export_records
-from ifc_lpg.files import DEFAULT_LIMITS, Limits, _now, export_file, import_file, run_worker, write_file
-from ifc_lpg.graph import FORM_VERSION, Graph, is_whole
-from ifc_lpg.importer import BATCH, BLOCK_BATCH, delete_model
-from ifc_lpg.lossless import ALL_ARGUMENTS, STEP_SUFFIX, TAGGED, TYPE_SUFFIX, decode_block, encode_block
-from ifc_lpg.prepare import RESOLUTIONS as RESOLUTIONS
-from ifc_lpg.schema import relationship_type, safe_identifier
-from ifc_lpg.step import parse_statement, statement_text, statements_of, string_of_atom
+from ifc_db.convert import BLOCK_BYTES
+from ifc_db.editing import refresh_inverses
+from ifc_db.exporter import export_records
+from ifc_db.files import DEFAULT_LIMITS, Limits, _now, export_file, import_file, run_worker, write_file
+from ifc_db.graph import FORM_VERSION, Graph, is_whole
+from ifc_db.importer import BATCH, BLOCK_BATCH, delete_model
+from ifc_db.lossless import ALL_ARGUMENTS, STEP_SUFFIX, TAGGED, TYPE_SUFFIX, decode_block, encode_block
+from ifc_db.prepare import RESOLUTIONS as RESOLUTIONS
+from ifc_db.schema import relationship_type, safe_identifier
+from ifc_db.step import parse_statement, statement_text, statements_of, string_of_atom
 
 CHOICES = ("a", "b", "new")
 _GUID = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$"
@@ -861,7 +861,7 @@ async def prepare_other(
     ]
     if differing:
         raise MergeError(f"B has units other than A's, which are not converted: {'; '.join(differing)}")
-    command = [sys.executable, "-m", "ifc_lpg.prepare"]
+    command = [sys.executable, "-m", "ifc_db.prepare"]
     options: list[str] = []
     if a.fields["schema"] != b.fields["schema"]:
         options += ["--schema", str(a.fields["schema"])]
@@ -870,7 +870,7 @@ async def prepare_other(
     if not options:
         raise MergeError("B has the schema and the length unit of A already; there is nothing to prepare")
     geometry = b.fields["geometry"]
-    with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="ifc-db-") as tmp:
         source, target = Path(tmp) / "other.ifc", Path(tmp) / "prepared.ifc"
         await export_file(graph, other_id, source, limits=limits)
         command += [str(source), str(target), *options, "--memory-mb", str(limits.memory_mb)]
@@ -1496,7 +1496,7 @@ async def _check(graph: Graph, plan: _Plan, model_id: str, numbers: dict[int, in
         if step not in full:
             full[step] = spare
             spare += 1
-    with tempfile.TemporaryDirectory(prefix="ifc-lpg-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="ifc-db-") as tmp:
         folder = Path(tmp)
         await graph.run("MATCH (m:Model {id: $id}) SET m.imported_at = $now", id=model_id, now=_now())  # for the export
         try:
@@ -1507,7 +1507,7 @@ async def _check(graph: Graph, plan: _Plan, model_id: str, numbers: dict[int, in
         await export_records(graph, plan.b.id, folder / "b.jsonl")
         _renumbered(folder / "b.jsonl", folder / "b2.jsonl", lambda step: full.setdefault(step, step + spare))
         await write_file(folder / "b2.jsonl", folder / "b.ifc", limits=limits)
-        command = [sys.executable, "-m", "ifc_lpg.validation", str(folder / "c.ifc"), "--against"]
+        command = [sys.executable, "-m", "ifc_db.validation", str(folder / "c.ifc"), "--against"]
         command += [str(folder / "a.ifc"), str(folder / "b.ifc"), "--memory-mb", str(limits.memory_mb)]
         answer = await run_worker(command, "the check of the merged model", limits.timeout_seconds, answers=(0, 1))
     result = json.loads(answer)

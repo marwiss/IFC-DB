@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import pytest
 
-from ifc_lpg.step import MAX_NESTING, StepError, StepFile, exact_text, parse_statement, statements_of
+from ifc_db.step import MAX_NESTING, StepError, StepFile, exact_text, parse_statement, statements_of
 from tests.conftest import FIXTURES_DIR
 
 HEAD = (
