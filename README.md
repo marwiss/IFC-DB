@@ -119,7 +119,7 @@ seldom see IFC-DB itself.
   it when a new one is needed. The server's own process uses the graph side,
   which needs no IfcOpenShell; worker processes with the extra `ifcopenshell` read,
   convert, write and check files. Its
-  [IFC-DB page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-lpg.md)
+  [IFC-DB page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-db.md)
   describes how. On upload it checks the file against the IFC schema,
   buildingSMART's rules and IDS (`validation`, `gherkin`, `check_ids`), converts it
   in a worker and imports the records (`convert_file`, `import_records`), with one
@@ -941,7 +941,7 @@ The command lines, each in a process of its own:
 | `python -m ifc_db.gherkin_install DIR` and `python -m ifc_db.gherkin FILE --env DIR` | buildingSMART's rules |
 
 Every command but the installer also takes `--memory-mb N`. Dataregium's
-[IFC-DB page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-lpg.md)
+[IFC-DB page](https://github.com/marwiss/Dataregium/blob/main/docs/en/ifc-db.md)
 describes how a server uses the parts.
 
 ## Background
